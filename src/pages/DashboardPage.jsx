@@ -14,8 +14,6 @@ import {
   Users,
   Sparkles,
   ArrowRight,
-  ShieldCheck,
-  Zap,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -109,8 +107,6 @@ export default function DashboardPage() {
           subtext="Under management"
           icon={FolderKanban}
           iconBg="bg-indigo-50 text-indigo-600"
-          trend="+12%"
-          isPositive={true}
         />
         <MetricCard
           title="Total Tasks"
@@ -118,8 +114,6 @@ export default function DashboardPage() {
           subtext="Across all pipelines"
           icon={Clock}
           iconBg="bg-sky-50 text-sky-600"
-          trend="+5%"
-          isPositive={true}
         />
         <MetricCard
           title="Completed Tasks"
@@ -127,8 +121,6 @@ export default function DashboardPage() {
           subtext={`${metrics.completionRate}% completion velocity`}
           icon={CheckCircle2}
           iconBg="bg-emerald-50 text-emerald-600"
-          trend="+18%"
-          isPositive={true}
         />
         <MetricCard
           title="Team Members"
@@ -156,31 +148,6 @@ export default function DashboardPage() {
           <RecentActivityFeed
             activities={activeWorkspace.activities || []}
           />
-
-          {/* College Viva Architecture Summary Card */}
-          <Card className="bg-slate-900 text-white border-slate-800">
-            <CardHeader className="border-slate-800">
-              <CardTitle className="text-white flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                <span>Multi-Tenancy Viva Note</span>
-              </CardTitle>
-            </CardHeader>
-            <CardBody className="space-y-3 text-xs text-slate-300 leading-relaxed">
-              <p>
-                In a SaaS platform, <strong>multi-tenancy</strong> ensures each organization’s data (projects, tasks, members) remains strictly isolated while sharing the application infrastructure.
-              </p>
-              <div className="p-3 bg-slate-800/80 rounded-lg border border-slate-700/80 font-mono text-[11px] text-indigo-300">
-                switchWorkspace(tenantId)
-                <br />
-                ↳ Scopes React State
-                <br />
-                ↳ Updates UI & Context
-              </div>
-              <p className="text-[11px] text-slate-400">
-                In Phase 2, this will send an <code className="text-indigo-400">x-tenant-id</code> header to Express.js middleware for backend row-level or tenant-schema isolation.
-              </p>
-            </CardBody>
-          </Card>
         </div>
       </div>
     </div>

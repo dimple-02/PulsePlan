@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Layers, Mail, Lock, Eye, EyeOff, Loader2, AlertCircle, ArrowRight, ShieldCheck } from 'lucide-react';
+import { Layers, Mail, Lock, Eye, EyeOff, Loader2, AlertCircle, ArrowRight } from 'lucide-react';
 import Button from '../components/common/Button';
 
 /**
@@ -12,7 +12,6 @@ import Button from '../components/common/Button';
  * - Real HTTP session cookie generation
  * - Form validation and clear server error handling
  * - Post-login redirection to previously intended route
- * - Viva demonstration quick-fill helper
  */
 export default function LoginPage() {
   const { login, isAuthenticated, isLoading: authLoading } = useAuth();
@@ -50,13 +49,6 @@ export default function LoginPage() {
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  // Demo credential quick-fill helper for viva presentation
-  const handleQuickFill = (demoEmail, demoPassword) => {
-    setEmail(demoEmail);
-    setPassword(demoPassword);
-    setErrorMessage('');
   };
 
   return (
@@ -153,29 +145,8 @@ export default function LoginPage() {
             </button>
           </form>
 
-          {/* College Viva Demo Helper */}
-          <div className="mt-6 pt-5 border-t border-slate-100">
-            <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-700 mb-2">
-              <ShieldCheck className="w-3.5 h-3.5 text-indigo-600" />
-              <span>Viva Examiner Quick Demo:</span>
-            </div>
-            <p className="text-[11px] text-slate-500 mb-2.5">
-              Click below to test pre-registered accounts or create a new account to test isolated multi-tenancy:
-            </p>
-            <div className="grid grid-cols-1 gap-1.5">
-              <button
-                type="button"
-                onClick={() => handleQuickFill('alex@pulseplan.test', 'password123')}
-                className="text-left px-2.5 py-1.5 rounded-md bg-slate-50 hover:bg-indigo-50 hover:text-indigo-700 border border-slate-200 text-xs text-slate-700 transition-colors flex items-center justify-between"
-              >
-                <span className="font-mono text-[11px]">alex@pulseplan.test</span>
-                <span className="text-[10px] bg-slate-200/80 px-1.5 py-0.5 rounded font-mono">fill demo</span>
-              </button>
-            </div>
-          </div>
-
           {/* Navigation to Signup */}
-          <div className="mt-5 text-center">
+          <div className="mt-6 text-center">
             <p className="text-xs text-slate-500">
               Don't have an account yet?{' '}
               <Link

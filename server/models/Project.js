@@ -67,11 +67,11 @@ const projectSchema = new mongoose.Schema(
     },
     lead: {
       type: String,
-      default: 'Alex Morgan',
+      default: 'Workspace Member',
     },
     members: {
       type: [String],
-      default: ['AM'],
+      default: ['WM'],
     },
     category: {
       type: String,

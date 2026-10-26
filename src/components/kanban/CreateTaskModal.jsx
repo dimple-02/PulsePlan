@@ -4,6 +4,7 @@ import Input from '../common/Input';
 import Select from '../common/Select';
 import Button from '../common/Button';
 import { useWorkspace } from '../../hooks/useWorkspace';
+import { useAuth } from '../../context/AuthContext';
 import { CheckSquare, AlertCircle, Folder } from 'lucide-react';
 
 /**
@@ -14,15 +15,16 @@ import { CheckSquare, AlertCircle, Folder } from 'lucide-react';
  */
 export default function CreateTaskModal({ isOpen, onClose, initialStatus = 'todo' }) {
   const { addTask, activeProject, activeWorkspace, activeProjectId, setActiveProjectId } = useWorkspace();
+  const { user } = useAuth();
 
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     status: initialStatus,
     priority: 'medium',
-    assigneeName: activeWorkspace?.members?.[0]?.name || 'Alex Morgan',
+    assigneeName: activeWorkspace?.members?.[0]?.name || user?.name || '',
     dueDate: '',
-    tagsString: 'Feature, Sprint-1',
+    tagsString: '',
     storyPoints: '3',
   });
 
@@ -33,9 +35,9 @@ export default function CreateTaskModal({ isOpen, onClose, initialStatus = 'todo
     setFormData((prev) => ({
       ...prev,
       status: initialStatus,
-      assigneeName: activeWorkspace?.members?.[0]?.name || 'Alex Morgan',
+      assigneeName: activeWorkspace?.members?.[0]?.name || user?.name || '',
     }));
-  }, [initialStatus, activeWorkspace]);
+  }, [initialStatus, activeWorkspace, user]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -90,9 +92,9 @@ export default function CreateTaskModal({ isOpen, onClose, initialStatus = 'todo
         description: '',
         status: 'todo',
         priority: 'medium',
-        assigneeName: activeWorkspace?.members?.[0]?.name || 'Alex Morgan',
+        assigneeName: activeWorkspace?.members?.[0]?.name || user?.name || '',
         dueDate: '',
-        tagsString: 'Feature, Sprint-1',
+        tagsString: '',
         storyPoints: '3',
       });
       onClose();
@@ -219,7 +221,7 @@ export default function CreateTaskModal({ isOpen, onClose, initialStatus = 'todo
               options={
                 memberOptions.length > 0
                   ? memberOptions
-                  : [{ value: 'Alex Morgan', label: 'Alex Morgan (Owner)' }]
+                  : [{ value: user?.name || 'Workspace Member', label: `${user?.name || 'Workspace Member'} (Owner)` }]
               }
             />
             <Input

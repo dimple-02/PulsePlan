@@ -45,8 +45,8 @@ const taskSchema = new mongoose.Schema(
       index: true,
     },
     assignee: {
-      name: { type: String, default: 'Alex Morgan' },
-      avatar: { type: String, default: 'AM' },
+      name: { type: String, default: 'Workspace Member' },
+      avatar: { type: String, default: 'WM' },
     },
     dueDate: {
       type: String,

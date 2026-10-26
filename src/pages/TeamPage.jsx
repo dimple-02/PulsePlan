@@ -1,13 +1,9 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useWorkspace } from '../hooks/useWorkspace';
 import { Card, CardHeader, CardTitle, CardDescription, CardBody } from '../components/common/Card';
 import Avatar from '../components/common/Avatar';
 import Badge from '../components/common/Badge';
-import Button from '../components/common/Button';
-import Modal from '../components/common/Modal';
-import Input from '../components/common/Input';
-import Select from '../components/common/Select';
-import { Users, UserPlus, Shield, Mail, CheckCircle2 } from 'lucide-react';
+import { Users, Shield } from 'lucide-react';
 
 /**
  * TeamPage Component
@@ -16,10 +12,7 @@ import { Users, UserPlus, Shield, Mail, CheckCircle2 } from 'lucide-react';
  * Highlights tenant user isolation.
  */
 export default function TeamPage() {
-  const { activeWorkspace, showToast } = useWorkspace();
-  const [isInviteOpen, setIsInviteOpen] = useState(false);
-  const [inviteEmail, setInviteEmail] = useState('');
-  const [inviteRole, setInviteRole] = useState('Member');
+  const { activeWorkspace } = useWorkspace();
 
   const members = activeWorkspace?.members || [];
 
@@ -27,15 +20,6 @@ export default function TeamPage() {
     Owner: 'purple',
     Admin: 'primary',
     Member: 'neutral',
-  };
-
-  const handleSendInvite = (e) => {
-    e.preventDefault();
-    if (!inviteEmail) return;
-
-    showToast(`Invitation sent to ${inviteEmail} as ${inviteRole}`, 'success');
-    setInviteEmail('');
-    setIsInviteOpen(false);
   };
 
   return (
@@ -51,15 +35,6 @@ export default function TeamPage() {
             Managing members and roles for <span className="font-semibold text-slate-700">{activeWorkspace?.name}</span>
           </p>
         </div>
-
-        <Button
-          variant="primary"
-          size="sm"
-          onClick={() => setIsInviteOpen(true)}
-          icon={UserPlus}
-        >
-          Invite Member
-        </Button>
       </div>
 
       {/* Members Table Card */}
@@ -156,47 +131,6 @@ export default function TeamPage() {
           </p>
         </div>
       </div>
-
-      {/* Invite Member Modal */}
-      <Modal
-        isOpen={isInviteOpen}
-        onClose={() => setIsInviteOpen(false)}
-        title="Invite New Team Member"
-        description={`Grant collaborator access to ${activeWorkspace?.name}`}
-        size="sm"
-        footer={
-          <>
-            <Button variant="secondary" onClick={() => setIsInviteOpen(false)}>
-              Cancel
-            </Button>
-            <Button variant="primary" onClick={handleSendInvite} icon={Mail}>
-              Send Invite
-            </Button>
-          </>
-        }
-      >
-        <form onSubmit={handleSendInvite} className="space-y-4">
-          <Input
-            label="Email Address"
-            type="email"
-            placeholder="colleague@company.com"
-            value={inviteEmail}
-            onChange={(e) => setInviteEmail(e.target.value)}
-            required
-            icon={Mail}
-          />
-
-          <Select
-            label="Assigned Role"
-            value={inviteRole}
-            onChange={(e) => setInviteRole(e.target.value)}
-            options={[
-              { value: 'Member', label: 'Member - Can contribute to tasks' },
-              { value: 'Admin', label: 'Admin - Can manage projects & members' },
-            ]}
-          />
-        </form>
-      </Modal>
     </div>
   );
 }

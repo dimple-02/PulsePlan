@@ -135,13 +135,6 @@ export async function deleteWorkspace(id) {
   });
 }
 
-export async function seedDefaultWorkspaces() {
-  const result = await apiRequest('/workspaces/seed', {
-    method: 'POST',
-  });
-  return result.data || [];
-}
-
 // -------------------------------------------------------------
 // Project API Calls (Scoped to Workspace)
 // -------------------------------------------------------------

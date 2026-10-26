@@ -383,24 +383,6 @@ export function WorkspaceProvider({ children }) {
     }
   }, [showToast]);
 
-  // Reseed default workspaces
-  const resetAllData = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const seeded = await api.seedDefaultWorkspaces();
-      setWorkspaces(seeded);
-      if (seeded.length > 0) {
-        setActiveWorkspaceId(seeded[0]._id || seeded[0].id);
-        setActiveProjectId(seeded[0].projects?.[0]?._id || seeded[0].projects?.[0]?.id || null);
-      }
-      showToast('Workspaces reset and verified with MongoDB.', 'info');
-    } catch (error) {
-      showToast(error.message || 'Failed to reset seed data', 'danger');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [showToast]);
-
   const value = {
     workspaces,
     activeWorkspaceId,
@@ -424,7 +406,6 @@ export function WorkspaceProvider({ children }) {
     updateTaskStatus,
     updateTask,
     deleteTask,
-    resetAllData,
   };
 
   return (

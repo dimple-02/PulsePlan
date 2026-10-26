@@ -8,7 +8,6 @@ import {
   Settings,
   Layers,
   Sparkles,
-  BookOpen,
   Folder,
   CheckCircle2,
   LogOut,
@@ -159,17 +158,6 @@ export default function Sidebar({ isOpen, onClose }) {
               </div>
             </div>
           )}
-
-          {/* College Viva Architecture Card */}
-          <div className="p-3 bg-gradient-to-br from-indigo-50/70 to-purple-50/50 rounded-xl border border-indigo-100/80">
-            <div className="flex items-center gap-1.5 text-xs font-semibold text-indigo-900 mb-1">
-              <BookOpen className="w-3.5 h-3.5 text-indigo-600" />
-              <span>Viva Concept Card</span>
-            </div>
-            <p className="text-[11px] text-slate-600 leading-relaxed">
-              Multi-tenancy logically partitions data per workspace. React Context manages tenant boundaries without prop-drilling.
-            </p>
-          </div>
         </div>
 
         {/* Current User & Logout footer */}

@@ -8,7 +8,6 @@ import {
   createWorkspace,
   updateWorkspace,
   deleteWorkspace,
-  seedWorkspaces,
 } from '../controllers/workspaceController.js';
 
 const router = express.Router();
@@ -18,8 +17,6 @@ const router = express.Router();
  */
 
 router.get('/', requireAuth, getWorkspaces);
-
-router.post('/seed', optionalAuth, seedWorkspaces);
 
 router.get(
   '/:id',

@@ -5,7 +5,7 @@ import Button from '../components/common/Button';
 import Input from '../components/common/Input';
 import Badge from '../components/common/Badge';
 import BootstrapSyllabusShowcase from '../components/common/BootstrapSyllabusShowcase';
-import { Settings, Save, RotateCcw, Building2, Shield, Database, Sparkles } from 'lucide-react';
+import { Settings, Save, Building2, Shield, Sparkles } from 'lucide-react';
 
 /**
  * SettingsPage Component
@@ -13,7 +13,7 @@ import { Settings, Save, RotateCcw, Building2, Shield, Database, Sparkles } from
  * Manages configuration for the current tenant workspace.
  */
 export default function SettingsPage() {
-  const { activeWorkspace, updateWorkspace, resetAllData, showToast } = useWorkspace();
+  const { activeWorkspace, updateWorkspace, showToast } = useWorkspace();
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -119,39 +119,6 @@ export default function SettingsPage() {
 
       {/* Syllabus Showcase: Bootstrap 5, Tailwind CSS, & JavaScript Promises */}
       <BootstrapSyllabusShowcase />
-
-      {/* Data Management & Viva Reset Card */}
-      <Card className="border-rose-100 bg-rose-50/20">
-        <CardHeader>
-          <CardTitle className="text-rose-900 flex items-center gap-2">
-            <Database className="w-4 h-4 text-rose-600" />
-            <span>Development & Testing Utilities</span>
-          </CardTitle>
-          <CardDescription>
-            Tools to reset client storage during college evaluations and presentations
-          </CardDescription>
-        </CardHeader>
-
-        <CardBody className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <p className="text-xs text-slate-700 font-medium">
-              Restore Initial Multi-Tenant Seed
-            </p>
-            <p className="text-xs text-slate-500 mt-0.5">
-              Re-populates the 3 tenant workspaces, all sample projects, Kanban tasks, and activity logs to pristine defaults.
-            </p>
-          </div>
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={resetAllData}
-            icon={RotateCcw}
-            className="text-rose-700 border-rose-200 hover:bg-rose-50 shrink-0"
-          >
-            Reset Seed Data
-          </Button>
-        </CardBody>
-      </Card>
     </div>
   );
 }

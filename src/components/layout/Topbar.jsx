@@ -4,7 +4,6 @@ import {
   Search,
   Bell,
   Plus,
-  RotateCcw,
   Building2,
   FolderPlus,
   CheckSquare,
@@ -20,7 +19,7 @@ import Badge from '../common/Badge';
  * Topbar Component
  * 
  * Provides search, active tenant context indicator, quick creation actions,
- * activity notifications dropdown, and seed data reset tool for testing.
+ * and activity notifications dropdown.
  */
 export default function Topbar({
   onMenuClick,
@@ -31,7 +30,6 @@ export default function Topbar({
     activeWorkspace,
     searchQuery,
     setSearchQuery,
-    resetAllData,
     isLoading,
   } = useWorkspace();
   const { user, logout } = useAuth();
@@ -100,18 +98,6 @@ export default function Topbar({
             </Badge>
           </div>
         )}
-
-        {/* Reset Mock Data for Viva demonstration */}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={resetAllData}
-          title="Reset to default seed data"
-          className="hidden sm:inline-flex text-slate-500 hover:text-slate-800"
-          icon={RotateCcw}
-        >
-          Reset Seed
-        </Button>
 
         {/* Quick Create Project */}
         <Button

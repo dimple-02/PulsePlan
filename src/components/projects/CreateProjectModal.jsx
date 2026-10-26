@@ -23,7 +23,7 @@ export default function CreateProjectModal({ isOpen, onClose }) {
     category: 'Product',
     priority: 'Medium',
     status: 'In Progress',
-    budget: '$20,000',
+    budget: '',
     deadline: '',
     description: '',
   });
@@ -63,7 +63,7 @@ export default function CreateProjectModal({ isOpen, onClose }) {
         category: 'Product',
         priority: 'Medium',
         status: 'In Progress',
-        budget: '$20,000',
+        budget: '',
         deadline: '',
         description: '',
       });
