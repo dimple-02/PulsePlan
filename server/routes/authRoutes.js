@@ -3,7 +3,6 @@ import { body } from 'express-validator';
 import { validate } from '../middleware/validate.js';
 import { requireAuth, optionalAuth } from '../middleware/auth.js';
 import {
-import {
   signup,
   login,
   logout,
@@ -58,6 +57,7 @@ router.post(
  */
 router.post(
   '/login',
+  authRateLimiter,
   [
     body('email')
       .trim()

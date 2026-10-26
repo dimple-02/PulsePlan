@@ -10,7 +10,7 @@ const JWT_EXPIRES_IN = '7d';
  * Uses secure flags in production; 'lax' sameSite in local development to allow cross-port cookies.
  */
 export function getCookieOptions() {
-  const isProduction = ENV.IS_PRODUCTION;
+  const isProduction = process.env.NODE_ENV === 'production' || ENV.IS_PRODUCTION;
   return {
     httpOnly: true,
     secure: isProduction,

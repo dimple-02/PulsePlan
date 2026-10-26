@@ -7,6 +7,10 @@ import { Plus, CheckCircle, Clock } from 'lucide-react';
  * 
  * Column wrapper containing the task cards for a specific status.
  * Renders an empty placeholder state when no tasks match.
+ * 
+ * Syllabus Demonstration: React Props & Prop Drilling
+ * - Intermediate component in the hierarchy: KanbanBoardPage -> KanbanColumn -> KanbanCard
+ * - Receives `onCardClick` from KanbanBoardPage and drills it down to KanbanCard as `onClick`.
  */
 export default function KanbanColumn({
   id,

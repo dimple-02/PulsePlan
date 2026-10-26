@@ -12,6 +12,7 @@
     "test:security": "node server/tests/securityAuditTest.js"
   },
   "dependencies": {
+    "bootstrap": "^5.3.8",
     "lucide-react": "^0.468.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",

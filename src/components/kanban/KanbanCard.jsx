@@ -9,6 +9,10 @@ import { useWorkspace } from '../../hooks/useWorkspace';
  * 
  * Individual task card rendered inside a Kanban column.
  * Provides quick move actions and opens the task modal on click.
+ * 
+ * Syllabus Demonstration: React Props & Prop Drilling
+ * - Leaf component in the hierarchy: KanbanBoardPage -> KanbanColumn -> KanbanCard
+ * - Receives the drilled `onClick` function and triggers it with the specific `task` object.
  */
 export default function KanbanCard({ task, onClick }) {
   const { updateTaskStatus } = useWorkspace();

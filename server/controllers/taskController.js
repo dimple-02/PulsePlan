@@ -76,8 +76,10 @@ export async function getTasks(req, res, next) {
 // GET /api/tasks/:id
 export async function getTaskById(req, res, next) {
   try {
-    const { id } = req.params;
-    const task = await Task.findOne({ _id: id, workspaceId: req.workspaceId });
+    // Syllabus Demonstration: Mongoose Relationships & References (.populate)
+    // Resolves the foreign key reference task.projectId -> Project document
+    const task = await Task.findOne({ _id: id, workspaceId: req.workspaceId })
+      .populate('projectId', 'name key category');
 
     if (!task) {
       return res.status(404).json({

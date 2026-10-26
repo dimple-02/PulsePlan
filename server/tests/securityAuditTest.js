@@ -16,6 +16,7 @@
 import http from 'http';
 import jwt from 'jsonwebtoken';
 import { ENV, validateEnv } from '../config/env.js';
+import { getCookieOptions } from '../controllers/authController.js';
 import { User } from '../models/User.js';
 import { Workspace } from '../models/Workspace.js';
 import { Project } from '../models/Project.js';
@@ -377,7 +378,57 @@ async function runSecurityAudit() {
     const projAId = projARes.body?.data?.id || projARes.body?.data?._id;
     assert(projARes.status === 201, '5.1 Project created in Workspace A (HTTP 201)');
 
-    // User B in Workspace B attempts to create a task assigned to Project A
+    // Create Task A in Workspace A
+    const taskARes = await request(
+      {
+        hostname: 'localhost',
+        port: PORT,
+        path: '/api/tasks',
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${tokenA}`,
+          'x-workspace-id': wsAId,
+          'Content-Type': 'application/json',
+        },
+      },
+      { title: 'Alpha Task 1', projectId: projAId }
+    );
+    const taskAId = taskARes.body?.data?.id || taskARes.body?.data?._id;
+
+    // Create Project B and Task B in Workspace B for User B
+    const projBRes = await request(
+      {
+        hostname: 'localhost',
+        port: PORT,
+        path: '/api/projects',
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${tokenB}`,
+          'x-workspace-id': wsBId,
+          'Content-Type': 'application/json',
+        },
+      },
+      { name: 'Beta Core Service', key: 'BCS' }
+    );
+    const projBId = projBRes.body?.data?.id || projBRes.body?.data?._id;
+
+    const taskBRes = await request(
+      {
+        hostname: 'localhost',
+        port: PORT,
+        path: '/api/tasks',
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${tokenB}`,
+          'x-workspace-id': wsBId,
+          'Content-Type': 'application/json',
+        },
+      },
+      { title: 'Beta Task 1', projectId: projBId }
+    );
+    const taskBId = taskBRes.body?.data?.id || taskBRes.body?.data?._id;
+
+    // 5.2 User B in Workspace B attempts to create a task assigned to Project A
     const crossTaskRes = await request(
       {
         hostname: 'localhost',
@@ -397,7 +448,7 @@ async function runSecurityAudit() {
       '5.2 Cross-workspace task creation with foreign projectId rejected with HTTP 400'
     );
 
-    // User B with Workspace B header attempts to view Project A
+    // 5.3 User B with Workspace B header attempts to view Project A
     const foreignProjRes = await request({
       hostname: 'localhost',
       port: PORT,
@@ -413,7 +464,7 @@ async function runSecurityAudit() {
       '5.3 Accessing foreign Project ID returns HTTP 404 in active workspace scope'
     );
 
-    // User B with Workspace B header attempts to filter tasks by foreign projectId
+    // 5.4 User B with Workspace B header attempts to filter tasks by foreign projectId
     const foreignFilterRes = await request({
       hostname: 'localhost',
       port: PORT,
@@ -427,6 +478,98 @@ async function runSecurityAudit() {
     assert(
       foreignFilterRes.status === 400,
       '5.4 Filtering tasks by foreign projectId rejected with HTTP 400'
+    );
+
+    // 5.5 User B attempts to update Project A from Workspace B scope
+    const crossProjUpdateRes = await request(
+      {
+        hostname: 'localhost',
+        port: PORT,
+        path: `/api/projects/${projAId}`,
+        method: 'PATCH',
+        headers: {
+          Authorization: `Bearer ${tokenB}`,
+          'x-workspace-id': wsBId,
+          'Content-Type': 'application/json',
+        },
+      },
+      { name: 'Hacked Alpha Project Name' }
+    );
+    assert(
+      crossProjUpdateRes.status === 404,
+      '5.5 Cross-tenant project update attempt rejected with HTTP 404'
+    );
+
+    // 5.6 User B attempts to delete Project A from Workspace B scope
+    const crossProjDeleteRes = await request({
+      hostname: 'localhost',
+      port: PORT,
+      path: `/api/projects/${projAId}`,
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${tokenB}`,
+        'x-workspace-id': wsBId,
+      },
+    });
+    assert(
+      crossProjDeleteRes.status === 404,
+      '5.6 Cross-tenant project delete attempt rejected with HTTP 404'
+    );
+
+    // 5.7 User B attempts to update Task A from Workspace B scope
+    const crossTaskUpdateRes = await request(
+      {
+        hostname: 'localhost',
+        port: PORT,
+        path: `/api/tasks/${taskAId}`,
+        method: 'PATCH',
+        headers: {
+          Authorization: `Bearer ${tokenB}`,
+          'x-workspace-id': wsBId,
+          'Content-Type': 'application/json',
+        },
+      },
+      { title: 'Hacked Alpha Task Title' }
+    );
+    assert(
+      crossTaskUpdateRes.status === 404,
+      '5.7 Cross-tenant task update attempt rejected with HTTP 404'
+    );
+
+    // 5.8 User B attempts to delete Task A from Workspace B scope
+    const crossTaskDeleteRes = await request({
+      hostname: 'localhost',
+      port: PORT,
+      path: `/api/tasks/${taskAId}`,
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${tokenB}`,
+        'x-workspace-id': wsBId,
+      },
+    });
+    assert(
+      crossTaskDeleteRes.status === 404,
+      '5.8 Cross-tenant task delete attempt rejected with HTTP 404'
+    );
+
+    // 5.9 User B attempts to reassign Task B to Project A (cross-workspace project mismatch)
+    const crossTaskReassignRes = await request(
+      {
+        hostname: 'localhost',
+        port: PORT,
+        path: `/api/tasks/${taskBId}`,
+        method: 'PATCH',
+        headers: {
+          Authorization: `Bearer ${tokenB}`,
+          'x-workspace-id': wsBId,
+          'Content-Type': 'application/json',
+        },
+      },
+      { projectId: projAId }
+    );
+    assert(
+      crossTaskReassignRes.status === 400,
+      '5.9 Updating task with mismatched foreign projectId rejected with HTTP 400'
     );
 
     // -------------------------------------------------------------
@@ -500,6 +643,55 @@ async function runSecurityAudit() {
     );
     assert(r6_2.status === 403, '6.2 Non-admin Member cannot update workspace settings (HTTP 403)');
 
+    // 6.3 Workspace Viewer cannot delete workspace (HTTP 403)
+    const emailD = `viewerD_${Date.now()}@pulseplan.test`;
+    const userDRes = await request(
+      {
+        hostname: 'localhost',
+        port: PORT,
+        path: '/api/auth/signup',
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      },
+      { name: 'Viewer D', email: emailD, password: 'password123' }
+    );
+    const tokenD = userDRes.body?.data?.token;
+    const userDId = userDRes.body?.data?.user?.id;
+    cleanupUserIds.push(userDId);
+    if (userDRes.body?.data?.user?.workspaces?.[0]?.workspaceId) {
+      cleanupWorkspaceIds.push(userDRes.body?.data?.user?.workspaces[0].workspaceId);
+    }
+
+    // Add User D as Viewer in Workspace A
+    await Workspace.findByIdAndUpdate(wsAId, {
+      $push: {
+        members: {
+          name: 'Viewer D',
+          email: emailD,
+          role: 'Viewer',
+          status: 'Active',
+          userId: userDId,
+        },
+      },
+    });
+    await User.findByIdAndUpdate(userDId, {
+      $push: {
+        workspaces: {
+          workspaceId: wsAId,
+          role: 'Viewer',
+        },
+      },
+    });
+
+    const r6_3 = await request({
+      hostname: 'localhost',
+      port: PORT,
+      path: `/api/workspaces/${wsAId}`,
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${tokenD}` },
+    });
+    assert(r6_3.status === 403, '6.3 Workspace Viewer cannot delete workspace (HTTP 403)');
+
     // -------------------------------------------------------------
     // SECTION 7: CORS & CSRF Protections
     // -------------------------------------------------------------
@@ -559,6 +751,59 @@ async function runSecurityAudit() {
       '7.3 State-changing cookie request with foreign Origin header blocked with HTTP 403'
     );
 
+    // 7.4 Cookie-authenticated logout request with Sec-Fetch-Site: cross-site blocked by CSRF
+    const csrfLogoutCrossSite = await request({
+      hostname: 'localhost',
+      port: PORT,
+      path: '/api/auth/logout',
+      method: 'POST',
+      headers: {
+        Cookie: userARes.headers['set-cookie']?.[0]?.split(';')[0],
+        'Sec-Fetch-Site': 'cross-site',
+      },
+    });
+    assert(
+      csrfLogoutCrossSite.status === 403,
+      '7.4 Logout with cookie and Sec-Fetch-Site: cross-site blocked with HTTP 403'
+    );
+
+    // 7.5 Cookie-authenticated logout request with unauthorized Origin blocked by CSRF
+    const csrfLogoutOrigin = await request({
+      hostname: 'localhost',
+      port: PORT,
+      path: '/api/auth/logout',
+      method: 'POST',
+      headers: {
+        Cookie: userARes.headers['set-cookie']?.[0]?.split(';')[0],
+        Origin: 'http://malicious-phishing.com',
+      },
+    });
+    assert(
+      csrfLogoutOrigin.status === 403,
+      '7.5 Logout with cookie and foreign Origin blocked with HTTP 403'
+    );
+
+    // 7.6 Cookie-authenticated task creation with unauthorized Origin blocked by CSRF
+    const csrfTaskOrigin = await request(
+      {
+        hostname: 'localhost',
+        port: PORT,
+        path: '/api/tasks',
+        method: 'POST',
+        headers: {
+          Cookie: userARes.headers['set-cookie']?.[0]?.split(';')[0],
+          'x-workspace-id': wsAId,
+          'Content-Type': 'application/json',
+          Origin: 'http://malicious-phishing.com',
+        },
+      },
+      { title: 'Forged Task' }
+    );
+    assert(
+      csrfTaskOrigin.status === 403,
+      '7.6 State-changing task request with unauthorized Origin blocked with HTTP 403'
+    );
+
     // -------------------------------------------------------------
     // SECTION 8: Production Environment Configuration Checks
     // -------------------------------------------------------------
@@ -591,6 +836,102 @@ async function runSecurityAudit() {
       process.env.NODE_ENV = prevEnv;
       process.env.JWT_SECRET = prevSecret;
     }
+
+    // 8.3 getCookieOptions() enforces secure: true, sameSite: 'none', httpOnly: true in production
+    const prodCookieOptions = (() => {
+      const prev = process.env.NODE_ENV;
+      try {
+        process.env.NODE_ENV = 'production';
+        return getCookieOptions();
+      } finally {
+        process.env.NODE_ENV = prev;
+      }
+    })();
+    assert(
+      prodCookieOptions.httpOnly === true &&
+        prodCookieOptions.secure === true &&
+        prodCookieOptions.sameSite === 'none' &&
+        prodCookieOptions.path === '/',
+      '8.3 Production cookie configuration enforces httpOnly, secure, and sameSite=none'
+    );
+
+    // 8.4 validateEnv() requires CLIENT_URL in production mode
+    const prevClientUrl = process.env.CLIENT_URL;
+    try {
+      process.env.NODE_ENV = 'production';
+      process.env.JWT_SECRET = 'a_very_long_valid_32_char_secret_key_12345';
+      delete process.env.CLIENT_URL;
+      let threwNoClient = false;
+      try {
+        validateEnv();
+      } catch {
+        threwNoClient = true;
+      }
+      assert(threwNoClient, '8.4 validateEnv() blocks startup if CLIENT_URL is missing in production');
+    } finally {
+      process.env.NODE_ENV = prevEnv;
+      process.env.JWT_SECRET = prevSecret;
+      process.env.CLIENT_URL = prevClientUrl;
+    }
+
+    // -------------------------------------------------------------
+    // SECTION 9: Authentication Rate Limiting
+    // -------------------------------------------------------------
+    console.log('\n--- SECTION 9: Authentication Rate Limiting ---');
+
+    // 9.1 Rapid login attempts: 21st attempt from test IP returns HTTP 429 Too Many Requests
+    const testIp = `198.51.100.${(Date.now() % 200) + 10}`;
+    let lastLoginRes = null;
+    for (let i = 0; i < 21; i++) {
+      lastLoginRes = await request(
+        {
+          hostname: 'localhost',
+          port: PORT,
+          path: '/api/auth/login',
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-forwarded-for': testIp,
+          },
+        },
+        { email: 'bruteforce@attacker.test', password: 'wrongpassword' }
+      );
+    }
+    assert(
+      lastLoginRes.status === 429,
+      '9.1 Exceeding 20 login attempts returns HTTP 429 Too Many Requests'
+    );
+
+    // 9.2 Rate limit response contains Retry-After header and X-RateLimit headers
+    const retryAfter = lastLoginRes.headers['retry-after'];
+    const rateLimitLimit = lastLoginRes.headers['x-ratelimit-limit'];
+    assert(
+      Boolean(retryAfter) && Number(retryAfter) > 0 && rateLimitLimit === '20',
+      '9.2 Rate limit response contains Retry-After and X-RateLimit-Limit headers'
+    );
+
+    // 9.3 Rapid signup attempts: 21st attempt from test IP returns HTTP 429 Too Many Requests
+    const testSignupIp = `198.51.100.${(Date.now() % 200) + 11}`;
+    let lastSignupRes = null;
+    for (let i = 0; i < 21; i++) {
+      lastSignupRes = await request(
+        {
+          hostname: 'localhost',
+          port: PORT,
+          path: '/api/auth/signup',
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-forwarded-for': testSignupIp,
+          },
+        },
+        { name: 'Spammer', email: `spam_${i}_${Date.now()}@pulseplan.test`, password: 'password123' }
+      );
+    }
+    assert(
+      lastSignupRes.status === 429,
+      '9.3 Exceeding 20 signup attempts returns HTTP 429 Too Many Requests'
+    );
 
     console.log('\n================================================================');
     console.log(` Security Audit Complete: ${totalPassed} Passed, ${totalFailed} Failed `);
