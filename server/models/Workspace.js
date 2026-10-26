@@ -13,6 +13,7 @@ const memberSchema = new mongoose.Schema(
     role: { type: String, enum: ['Owner', 'Admin', 'Member'], default: 'Member' },
     avatar: { type: String, default: 'U' },
     status: { type: String, enum: ['Active', 'Offline'], default: 'Active' },
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   },
   { _id: true }
 );

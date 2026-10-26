@@ -9,8 +9,10 @@ import {
   FolderPlus,
   CheckSquare,
   Sparkles,
+  LogOut,
 } from 'lucide-react';
 import { useWorkspace } from '../../hooks/useWorkspace';
+import { useAuth } from '../../context/AuthContext';
 import Button from '../common/Button';
 import Badge from '../common/Badge';
 
@@ -32,6 +34,7 @@ export default function Topbar({
     resetAllData,
     isLoading,
   } = useWorkspace();
+  const { user, logout } = useAuth();
 
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const notificationRef = useRef(null);
@@ -184,6 +187,17 @@ export default function Topbar({
             </div>
           )}
         </div>
+
+        {/* User signout shortcut */}
+        <button
+          type="button"
+          onClick={logout}
+          title={`Sign out (${user?.name || user?.email})`}
+          className="p-2 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+          aria-label="Sign out"
+        >
+          <LogOut className="w-4 h-4" />
+        </button>
       </div>
     </header>
   );

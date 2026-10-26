@@ -25,6 +25,7 @@ async function apiRequest(endpoint, options = {}, workspaceId = null) {
   };
 
   const config = {
+    credentials: 'include',
     ...options,
     headers,
   };
@@ -36,6 +37,7 @@ async function apiRequest(endpoint, options = {}, workspaceId = null) {
     if (!response.ok) {
       const errorMessage =
         result?.message ||
+        result?.errors?.[0]?.msg ||
         result?.errors?.[0]?.message ||
         `Server responded with HTTP ${response.status} (${response.statusText})`;
       const error = new Error(errorMessage);
@@ -57,6 +59,38 @@ async function apiRequest(endpoint, options = {}, workspaceId = null) {
     }
     throw error;
   }
+}
+
+// -------------------------------------------------------------
+// Authentication API Calls (Session Cookies & JWT)
+// -------------------------------------------------------------
+export async function signupUser({ name, email, password }) {
+  const result = await apiRequest('/auth/signup', {
+    method: 'POST',
+    body: JSON.stringify({ name, email, password }),
+  });
+  return result.data?.user;
+}
+
+export async function loginUser({ email, password }) {
+  const result = await apiRequest('/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ email, password }),
+  });
+  return result.data?.user;
+}
+
+export async function logoutUser() {
+  return await apiRequest('/auth/logout', {
+    method: 'POST',
+  });
+}
+
+export async function getCurrentUser() {
+  const result = await apiRequest('/auth/me', {
+    method: 'GET',
+  });
+  return result.data?.user;
 }
 
 // -------------------------------------------------------------

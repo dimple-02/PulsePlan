@@ -1,19 +1,20 @@
 # PulsePlan SaaS — Multi-Tenant Project Management System
 
-> **College Evaluation Milestone (Phase 1 Frontend + Phase 2 Node.js & MongoDB Backend — ~50% Evaluation Milestone)**  
-> Full-Stack Architecture: **React 18**, **Tailwind CSS**, **Node.js**, **Express.js**, **MongoDB**, and **Mongoose**.
+> **Full-Stack SaaS Platform with Authenticated Multi-Tenant Workspaces**  
+> Complete Stack: **React 18**, **Tailwind CSS**, **Node.js**, **Express.js**, **MongoDB**, **Mongoose**, **JWT**, and **bcryptjs**.
 
 ---
 
 ## 🌟 1. Project Overview & Multi-Tenancy Architecture
 
-**PulsePlan SaaS** is a modern project management platform designed around **Multi-Tenant Workspaces**.
-In this multi-tenant architecture:
-- Organizations (tenants) share the same underlying application infrastructure.
-- Data (projects, Kanban boards, tasks, members, and activity streams) is **strictly isolated per tenant in MongoDB**.
-- Workspaces start clean with **zero pre-populated dummy projects** — you add projects and tasks manually using the **"+ Project"** and **"+ New Task"** controls.
-- When a workspace is switched, the application state dynamically scopes and re-renders only that tenant's resources.
-- The frontend communicates with the Express backend using HTTP requests, passing the active tenant identifier (`x-workspace-id` header), where backend middleware validates database queries against that workspace boundary.
+**PulsePlan SaaS** is a modern project management platform designed around **Authenticated Multi-Tenant Workspaces**.
+
+### Core Architecture Principles:
+- **Server-Side Membership Authorization**: The `x-workspace-id` header is **never** trusted as proof of authorization. Every request is verified against the authenticated user's session and database membership records.
+- **Strict Data Isolation**: A user belongs strictly to their authorized workspaces. When a new user registers, they are provisioned with an isolated private workspace and **cannot** view or access other tenant organizations (e.g., *Acme Cloud*, *Nexus FinTech*, or *Studio Zero*) without explicit admin invitation.
+- **Cross-Workspace Assignment Protection**: When tasks are created or modified, the backend validates that the target project belongs strictly to the active workspace.
+- **Session Persistence via Secure HTTP-Only Cookies**: User authentication relies on signed JWTs stored in HTTP-only cookies (`SameSite: Lax` in development, `SameSite: None` + `Secure` in production). This prevents client-side XSS token theft while automatically persisting sessions across browser reloads.
+- **Clean Initial State**: No hardcoded or fake mock data. Real data is loaded from MongoDB.
 
 ---
 
@@ -23,17 +24,22 @@ In this multi-tenant architecture:
 - **UI Library**: React 18 (Functional components, Hooks, Context API)
 - **Styling**: Tailwind CSS + Custom SaaS Design System (Indigo / Slate palette)
 - **Icons**: Lucide React
-- **Routing**: React Router v6 (`BrowserRouter`, nested `Route`, `Outlet`, `NavLink`)
-- **API Client**: Standard ES6 `fetch` with `async/await` ([`src/services/api.js`](file:///d:/project%20management%20system/src/services/api.js))
+- **Routing**: React Router v6 (`BrowserRouter`, nested `Route`, `Outlet`, `NavLink`, `Navigate`)
+- **Protected Routing**: `ProtectedRoute.jsx` for session restoration loading & unauthorized redirects
+- **Authentication**: `AuthContext.jsx` with real asynchronous session restore
+- **API Client**: Standard ES6 `fetch` with `credentials: 'include'` ([`src/services/api.js`](file:///d:/project%20management%20system/src/services/api.js))
 - **Build Tool**: Vite v6
 
 ### Backend:
 - **Runtime**: Node.js v22 (ES Modules)
 - **Framework**: Express.js v4
 - **Database**: MongoDB (Supports local MongoDB on `127.0.0.1:27017` or MongoDB Atlas cloud cluster)
-- **ODM**: Mongoose v8 (Schemas, strict validation, timestamps, toJSON transforms)
-- **Validation**: express-validator v7
-- **Security & Middleware**: CORS, centralized error-handling middleware, tenant scoping middleware
+- **ODM**: Mongoose v8 (Strict schemas, timestamps, indexes, virtuals, toJSON transforms)
+- **Password Security**: `bcryptjs` with salt generation and pre-save hashing
+- **Session Tokens**: `jsonwebtoken` (JWT) with 7-day expiration
+- **Cookie Management**: `cookie-parser`
+- **Validation**: `express-validator` v7
+- **Security & Middleware**: CORS with credentials, HTTP-only cookie auth middleware, tenant boundary scoping middleware, centralized error handling
 
 ---
 
@@ -51,45 +57,62 @@ d:\project management system\
 │   ├── config/
 │   │   └── db.js                  # MongoDB Mongoose connection & error logging
 │   ├── controllers/
-│   │   ├── workspaceController.js # Workspace CRUD & seed operations
+│   │   ├── authController.js      # Signup, login, logout, getMe session handler
+│   │   ├── workspaceController.js # Workspace CRUD with user membership scoping
 │   │   ├── projectController.js   # Project CRUD with workspace scoping
 │   │   └── taskController.js      # Task CRUD with cross-workspace project checks
 │   ├── middleware/
-│   │   ├── tenantScope.js         # Workspace boundary extractor & validator
+│   │   ├── auth.js                # requireAuth & optionalAuth JWT cookie verifier
+│   │   ├── tenantScope.js         # Strict server-side workspace authorization
 │   │   ├── validate.js            # express-validator result handler
 │   │   └── errorHandler.js        # Centralized error handler (CastError, ValidationError)
 │   ├── models/
-│   │   ├── Workspace.js           # Tenant schema (name, slug, plan, members, activities)
+│   │   ├── User.js                # User identity schema, bcrypt hash, workspace memberships
+│   │   ├── Workspace.js           # Tenant schema (name, slug, plan, members with userId, activities)
 │   │   ├── Project.js             # Project schema with workspaceId reference & unique key index
 │   │   └── Task.js                # Task schema with projectId & workspaceId references
 │   ├── routes/
-│   │   ├── workspaceRoutes.js     # /api/workspaces routes
-│   │   ├── projectRoutes.js       # /api/projects routes
-│   │   └── taskRoutes.js          # /api/tasks routes
-│   ├── app.js                     # Express app setup, CORS, JSON parser, route mounting
+│   │   ├── authRoutes.js          # /api/auth (signup, login, logout, me)
+│   │   ├── workspaceRoutes.js     # /api/workspaces routes (guarded by requireAuth)
+│   │   ├── projectRoutes.js       # /api/projects routes (guarded by requireAuth & tenantScope)
+│   │   └── taskRoutes.js          # /api/tasks routes (guarded by requireAuth & tenantScope)
+│   ├── tests/
+│   │   └── authTest.js            # Automated 10-point auth & multi-tenancy test runner
+│   ├── app.js                     # Express app setup, CORS credentials, cookie parser, routes
 │   ├── server.js                  # Server bootstrap & graceful shutdown
-│   ├── package.json               # Backend dependencies (express, mongoose, cors, dotenv)
+│   ├── package.json               # Backend dependencies (express, mongoose, bcryptjs, jsonwebtoken, etc.)
 │   ├── .env.example               # Environment variables template
-│   └── .env                       # Local environment file (git-ignored)
+│   └── .env                       # Local environment file
 │
 └── src/                           # React Frontend
     ├── components/
+    │   ├── auth/
+    │   │   └── ProtectedRoute.jsx # Route guard with session restoration loading spinner
     │   ├── common/                # Reusable UI primitives (Button, Badge, Card, Modal, Input, etc.)
     │   ├── dashboard/             # MetricCard, ProjectProgressList, QuickTaskSummary, RecentActivityFeed
     │   ├── kanban/                # KanbanColumn, KanbanCard, KanbanFilters, TaskDetailsModal, CreateTaskModal
-    │   ├── layout/                # AppLayout (with error banner), Sidebar, Topbar, WorkspaceSwitcher
+    │   ├── layout/                # AppLayout, Sidebar (with user & logout), Topbar (with logout shortcut)
     │   └── projects/              # ProjectCard, ProjectTableRow, CreateProjectModal
     ├── context/
+    │   ├── AuthContext.jsx        # User session state, persistent login, signup, logout
     │   └── WorkspaceContext.jsx   # Global tenant state & backend API dispatchers
     ├── hooks/
     │   ├── useDebounce.js         # Input debouncing hook for search
     │   └── useWorkspace.js        # Context consumer hook
-    ├── pages/                     # DashboardPage, ProjectsPage, KanbanBoardPage, TeamPage, SettingsPage, NotFoundPage
+    ├── pages/
+    │   ├── LoginPage.jsx          # Responsive login with form validation & demo credentials
+    │   ├── SignupPage.jsx         # User registration with automatic workspace generation
+    │   ├── DashboardPage.jsx      # High-level workspace project & task metrics
+    │   ├── ProjectsPage.jsx       # Grid and table project listings
+    │   ├── KanbanBoardPage.jsx    # Interactive drag-and-click column task manager
+    │   ├── TeamPage.jsx           # Tenant member directory and roles
+    │   ├── SettingsPage.jsx       # Workspace configuration settings
+    │   └── NotFoundPage.jsx       # 404 error fallback
     ├── routes/
-    │   └── AppRoutes.jsx          # Route hierarchy definitions
+    │   └── AppRoutes.jsx          # Route hierarchy with protected route grouping
     ├── services/
-    │   └── api.js                 # HTTP fetch client connecting to backend
-    ├── App.jsx                    # Root provider wrapper
+    │   └── api.js                 # HTTP client with credentials: 'include'
+    ├── App.jsx                    # Root provider wrapper (Auth + Workspace context)
     ├── main.jsx                   # React 18 DOM mount
     └── index.css                  # Tailwind directives and custom scrollbar
 ```
@@ -100,18 +123,26 @@ d:\project management system\
 
 Base URL: `http://localhost:5000/api`
 
-### Workspaces (Tenants)
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/api/workspaces` | Retrieve all workspaces (with projects and tasks) |
-| `POST` | `/api/workspaces` | Create a new tenant workspace |
-| `POST` | `/api/workspaces/seed` | Seed default 3 workspaces (*Acme*, *Nexus*, *Studio Zero*) into MongoDB |
-| `GET` | `/api/workspaces/:id` | Get single workspace by ID or slug |
-| `PATCH` | `/api/workspaces/:id` | Update workspace settings |
-| `DELETE` | `/api/workspaces/:id` | Delete workspace and cascade-delete all its projects and tasks |
+### Authentication (`/api/auth`)
+| Method | Endpoint | Description | Auth Required |
+|---|---|---|---|
+| `POST` | `/api/auth/signup` | Register new user, hash password, create personal workspace, set cookie | No |
+| `POST` | `/api/auth/login` | Authenticate credentials, set HTTP-only session cookie | No |
+| `POST` | `/api/auth/logout` | Clear session cookie | Yes |
+| `GET` | `/api/auth/me` | Return current authenticated user profile | Yes (Cookie / Bearer) |
 
-### Projects (Scoped to Workspace)
-> **Header Required**: `x-workspace-id: <workspaceId>` (or query `?workspaceId=<workspaceId>`)
+### Workspaces (`/api/workspaces`)
+| Method | Endpoint | Description | Auth Required |
+|---|---|---|---|
+| `GET` | `/api/workspaces` | Return all workspaces authorized for current user | Yes |
+| `POST` | `/api/workspaces` | Create a new tenant workspace (user added as Owner) | Yes |
+| `GET` | `/api/workspaces/:id` | Get single workspace (validates membership) | Yes |
+| `PATCH` | `/api/workspaces/:id` | Update workspace settings | Yes |
+| `DELETE` | `/api/workspaces/:id` | Cascade-delete workspace, projects, and tasks (Owner only) | Yes |
+| `POST` | `/api/workspaces/seed` | Seed default test workspaces (*Acme*, *Nexus*, *Studio Zero*) | Optional |
+
+### Projects (`/api/projects`)
+> **Header Required**: `x-workspace-id: <workspaceId>`
 
 | Method | Endpoint | Description | Query Parameters |
 |---|---|---|---|
@@ -121,102 +152,83 @@ Base URL: `http://localhost:5000/api`
 | `PATCH` | `/api/projects/:id` | Update project properties | — |
 | `DELETE` | `/api/projects/:id` | Delete project and cascade-delete its tasks | — |
 
-### Tasks (Scoped to Workspace & Project)
-> **Header Required**: `x-workspace-id: <workspaceId>` (or query `?workspaceId=<workspaceId>`)
+### Tasks (`/api/tasks`)
+> **Header Required**: `x-workspace-id: <workspaceId>`
 
 | Method | Endpoint | Description | Query Parameters |
 |---|---|---|---|
 | `GET` | `/api/tasks` | List tasks in workspace | `projectId`, `status`, `priority`, `assignee`, `search` |
 | `POST` | `/api/tasks` | Create task (verifies project belongs to same workspace) | — |
 | `GET` | `/api/tasks/:id` | Get task by ID (scoped) | — |
-| `PATCH` | `/api/tasks/:id` | Update task (status, priority, details, move column) | — |
+| `PATCH` | `/api/tasks/:id` | Update task status or properties | — |
 | `DELETE` | `/api/tasks/:id` | Delete task from board | — |
 
 ---
 
-## 🔒 5. Multi-Tenant Isolation & Security Rules
+## 🔒 5. Multi-Tenant Authorization & Security Verification
 
-1. **Workspace Boundary Scoping**:
-   - All Project and Task queries enforce `{ workspaceId: req.workspaceId }` at the database level.
-   - It is impossible for a user in *Nexus FinTech Labs* to query or view projects/tasks belonging to *Acme Cloud Innovations*.
-2. **Cross-Workspace Assignment Protection**:
-   - When creating or updating a task (`POST /api/tasks`, `PATCH /api/tasks/:id`), the backend validates that `projectId` exists **AND** belongs to the exact same `workspaceId`.
-   - If an attacker tries to associate a task with another tenant's project ID, the request is rejected with `400 Bad Request`.
-3. **Current Security Limitation (For College Viva Explanation)**:
-   - In this Phase 2 evaluation, workspace scoping is enforced per-request via headers and query parameters.
-   - **Production Requirement Note**: In a production SaaS, client-supplied workspace IDs cannot be blindly trusted. Full production security requires user authentication (JWT/Sessions in Phase 3) where the user's workspace membership is validated against an authenticated identity record in the database.
+1. **Header Spoofing Prevention**:
+   - Supplying `x-workspace-id: <id>` without user membership returns `403 Forbidden`.
+   - The server verifies `user.workspaces` or `workspace.members` at the database level before granting access.
+2. **New User Isolation**:
+   - When a new user registers (`/api/auth/signup`), a new isolated workspace is created for them.
+   - They **cannot** access or query Acme Cloud, Nexus FinTech, or Studio Zero.
+3. **Password Security**:
+   - Handled via `bcryptjs` with auto-generated salt (10 rounds).
+   - Plaintext passwords are never stored or returned in API responses (`select: false` on Mongoose schema).
+4. **Session Cookie Security**:
+   - `httpOnly: true`: Prevents client-side script access to the token.
+   - `sameSite: 'lax'` (development) / `'none'` (production): Protects against cross-site request forgery.
+   - `secure: true` in production (enforces HTTPS).
 
 ---
 
 ## ⚙️ 6. Environment Variables Configuration
 
-Create a file named `server/.env` (or copy from `server/.env.example`):
+In `server/.env`:
 
 ```ini
 PORT=5000
 
-# For Local MongoDB (Running on Windows port 27017):
+# Local MongoDB (Running on Windows port 27017):
 MONGODB_URI=mongodb://127.0.0.1:27017/pulseplan_db
 
-# For MongoDB Atlas (Cloud Cluster):
+# MongoDB Atlas (Cloud Cluster alternative):
 # MONGODB_URI=mongodb+srv://<username>:<password>@cluster0.abcde.mongodb.net/pulseplan_db?retryWrites=true&w=majority
 
 CLIENT_URL=http://localhost:5173
+JWT_SECRET=pulseplan_jwt_secret_dev_key_2026
 NODE_ENV=development
 ```
 
 ---
 
-## 🚀 7. How to Run the Project
+## 🚀 7. How to Run the Project & Run Verification
 
-### Prerequisites
-- Node.js (v18+)
-- MongoDB running locally on port 27017, **OR** a MongoDB Atlas cluster URI configured in `server/.env`.
-
-### Step 1: Start the Backend Server
+### Step 1: Start Backend Server
 ```bash
-# Option A: From root directory
-npm run server
-
-# Option B: From server directory
+# In server directory
 cd server
 npm start
+# Server listens on http://localhost:5000
 ```
-The backend will connect to MongoDB and listen on `http://localhost:5000`.
 
-### Step 2: Start the Frontend Vite Server
+### Step 2: Start Frontend Application
 ```bash
-# From root directory
+# In root directory
 npm run dev
+# Frontend opens on http://localhost:5173 (or 5174)
 ```
-The frontend will start on `http://localhost:5173` (or port indicated by Vite).
 
----
+### Step 3: Run Automated Auth & Isolation Test Suite
+```bash
+# In root directory
+npm run test:auth
+```
+This runs `server/tests/authTest.js` and outputs pass/fail status for all 10 security scenarios.
 
-## 🧪 8. Manual Testing & Verification Checklist
-
-1. **Verify Backend Health**:
-   - Open browser or terminal: `http://localhost:5000/api/health`
-   - Expect: `{"status":"healthy", "service":"PulsePlan SaaS API"}`
-2. **Verify Multi-Tenant Workspaces**:
-   - Open frontend: `http://localhost:5174/` (or `5173`)
-   - Notice the 3 isolated workspaces in the sidebar switcher: *Acme Cloud Innovations*, *Nexus FinTech Labs*, and *Studio Zero Digital*.
-3. **Create Project in MongoDB**:
-   - Click **"+ Project"** in topbar or on the Projects page.
-   - Enter name (e.g. `Distributed API Gateway`), key (`GW`), category (`DevOps`).
-   - Click **"Create Project"**.
-   - **Verify**: Refresh the browser page (`F5`). Notice the project **persists** because it was saved directly in MongoDB!
-4. **Create Task in Kanban Board**:
-   - Navigate to **"Kanban Board"** page.
-   - Click **"+ Add Task"** on the "To Do" column.
-   - Add title (e.g. `Implement rate limiting middleware`).
-   - Click **"Create Task"**.
-   - Move the card between columns (e.g. click the right arrow `>` to move to "In Progress").
-   - **Verify**: Refresh the browser page (`F5`). Notice the task remains in "In Progress" in MongoDB!
-5. **Verify Tenant Data Isolation**:
-   - Switch workspace to *Nexus FinTech Labs* from the topbar or sidebar.
-   - Notice the project and task counts are `0` — Acme's data is completely hidden from Nexus.
-   - Switch back to *Acme Cloud Innovations* — your project and task reappear!
-6. **Error Banner Test (Resilience)**:
-   - Stop the backend server temporarily.
-   - Notice the frontend immediately displays a clear red error banner: *"Backend Disconnected: Cannot connect to backend server..."* with a **"Retry Connection"** button (no fake mock data fallbacks!).
+### Step 4: Run Frontend Production Build Check
+```bash
+npm run build
+```
+Verifies full TypeScript/JSX compilation, asset bundling, and zero syntax errors.

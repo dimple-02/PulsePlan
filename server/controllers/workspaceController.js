@@ -11,7 +11,22 @@ import { Task } from '../models/Task.js';
 // GET /api/workspaces
 export async function getWorkspaces(req, res, next) {
   try {
-    const workspaces = await Workspace.find().sort({ createdAt: -1 });
+    let query = {};
+
+    // Multi-tenant isolation: If user is authenticated, return ONLY workspaces
+    // where user is explicitly in user.workspaces or workspace.members
+    if (req.user) {
+      const userWorkspaceIds = (req.user.workspaces || []).map((w) => w.workspaceId);
+      query = {
+        $or: [
+          { _id: { $in: userWorkspaceIds } },
+          { 'members.userId': req.user._id },
+          { 'members.email': req.user.email.toLowerCase() },
+        ],
+      };
+    }
+
+    const workspaces = await Workspace.find(query).sort({ createdAt: -1 });
 
     // Fetch projects and tasks for each workspace so frontend gets full state
     const enhanced = await Promise.all(
@@ -49,6 +64,24 @@ export async function getWorkspaceById(req, res, next) {
         success: false,
         message: `Workspace with ID '${id}' not found.`,
       });
+    }
+
+    // Server-side authorization check: User must be a member of this workspace
+    if (req.user) {
+      const isMember =
+        req.user.workspaces?.some((w) => w.workspaceId.toString() === workspace._id.toString()) ||
+        workspace.members?.some(
+          (m) =>
+            (m.userId && m.userId.toString() === req.user._id.toString()) ||
+            (m.email && m.email.toLowerCase() === req.user.email.toLowerCase())
+        );
+
+      if (!isMember) {
+        return res.status(403).json({
+          success: false,
+          message: `Access denied: You are not authorized to view workspace '${workspace.name}'.`,
+        });
+      }
     }
 
     const [projects, tasks] = await Promise.all([
@@ -90,11 +123,12 @@ export async function createWorkspace(req, res, next) {
 
     const defaultMembers = members && members.length > 0 ? members : [
       {
-        name: 'Alex Morgan',
-        email: 'alex.m@acme.io',
+        name: req.user ? req.user.name : 'Workspace Admin',
+        email: req.user ? req.user.email : 'admin@pulseplan.io',
         role: 'Owner',
-        avatar: 'AM',
+        avatar: req.user?.avatar || 'U',
         status: 'Active',
+        userId: req.user ? req.user._id : undefined,
       },
     ];
 
@@ -105,18 +139,27 @@ export async function createWorkspace(req, res, next) {
       color: color || '#4f46e5',
       badgeColor: badgeColor || 'bg-indigo-100 text-indigo-800 border-indigo-200',
       description: description || '',
-      currentUserRole: currentUserRole || 'Workspace Admin',
+      currentUserRole: currentUserRole || 'Owner',
       membersCount: defaultMembers.length,
       members: defaultMembers,
       activities: [
         {
-          user: 'You',
+          user: req.user ? req.user.name : 'You',
           action: 'created workspace',
           target: name,
           timestamp: 'Just now',
         },
       ],
     });
+
+    // Link workspace to creator's user account
+    if (req.user) {
+      req.user.workspaces.push({
+        workspaceId: workspace._id,
+        role: 'Owner',
+      });
+      await req.user.save();
+    }
 
     const result = workspace.toJSON();
     result.projects = [];
@@ -178,6 +221,27 @@ export async function deleteWorkspace(req, res, next) {
         success: false,
         message: `Workspace with ID '${id}' not found.`,
       });
+    }
+
+    // Role check: Only Owner or Admin can delete a workspace
+    if (req.user) {
+      const isOwnerOrAdmin =
+        req.user.workspaces?.some(
+          (w) => w.workspaceId.toString() === workspace._id.toString() && (w.role === 'Owner' || w.role === 'Admin')
+        ) ||
+        workspace.members?.some(
+          (m) =>
+            ((m.userId && m.userId.toString() === req.user._id.toString()) ||
+              (m.email && m.email.toLowerCase() === req.user.email.toLowerCase())) &&
+            (m.role === 'Owner' || m.role === 'Admin')
+        );
+
+      if (!isOwnerOrAdmin) {
+        return res.status(403).json({
+          success: false,
+          message: 'Access denied: Only workspace Owners or Admins are authorized to delete this workspace.',
+        });
+      }
     }
 
     // Cascade delete: remove all projects and tasks belonging to this workspace

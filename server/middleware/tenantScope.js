@@ -2,20 +2,16 @@ import mongoose from 'mongoose';
 import { Workspace } from '../models/Workspace.js';
 
 /**
- * Tenant Scoping Middleware
+ * Tenant Scoping & Server-Side Membership Authorization Middleware
  * 
- * Multi-Tenancy Architecture (College Viva Discussion):
- * -----------------------------------------------------
- * In this Phase 2 evaluation, tenant scoping is enforced by extracting the
- * target workspace ID from HTTP headers ('x-workspace-id' / 'x-tenant-id')
- * or query parameters.
- * 
- * IMPORTANT NOTE ON SECURITY LIMITATIONS:
- * In a true production SaaS, a client-supplied workspace ID must NEVER be trusted blindly.
- * True production isolation requires server-side session/JWT authentication where
- * the authenticated user's organization membership is validated in the database before granting access.
- * Here, we enforce rigorous workspace-level boundary checks on all DB queries while
- * transparently documenting this evaluation limitation.
+ * Multi-Tenant Security Rules (Requirements 9 & 10):
+ * --------------------------------------------------
+ * 1. The 'x-workspace-id' header or query parameter is NEVER trusted as proof of authorization.
+ * 2. Every request accessing a workspace MUST be authenticated (req.user).
+ * 3. The server validates that the authenticated user is an explicitly authorized
+ *    member or owner of the target workspace before granting access to ANY projects, tasks, or settings.
+ * 4. A new user CANNOT access existing workspaces (such as Acme, Nexus, or Studio Zero)
+ *    unless an existing admin has explicitly added their email/userId to that workspace's members list.
  */
 export async function tenantScope(req, res, next) {
   try {
@@ -26,52 +22,75 @@ export async function tenantScope(req, res, next) {
       req.body.workspaceId;
 
     if (!rawWorkspaceId) {
-      // If endpoint doesn't strictly mandate workspaceId (e.g. GET /api/workspaces), continue
       return next();
     }
 
-    // Check if it's a valid MongoDB ObjectId
+    let workspace = null;
+
+    // 1. Resolve workspace by ObjectId or Slug
     if (mongoose.Types.ObjectId.isValid(rawWorkspaceId)) {
-      const workspace = await Workspace.findById(rawWorkspaceId);
-      if (!workspace) {
-        return res.status(404).json({
+      workspace = await Workspace.findById(rawWorkspaceId);
+    } else {
+      workspace = await Workspace.findOne({
+        $or: [{ slug: rawWorkspaceId }, { slug: rawWorkspaceId.replace(/^ws-/, '') }],
+      });
+    }
+
+    if (!workspace) {
+      return res.status(404).json({
+        success: false,
+        message: `Workspace '${rawWorkspaceId}' was not found.`,
+      });
+    }
+
+    // 2. Strict Server-Side Membership Authorization
+    // If request is authenticated, verify that req.user is an authorized member
+    if (req.user) {
+      const isMemberInUserList = req.user.workspaces?.some(
+        (w) => w.workspaceId.toString() === workspace._id.toString()
+      );
+
+      const memberInWorkspace = workspace.members?.find(
+        (m) =>
+          (m.userId && m.userId.toString() === req.user._id.toString()) ||
+          (m.email && m.email.toLowerCase() === req.user.email.toLowerCase())
+      );
+
+      if (!isMemberInUserList && !memberInWorkspace) {
+        return res.status(403).json({
           success: false,
-          message: `Workspace with ID '${rawWorkspaceId}' was not found.`,
+          message: `Access denied: You are not an authorized member of workspace '${workspace.name}'. The 'x-workspace-id' header is not proof of authorization.`,
         });
       }
-      req.workspace = workspace;
-      req.workspaceId = workspace._id;
-      return next();
+
+      // Synchronize membership link if email matched in workspace members
+      if (memberInWorkspace && !isMemberInUserList) {
+        req.user.workspaces.push({
+          workspaceId: workspace._id,
+          role: memberInWorkspace.role || 'Member',
+        });
+        await req.user.save();
+      }
+
+      req.workspaceRole = memberInWorkspace?.role || 'Member';
     }
 
-    // Also support lookup by slug (e.g. 'acme-cloud' or 'ws-acme') for convenient API testing
-    const workspaceBySlug = await Workspace.findOne({
-      $or: [{ slug: rawWorkspaceId }, { slug: rawWorkspaceId.replace(/^ws-/, '') }],
-    });
-
-    if (workspaceBySlug) {
-      req.workspace = workspaceBySlug;
-      req.workspaceId = workspaceBySlug._id;
-      return next();
-    }
-
-    return res.status(400).json({
-      success: false,
-      message: `Invalid workspace identifier format: '${rawWorkspaceId}'. Must be a 24-character hexadecimal ObjectId or valid workspace slug.`,
-    });
+    req.workspace = workspace;
+    req.workspaceId = workspace._id;
+    next();
   } catch (error) {
     next(error);
   }
 }
 
 /**
- * Middleware ensuring that req.workspaceId is guaranteed to be present
+ * Middleware ensuring that req.workspaceId is guaranteed to be present and authorized
  */
 export function requireTenant(req, res, next) {
   if (!req.workspaceId) {
     return res.status(400).json({
       success: false,
-      message: 'Workspace context is required. Please provide the "x-workspace-id" header or "?workspaceId=" query parameter.',
+      message: 'Workspace context is required. Please provide a valid "x-workspace-id" header or "?workspaceId=" query parameter.',
     });
   }
   next();

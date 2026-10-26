@@ -12,10 +12,11 @@ import { Settings, Save, RotateCcw, Building2, Shield, Database, Sparkles } from
  * Manages configuration for the current tenant workspace.
  */
 export default function SettingsPage() {
-  const { activeWorkspace, resetAllData, showToast } = useWorkspace();
+  const { activeWorkspace, updateWorkspace, resetAllData, showToast } = useWorkspace();
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (activeWorkspace) {
@@ -24,9 +25,21 @@ export default function SettingsPage() {
     }
   }, [activeWorkspace]);
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
-    showToast('Workspace settings saved successfully.', 'success');
+    if (!activeWorkspace) return;
+
+    setIsSaving(true);
+    try {
+      await updateWorkspace(activeWorkspace._id || activeWorkspace.id, {
+        name,
+        description,
+      });
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   if (!activeWorkspace) return null;
@@ -96,7 +109,7 @@ export default function SettingsPage() {
           </CardBody>
 
           <CardFooter className="justify-end">
-            <Button variant="primary" size="sm" type="submit" icon={Save}>
+            <Button variant="primary" size="sm" type="submit" isLoading={isSaving} icon={Save}>
               Save Changes
             </Button>
           </CardFooter>

@@ -1,6 +1,7 @@
 import express from 'express';
 import { body, param } from 'express-validator';
 import { validate } from '../middleware/validate.js';
+import { requireAuth } from '../middleware/auth.js';
 import { tenantScope, requireTenant } from '../middleware/tenantScope.js';
 import {
   getTasks,
@@ -12,7 +13,8 @@ import {
 
 const router = express.Router();
 
-// Enforce workspace tenant scoping on all task routes
+// Enforce user authentication and workspace tenant scoping on all task routes
+router.use(requireAuth);
 router.use(tenantScope);
 router.use(requireTenant);
 

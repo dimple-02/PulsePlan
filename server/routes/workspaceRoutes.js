@@ -1,6 +1,7 @@
 import express from 'express';
 import { body, param } from 'express-validator';
 import { validate } from '../middleware/validate.js';
+import { requireAuth, optionalAuth } from '../middleware/auth.js';
 import {
   getWorkspaces,
   getWorkspaceById,
@@ -16,18 +17,20 @@ const router = express.Router();
  * Workspace Routes: /api/workspaces
  */
 
-router.get('/', getWorkspaces);
+router.get('/', requireAuth, getWorkspaces);
 
-router.post('/seed', seedWorkspaces);
+router.post('/seed', optionalAuth, seedWorkspaces);
 
 router.get(
   '/:id',
+  requireAuth,
   [param('id').isMongoId().withMessage('Invalid workspace ID format'), validate],
   getWorkspaceById
 );
 
 router.post(
   '/',
+  requireAuth,
   [
     body('name').trim().notEmpty().withMessage('Workspace name is required').isLength({ max: 100 }).withMessage('Name too long'),
     body('plan').optional().isIn(['Starter', 'Pro Team', 'Enterprise']).withMessage('Invalid plan tier'),
@@ -39,6 +42,7 @@ router.post(
 
 router.patch(
   '/:id',
+  requireAuth,
   [
     param('id').isMongoId().withMessage('Invalid workspace ID format'),
     body('plan').optional().isIn(['Starter', 'Pro Team', 'Enterprise']).withMessage('Invalid plan tier'),
@@ -49,6 +53,7 @@ router.patch(
 
 router.delete(
   '/:id',
+  requireAuth,
   [param('id').isMongoId().withMessage('Invalid workspace ID format'), validate],
   deleteWorkspace
 );

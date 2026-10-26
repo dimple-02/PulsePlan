@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 import * as api from '../services/api';
+import { useAuth } from './AuthContext';
 
 // Create the Context with null default
 export const WorkspaceContext = createContext(null);
@@ -14,6 +15,8 @@ export const WorkspaceContext = createContext(null);
  * - Multi-tenant workspace scoping via 'x-workspace-id' header
  */
 export function WorkspaceProvider({ children }) {
+  const { isAuthenticated, user } = useAuth();
+
   const [workspaces, setWorkspaces] = useState([]);
   const [activeWorkspaceId, setActiveWorkspaceId] = useState(null);
   const [activeProjectId, setActiveProjectId] = useState(null);
@@ -32,20 +35,21 @@ export function WorkspaceProvider({ children }) {
 
   // Fetch workspaces from MongoDB backend
   const loadWorkspacesFromBackend = useCallback(async () => {
+    if (!isAuthenticated) {
+      setWorkspaces([]);
+      setActiveWorkspaceId(null);
+      setActiveProjectId(null);
+      setIsLoading(false);
+      return;
+    }
+
     setIsLoading(true);
     setApiError(null);
     try {
-      let data = await api.getWorkspaces();
+      const data = await api.getWorkspaces();
+      setWorkspaces(data || []);
 
-      // If DB has no workspaces yet, seed the default 3 tenant workspaces
-      if (!data || data.length === 0) {
-        console.log('[Frontend] Workspaces collection is empty. Triggering seed...');
-        data = await api.seedDefaultWorkspaces();
-      }
-
-      setWorkspaces(data);
-
-      if (data.length > 0) {
+      if (data && data.length > 0) {
         // Keep current active workspace if still valid, or pick first
         setActiveWorkspaceId((prevId) => {
           const exists = data.some((w) => (w._id === prevId || w.id === prevId));
@@ -60,19 +64,24 @@ export function WorkspaceProvider({ children }) {
 
           return chosenId;
         });
+      } else {
+        setActiveWorkspaceId(null);
+        setActiveProjectId(null);
       }
     } catch (err) {
       console.error('[Frontend] Failed to load workspaces from backend:', err);
-      setApiError(err.message || 'Failed to connect to backend server');
+      if (err.status !== 401) {
+        setApiError(err.message || 'Failed to connect to backend server');
+      }
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [isAuthenticated]);
 
-  // Initialize on mount
+  // Reload when authentication state or user changes
   useEffect(() => {
     loadWorkspacesFromBackend();
-  }, [loadWorkspacesFromBackend]);
+  }, [loadWorkspacesFromBackend, user?.id]);
 
   // Compute active workspace object
   const activeWorkspace = useMemo(() => {
@@ -356,6 +365,24 @@ export function WorkspaceProvider({ children }) {
     }
   }, [activeWorkspaceId, showToast]);
 
+  // Update Workspace settings
+  const updateWorkspace = useCallback(async (workspaceId, updatedData) => {
+    try {
+      const updated = await api.updateWorkspace(workspaceId, updatedData);
+      setWorkspaces((prevWorkspaces) =>
+        prevWorkspaces.map((ws) =>
+          (ws._id === workspaceId || ws.id === workspaceId) ? { ...ws, ...updated } : ws
+        )
+      );
+      showToast('Workspace settings updated in MongoDB.', 'success');
+      return updated;
+    } catch (error) {
+      console.error('[Frontend] Error updating workspace:', error);
+      showToast(error.message || 'Failed to update workspace', 'danger');
+      throw error;
+    }
+  }, [showToast]);
+
   // Reseed default workspaces
   const resetAllData = useCallback(async () => {
     setIsLoading(true);
@@ -389,6 +416,7 @@ export function WorkspaceProvider({ children }) {
     reloadWorkspaces: loadWorkspacesFromBackend,
     notification,
     showToast,
+    updateWorkspace,
     addProject,
     updateProject,
     deleteProject,

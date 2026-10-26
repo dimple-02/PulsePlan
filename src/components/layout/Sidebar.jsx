@@ -11,9 +11,11 @@ import {
   BookOpen,
   Folder,
   CheckCircle2,
+  LogOut,
 } from 'lucide-react';
 import WorkspaceSwitcher from './WorkspaceSwitcher';
 import { useWorkspace } from '../../hooks/useWorkspace';
+import { useAuth } from '../../context/AuthContext';
 import Avatar from '../common/Avatar';
 
 /**
@@ -24,6 +26,7 @@ import Avatar from '../common/Avatar';
  */
 export default function Sidebar({ isOpen, onClose }) {
   const { activeWorkspace, activeProjectId, setActiveProjectId } = useWorkspace();
+  const { user, logout } = useAuth();
 
   const navigation = [
     { name: 'Dashboard', to: '/', icon: LayoutDashboard },
@@ -169,18 +172,35 @@ export default function Sidebar({ isOpen, onClose }) {
           </div>
         </div>
 
-        {/* Current User & Workspace Plan footer */}
+        {/* Current User & Logout footer */}
         <div className="p-3 border-t border-slate-100 bg-slate-50/50">
-          <div className="flex items-center gap-3">
-            <Avatar name="Alex Morgan" initials="AM" status="online" size="md" />
-            <div className="min-w-0 flex-1">
-              <p className="text-xs font-semibold text-slate-900 truncate">
-                Alex Morgan
-              </p>
-              <p className="text-[10px] text-slate-500 truncate flex items-center gap-1">
-                <span>{activeWorkspace?.currentUserRole || 'Administrator'}</span>
-              </p>
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2.5 min-w-0 flex-1">
+              <Avatar
+                name={user?.name || 'User'}
+                initials={user?.avatar || 'U'}
+                status="online"
+                size="md"
+              />
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-semibold text-slate-900 truncate">
+                  {user?.name || 'User'}
+                </p>
+                <p className="text-[10px] text-slate-500 truncate" title={user?.email}>
+                  {user?.email || 'Authenticated'}
+                </p>
+              </div>
             </div>
+
+            <button
+              type="button"
+              onClick={logout}
+              title="Sign out of PulsePlan"
+              className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors shrink-0"
+              aria-label="Sign out"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
           </div>
         </div>
       </aside>
