@@ -27,21 +27,23 @@ export default function TaskDetailsModal({ isOpen, onClose, task }) {
 
   if (!task) return null;
 
+  const taskId = task._id || task.id;
+
   const handleStatusChange = async (e) => {
     const newStatus = e.target.value;
     setCurrentStatus(newStatus);
-    await updateTaskStatus(task.id, newStatus);
+    await updateTaskStatus(taskId, newStatus);
   };
 
   const handlePriorityChange = async (e) => {
     const newPriority = e.target.value;
     setCurrentPriority(newPriority);
-    await updateTask(task.id, { priority: newPriority });
+    await updateTask(taskId, { priority: newPriority });
   };
 
   const handleDelete = async () => {
     if (window.confirm(`Are you sure you want to delete task "${task.title}"?`)) {
-      await deleteTask(task.id);
+      await deleteTask(taskId);
       onClose();
     }
   };

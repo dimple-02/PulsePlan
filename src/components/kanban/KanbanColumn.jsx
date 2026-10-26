@@ -57,7 +57,7 @@ export default function KanbanColumn({
         ) : (
           tasks.map((task) => (
             <KanbanCard
-              key={task.id}
+              key={task._id || task.id}
               task={task}
               onClick={onCardClick}
             />

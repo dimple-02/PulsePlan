@@ -38,7 +38,10 @@ export default function KanbanBoardPage() {
     if (!activeWorkspace || !activeWorkspace.tasks) return [];
     if (!activeProjectId) return activeWorkspace.tasks;
 
-    return activeWorkspace.tasks.filter((t) => t.projectId === activeProjectId);
+    return activeWorkspace.tasks.filter((t) => {
+      const taskProjId = typeof t.projectId === 'object' && t.projectId !== null ? (t.projectId._id || t.projectId.id) : t.projectId;
+      return String(taskProjId) === String(activeProjectId);
+    });
   }, [activeWorkspace, activeProjectId]);
 
   // Apply search and priority filters to the project tasks

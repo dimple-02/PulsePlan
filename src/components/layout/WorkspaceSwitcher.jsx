@@ -73,13 +73,14 @@ export default function WorkspaceSwitcher() {
 
           <div className="max-h-60 overflow-y-auto">
             {workspaces.map((ws) => {
-              const isSelected = ws.id === activeWorkspace.id;
+              const wsId = ws._id || ws.id;
+              const isSelected = wsId === (activeWorkspace._id || activeWorkspace.id);
               return (
                 <button
-                  key={ws.id}
+                  key={wsId}
                   type="button"
                   onClick={() => {
-                    switchWorkspace(ws.id);
+                    switchWorkspace(wsId);
                     setIsOpen(false);
                   }}
                   className={`w-full flex items-center justify-between px-3 py-2 text-left hover:bg-slate-50 transition-colors ${

@@ -127,13 +127,14 @@ export default function Sidebar({ isOpen, onClose }) {
               </div>
               <div className="space-y-1">
                 {activeWorkspace.projects.slice(0, 4).map((proj) => {
-                  const isSelected = proj.id === activeProjectId;
+                  const projId = proj._id || proj.id;
+                  const isSelected = projId === activeProjectId;
                   return (
                     <button
-                      key={proj.id}
+                      key={projId}
                       type="button"
                       onClick={() => {
-                        setActiveProjectId(proj.id);
+                        setActiveProjectId(projId);
                         if (window.innerWidth < 1024) onClose();
                       }}
                       className={`w-full flex items-center justify-between px-3 py-1.5 rounded-lg text-xs transition-colors text-left ${

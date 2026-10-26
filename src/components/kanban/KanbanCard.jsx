@@ -26,14 +26,14 @@ export default function KanbanCard({ task, onClick }) {
   const handleMovePrevious = (e) => {
     e.stopPropagation();
     if (currentIndex > 0) {
-      updateTaskStatus(task.id, statusOrder[currentIndex - 1]);
+      updateTaskStatus(task._id || task.id, statusOrder[currentIndex - 1]);
     }
   };
 
   const handleMoveNext = (e) => {
     e.stopPropagation();
     if (currentIndex < statusOrder.length - 1) {
-      updateTaskStatus(task.id, statusOrder[currentIndex + 1]);
+      updateTaskStatus(task._id || task.id, statusOrder[currentIndex + 1]);
     }
   };
 

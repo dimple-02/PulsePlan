@@ -55,7 +55,7 @@ export default function ProjectProgressList({ projects = [] }) {
         ) : (
           projects.slice(0, 4).map((project) => (
             <div
-              key={project.id}
+              key={project._id || project.id}
               className="p-4 hover:bg-slate-50 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-3"
             >
               <div className="flex items-center gap-3 min-w-0">

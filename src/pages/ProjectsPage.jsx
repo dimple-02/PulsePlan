@@ -199,7 +199,7 @@ export default function ProjectsPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {filteredProjects.map((project) => (
             <ProjectCard
-              key={project.id}
+              key={project._id || project.id}
               project={project}
               onSelect={() => {}}
               onDelete={deleteProject}
@@ -224,7 +224,7 @@ export default function ProjectsPage() {
               <tbody>
                 {filteredProjects.map((project) => (
                   <ProjectTableRow
-                    key={project.id}
+                    key={project._id || project.id}
                     project={project}
                     onSelect={() => {}}
                     onDelete={deleteProject}

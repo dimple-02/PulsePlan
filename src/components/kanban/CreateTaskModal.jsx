@@ -156,15 +156,18 @@ export default function CreateTaskModal({ isOpen, onClose, initialStatus = 'todo
                 Target Project
               </label>
               <select
-                value={activeProjectId || activeProject?.id}
+                value={activeProjectId || activeProject?._id || activeProject?.id}
                 onChange={(e) => setActiveProjectId(e.target.value)}
                 className="w-full text-xs font-semibold py-1.5 px-2 rounded border border-slate-300 bg-white"
               >
-                {activeWorkspace.projects.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name} ({p.key})
-                  </option>
-                ))}
+                {activeWorkspace.projects.map((p) => {
+                  const projId = p._id || p.id;
+                  return (
+                    <option key={projId} value={projId}>
+                      {p.name} ({p.key})
+                    </option>
+                  );
+                })}
               </select>
             </div>
           )}

@@ -31,7 +31,7 @@ export default function ProjectTableRow({ project, onSelect, onDelete }) {
 
   const handleOpenBoard = (e) => {
     e.stopPropagation();
-    setActiveProjectId(project.id);
+    setActiveProjectId(project._id || project.id);
     navigate('/kanban');
   };
 
@@ -103,7 +103,7 @@ export default function ProjectTableRow({ project, onSelect, onDelete }) {
           {onDelete && (
             <button
               type="button"
-              onClick={() => onDelete(project.id)}
+              onClick={() => onDelete(project._id || project.id)}
               className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition-colors"
               title="Delete project"
             >

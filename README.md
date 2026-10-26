@@ -1,148 +1,222 @@
 # PulsePlan SaaS — Multi-Tenant Project Management System
 
-> **College Evaluation Milestone (Phase 1 — Frontend Foundation ~50%)**  
-> Built with: **React 18**, **Vite**, **Tailwind CSS**, and **React Router v6**.
+> **College Evaluation Milestone (Phase 1 Frontend + Phase 2 Node.js & MongoDB Backend — ~50% Evaluation Milestone)**  
+> Full-Stack Architecture: **React 18**, **Tailwind CSS**, **Node.js**, **Express.js**, **MongoDB**, and **Mongoose**.
 
 ---
 
 ## 🌟 1. Project Overview & Multi-Tenancy Architecture
 
-**PulsePlan SaaS** is a modern project management platform designed around **Multi-Tenant Workspaces**. In multi-tenant software:
+**PulsePlan SaaS** is a modern project management platform designed around **Multi-Tenant Workspaces**.
+In this multi-tenant architecture:
 - Organizations (tenants) share the same underlying application infrastructure.
-- Data (projects, Kanban boards, tasks, members, and activity streams) is **strictly isolated per tenant**.
+- Data (projects, Kanban boards, tasks, members, and activity streams) is **strictly isolated per tenant in MongoDB**.
 - Workspaces start clean with **zero pre-populated dummy projects** — you add projects and tasks manually using the **"+ Project"** and **"+ New Task"** controls.
-- Users can switch between workspaces (e.g., *Acme Cloud Innovations [Enterprise]*, *Nexus FinTech Labs [Pro Team]*, and *Studio Zero Digital [Starter]*) seamlessly from the sidebar or top navigation.
 - When a workspace is switched, the application state dynamically scopes and re-renders only that tenant's resources.
+- The frontend communicates with the Express backend using HTTP requests, passing the active tenant identifier (`x-workspace-id` header), where backend middleware validates database queries against that workspace boundary.
 
 ---
 
 ## 🛠️ 2. Tech Stack
 
-- **Runtime & Build Tool**: Node.js v22 + Vite (Ultra-fast HMR)
-- **UI Framework**: React 18 (Functional components, Hooks, Context API)
-- **Styling**: Tailwind CSS + Custom Design System (Indigo / Slate palette)
+### Frontend:
+- **UI Library**: React 18 (Functional components, Hooks, Context API)
+- **Styling**: Tailwind CSS + Custom SaaS Design System (Indigo / Slate palette)
 - **Icons**: Lucide React
 - **Routing**: React Router v6 (`BrowserRouter`, nested `Route`, `Outlet`, `NavLink`)
-- **State Management**: React Context (`WorkspaceContext`) + Custom Hooks (`useWorkspace`, `useDebounce`)
-- **Async & Storage Layer**: Promise-based simulated asynchronous client service with localStorage persistence (`clientStorage.js`)
+- **API Client**: Standard ES6 `fetch` with `async/await` ([`src/services/api.js`](file:///d:/project%20management%20system/src/services/api.js))
+- **Build Tool**: Vite v6
+
+### Backend:
+- **Runtime**: Node.js v22 (ES Modules)
+- **Framework**: Express.js v4
+- **Database**: MongoDB (Supports local MongoDB on `127.0.0.1:27017` or MongoDB Atlas cloud cluster)
+- **ODM**: Mongoose v8 (Schemas, strict validation, timestamps, toJSON transforms)
+- **Validation**: express-validator v7
+- **Security & Middleware**: CORS, centralized error-handling middleware, tenant scoping middleware
 
 ---
 
-## 📁 3. Clean Folder Structure
+## 📁 3. Project Structure
 
 ```
 d:\project management system\
 ├── index.html                     # HTML5 shell with Inter typography
-├── package.json                   # NPM dependencies and scripts
+├── package.json                   # Root scripts & frontend dependencies
 ├── vite.config.js                 # Vite configuration
 ├── tailwind.config.js             # Tailwind theme & color extensions
 ├── postcss.config.js              # PostCSS plugins
-├── src/
-│   ├── assets/                    # Static assets
-│   ├── components/
-│   │   ├── common/                # Reusable UI primitives
-│   │   │   ├── Avatar.jsx         # User avatar & AvatarGroup
-│   │   │   ├── Badge.jsx          # Status and priority badges
-│   │   │   ├── Button.jsx         # Buttons (primary, secondary, outline, danger)
-│   │   │   ├── Card.jsx           # Compound card components
-│   │   │   ├── EmptyState.jsx     # Friendly zero-state placeholders
-│   │   │   ├── Input.jsx          # Controlled form inputs
-│   │   │   ├── Modal.jsx          # Accessible dialog with ESC listener & scroll lock
-│   │   │   └── Select.jsx         # Controlled select dropdowns
-│   │   ├── dashboard/             # Dashboard widgets
-│   │   │   ├── MetricCard.jsx     # KPI summary cards with trends
-│   │   │   ├── ProjectProgressList.jsx # Top active projects progress bars
-│   │   │   ├── QuickTaskSummary.jsx    # Kanban status distribution breakdown
-│   │   │   └── RecentActivityFeed.jsx  # Real-time audit log stream
-│   │   ├── kanban/                # Kanban board system
-│   │   │   ├── CreateTaskModal.jsx     # Controlled form for new tasks
-│   │   │   ├── KanbanCard.jsx          # Individual task card with move actions
-│   │   │   ├── KanbanColumn.jsx        # Status column with card count
-│   │   │   ├── KanbanFilters.jsx       # Board search and priority filter
-│   │   │   └── TaskDetailsModal.jsx    # Task inspector, status editor, delete
-│   │   ├── layout/                # Application Chrome
-│   │   │   ├── AppLayout.jsx           # Frame with sidebar, topbar, toast, outlet
-│   │   │   ├── Sidebar.jsx             # Tenant navigation & quick project switcher
-│   │   │   ├── Topbar.jsx              # Global search, tenant pill, quick create
-│   │   │   └── WorkspaceSwitcher.jsx   # Interactive tenant switcher dropdown
-│   │   └── projects/              # Project listing system
-│   │       ├── CreateProjectModal.jsx  # New project modal
-│   │       ├── ProjectCard.jsx         # Grid view project card
-│   │       └── ProjectTableRow.jsx     # Table view project row
-│   ├── context/
-│   │   └── WorkspaceContext.jsx   # Global tenant state & CRUD dispatchers
-│   ├── data/
-│   │   └── mockWorkspaces.js      # Multi-tenant seed dataset
-│   ├── hooks/
-│   │   ├── useDebounce.js         # Input debouncing hook for search
-│   │   └── useWorkspace.js        # Context consumer hook
-│   ├── pages/
-│   │   ├── DashboardPage.jsx      # SaaS metrics & overview
-│   │   ├── ProjectsPage.jsx       # Grid / Table project listings & filter
-│   │   ├── KanbanBoardPage.jsx    # 5-column Kanban board
-│   │   ├── TeamPage.jsx           # RBAC team members & role permissions
-│   │   ├── SettingsPage.jsx       # Workspace settings & seed data reset
-│   │   └── NotFoundPage.jsx       # 404 Route fallback
+│
+├── server/                        # Express + MongoDB Backend
+│   ├── config/
+│   │   └── db.js                  # MongoDB Mongoose connection & error logging
+│   ├── controllers/
+│   │   ├── workspaceController.js # Workspace CRUD & seed operations
+│   │   ├── projectController.js   # Project CRUD with workspace scoping
+│   │   └── taskController.js      # Task CRUD with cross-workspace project checks
+│   ├── middleware/
+│   │   ├── tenantScope.js         # Workspace boundary extractor & validator
+│   │   ├── validate.js            # express-validator result handler
+│   │   └── errorHandler.js        # Centralized error handler (CastError, ValidationError)
+│   ├── models/
+│   │   ├── Workspace.js           # Tenant schema (name, slug, plan, members, activities)
+│   │   ├── Project.js             # Project schema with workspaceId reference & unique key index
+│   │   └── Task.js                # Task schema with projectId & workspaceId references
 │   ├── routes/
-│   │   └── AppRoutes.jsx          # Route hierarchy definitions
-│   ├── services/
-│   │   └── clientStorage.js       # Promise-based async service layer
-│   ├── App.jsx                    # Root provider wrapper
-│   ├── main.jsx                   # React 18 DOM mount
-│   └── index.css                  # Tailwind directives and custom scrollbar
+│   │   ├── workspaceRoutes.js     # /api/workspaces routes
+│   │   ├── projectRoutes.js       # /api/projects routes
+│   │   └── taskRoutes.js          # /api/tasks routes
+│   ├── app.js                     # Express app setup, CORS, JSON parser, route mounting
+│   ├── server.js                  # Server bootstrap & graceful shutdown
+│   ├── package.json               # Backend dependencies (express, mongoose, cors, dotenv)
+│   ├── .env.example               # Environment variables template
+│   └── .env                       # Local environment file (git-ignored)
+│
+└── src/                           # React Frontend
+    ├── components/
+    │   ├── common/                # Reusable UI primitives (Button, Badge, Card, Modal, Input, etc.)
+    │   ├── dashboard/             # MetricCard, ProjectProgressList, QuickTaskSummary, RecentActivityFeed
+    │   ├── kanban/                # KanbanColumn, KanbanCard, KanbanFilters, TaskDetailsModal, CreateTaskModal
+    │   ├── layout/                # AppLayout (with error banner), Sidebar, Topbar, WorkspaceSwitcher
+    │   └── projects/              # ProjectCard, ProjectTableRow, CreateProjectModal
+    ├── context/
+    │   └── WorkspaceContext.jsx   # Global tenant state & backend API dispatchers
+    ├── hooks/
+    │   ├── useDebounce.js         # Input debouncing hook for search
+    │   └── useWorkspace.js        # Context consumer hook
+    ├── pages/                     # DashboardPage, ProjectsPage, KanbanBoardPage, TeamPage, SettingsPage, NotFoundPage
+    ├── routes/
+    │   └── AppRoutes.jsx          # Route hierarchy definitions
+    ├── services/
+    │   └── api.js                 # HTTP fetch client connecting to backend
+    ├── App.jsx                    # Root provider wrapper
+    ├── main.jsx                   # React 18 DOM mount
+    └── index.css                  # Tailwind directives and custom scrollbar
 ```
 
 ---
 
-## 🎓 4. College Viva & Examination Quick Reference Guide
+## 🔌 4. API Endpoints Reference
 
-Be prepared to explain these core syllabus concepts using the code in this repository:
+Base URL: `http://localhost:5000/api`
 
-### 1. JavaScript Fundamentals, Promises & Async/Await
-- **File**: [`clientStorage.js`](file:///d:/project%20management%20system/src/services/clientStorage.js)
-- **Concept**: ES6 Promises represent an eventual completion or failure of an asynchronous operation. `async/await` is syntactic sugar over Promises that allows asynchronous code to be read sequentially.
-- **Viva explanation**: *"In `clientStorage.js`, we wrap operations in `async` functions and simulate network latency using `new Promise((resolve) => setTimeout(resolve, ms))`. In Phase 2, these exact functions will execute `const res = await fetch('/api/projects');`."*
+### Workspaces (Tenants)
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/api/workspaces` | Retrieve all workspaces (with projects and tasks) |
+| `POST` | `/api/workspaces` | Create a new tenant workspace |
+| `POST` | `/api/workspaces/seed` | Seed default 3 workspaces (*Acme*, *Nexus*, *Studio Zero*) into MongoDB |
+| `GET` | `/api/workspaces/:id` | Get single workspace by ID or slug |
+| `PATCH` | `/api/workspaces/:id` | Update workspace settings |
+| `DELETE` | `/api/workspaces/:id` | Delete workspace and cascade-delete all its projects and tasks |
 
-### 2. React Hooks
-- `useState`: Used for local component state (e.g., active modal open/close in [`AppLayout.jsx`](file:///d:/project%20management%20system/src/components/layout/AppLayout.jsx), search inputs in [`ProjectsPage.jsx`](file:///d:/project%20management%20system/src/pages/ProjectsPage.jsx)).
-- `useEffect`:
-  - Used in [`WorkspaceContext.jsx`](file:///d:/project%20management%20system/src/context/WorkspaceContext.jsx) to load initial tenant data on mount.
-  - Used in [`Modal.jsx`](file:///d:/project%20management%20system/src/components/common/Modal.jsx) with a **cleanup function** to remove the keyboard `'keydown'` event listener and restore `document.body.style.overflow`.
-- `useMemo`: Used in [`ProjectsPage.jsx`](file:///d:/project%20management%20system/src/pages/ProjectsPage.jsx) and [`KanbanBoardPage.jsx`](file:///d:/project%20management%20system/src/pages/KanbanBoardPage.jsx) to memoize expensive filter computations, re-running only when `searchFilter`, `statusFilter`, or tasks change.
-- `useCallback`: Used in [`WorkspaceContext.jsx`](file:///d:/project%20management%20system/src/context/WorkspaceContext.jsx) to stabilize handler functions (`addTask`, `switchWorkspace`) so child components do not re-render unnecessarily.
-- **Custom Hooks**:
-  - [`useWorkspace.js`](file:///d:/project%20management%20system/src/hooks/useWorkspace.js): Encapsulates context consumption and guards against rendering outside `<WorkspaceProvider>`.
-  - [`useDebounce.js`](file:///d:/project%20management%20system/src/hooks/useDebounce.js): Demonstrates combining `useState` and `useEffect` with `clearTimeout` cleanup.
+### Projects (Scoped to Workspace)
+> **Header Required**: `x-workspace-id: <workspaceId>` (or query `?workspaceId=<workspaceId>`)
 
-### 3. Props & Prop Drilling vs. React Context
-- **Props**: Passed explicitly to reusable primitives (e.g., `variant`, `size`, `isLoading` on [`Button.jsx`](file:///d:/project%20management%20system/src/components/common/Button.jsx)).
-- **Prop Drilling Problem**: If we had to pass `activeWorkspace` and `switchWorkspace` down through 5 layers of layout components to reach `WorkspaceSwitcher`, it would lead to fragile, tightly-coupled code.
-- **Context API Solution**: [`WorkspaceContext.jsx`](file:///d:/project%20management%20system/src/context/WorkspaceContext.jsx) provides a global subscription mechanism, allowing any nested component to access tenant state via `useWorkspace()`.
+| Method | Endpoint | Description | Query Parameters |
+|---|---|---|---|
+| `GET` | `/api/projects` | List projects in workspace | `status`, `category`, `search` |
+| `POST` | `/api/projects` | Create project in workspace | — |
+| `GET` | `/api/projects/:id` | Get project by ID (scoped) | — |
+| `PATCH` | `/api/projects/:id` | Update project properties | — |
+| `DELETE` | `/api/projects/:id` | Delete project and cascade-delete its tasks | — |
 
-### 4. Controlled Components
-- Form inputs in [`CreateProjectModal.jsx`](file:///d:/project%20management%20system/src/components/projects/CreateProjectModal.jsx) and [`CreateTaskModal.jsx`](file:///d:/project%20management%20system/src/components/kanban/CreateTaskModal.jsx) have their `value` bound to React state and update via `onChange`, ensuring the single source of truth resides in React state.
+### Tasks (Scoped to Workspace & Project)
+> **Header Required**: `x-workspace-id: <workspaceId>` (or query `?workspaceId=<workspaceId>`)
 
-### 5. Multi-Tenancy Architecture
-- Each tenant workspace has an isolated ID (`ws-acme`, `ws-fintech`, `ws-freelance`).
-- Switching workspaces immediately switches the visible projects, team members, metrics, and Kanban boards.
-- In Phase 2, the active workspace ID will be transmitted as an HTTP header (`x-tenant-id`) to Node.js/Express.js middleware for backend query partitioning.
+| Method | Endpoint | Description | Query Parameters |
+|---|---|---|---|
+| `GET` | `/api/tasks` | List tasks in workspace | `projectId`, `status`, `priority`, `assignee`, `search` |
+| `POST` | `/api/tasks` | Create task (verifies project belongs to same workspace) | — |
+| `GET` | `/api/tasks/:id` | Get task by ID (scoped) | — |
+| `PATCH` | `/api/tasks/:id` | Update task (status, priority, details, move column) | — |
+| `DELETE` | `/api/tasks/:id` | Delete task from board | — |
 
 ---
 
-## 🚀 5. How to Run Locally
+## 🔒 5. Multi-Tenant Isolation & Security Rules
 
+1. **Workspace Boundary Scoping**:
+   - All Project and Task queries enforce `{ workspaceId: req.workspaceId }` at the database level.
+   - It is impossible for a user in *Nexus FinTech Labs* to query or view projects/tasks belonging to *Acme Cloud Innovations*.
+2. **Cross-Workspace Assignment Protection**:
+   - When creating or updating a task (`POST /api/tasks`, `PATCH /api/tasks/:id`), the backend validates that `projectId` exists **AND** belongs to the exact same `workspaceId`.
+   - If an attacker tries to associate a task with another tenant's project ID, the request is rejected with `400 Bad Request`.
+3. **Current Security Limitation (For College Viva Explanation)**:
+   - In this Phase 2 evaluation, workspace scoping is enforced per-request via headers and query parameters.
+   - **Production Requirement Note**: In a production SaaS, client-supplied workspace IDs cannot be blindly trusted. Full production security requires user authentication (JWT/Sessions in Phase 3) where the user's workspace membership is validated against an authenticated identity record in the database.
+
+---
+
+## ⚙️ 6. Environment Variables Configuration
+
+Create a file named `server/.env` (or copy from `server/.env.example`):
+
+```ini
+PORT=5000
+
+# For Local MongoDB (Running on Windows port 27017):
+MONGODB_URI=mongodb://127.0.0.1:27017/pulseplan_db
+
+# For MongoDB Atlas (Cloud Cluster):
+# MONGODB_URI=mongodb+srv://<username>:<password>@cluster0.abcde.mongodb.net/pulseplan_db?retryWrites=true&w=majority
+
+CLIENT_URL=http://localhost:5173
+NODE_ENV=development
+```
+
+---
+
+## 🚀 7. How to Run the Project
+
+### Prerequisites
+- Node.js (v18+)
+- MongoDB running locally on port 27017, **OR** a MongoDB Atlas cluster URI configured in `server/.env`.
+
+### Step 1: Start the Backend Server
 ```bash
-# 1. Install dependencies
-npm install
+# Option A: From root directory
+npm run server
 
-# 2. Run the Vite development server
-npm run dev
-
-# 3. Build for production
-npm run build
-
-# 4. Preview production build
-npm run preview
+# Option B: From server directory
+cd server
+npm start
 ```
+The backend will connect to MongoDB and listen on `http://localhost:5000`.
 
-Open `http://localhost:5173/` (or port indicated in the terminal) in your browser.
+### Step 2: Start the Frontend Vite Server
+```bash
+# From root directory
+npm run dev
+```
+The frontend will start on `http://localhost:5173` (or port indicated by Vite).
+
+---
+
+## 🧪 8. Manual Testing & Verification Checklist
+
+1. **Verify Backend Health**:
+   - Open browser or terminal: `http://localhost:5000/api/health`
+   - Expect: `{"status":"healthy", "service":"PulsePlan SaaS API"}`
+2. **Verify Multi-Tenant Workspaces**:
+   - Open frontend: `http://localhost:5174/` (or `5173`)
+   - Notice the 3 isolated workspaces in the sidebar switcher: *Acme Cloud Innovations*, *Nexus FinTech Labs*, and *Studio Zero Digital*.
+3. **Create Project in MongoDB**:
+   - Click **"+ Project"** in topbar or on the Projects page.
+   - Enter name (e.g. `Distributed API Gateway`), key (`GW`), category (`DevOps`).
+   - Click **"Create Project"**.
+   - **Verify**: Refresh the browser page (`F5`). Notice the project **persists** because it was saved directly in MongoDB!
+4. **Create Task in Kanban Board**:
+   - Navigate to **"Kanban Board"** page.
+   - Click **"+ Add Task"** on the "To Do" column.
+   - Add title (e.g. `Implement rate limiting middleware`).
+   - Click **"Create Task"**.
+   - Move the card between columns (e.g. click the right arrow `>` to move to "In Progress").
+   - **Verify**: Refresh the browser page (`F5`). Notice the task remains in "In Progress" in MongoDB!
+5. **Verify Tenant Data Isolation**:
+   - Switch workspace to *Nexus FinTech Labs* from the topbar or sidebar.
+   - Notice the project and task counts are `0` — Acme's data is completely hidden from Nexus.
+   - Switch back to *Acme Cloud Innovations* — your project and task reappear!
+6. **Error Banner Test (Resilience)**:
+   - Stop the backend server temporarily.
+   - Notice the frontend immediately displays a clear red error banner: *"Backend Disconnected: Cannot connect to backend server..."* with a **"Retry Connection"** button (no fake mock data fallbacks!).

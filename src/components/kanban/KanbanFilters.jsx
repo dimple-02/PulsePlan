@@ -32,11 +32,14 @@ export default function KanbanFilters({
             className="text-xs sm:text-sm font-semibold rounded-lg border border-slate-300 py-1.5 px-3 bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-100"
           >
             {activeWorkspace?.projects && activeWorkspace.projects.length > 0 ? (
-              activeWorkspace.projects.map((proj) => (
-                <option key={proj.id} value={proj.id}>
-                  {proj.name} ({proj.key})
-                </option>
-              ))
+              activeWorkspace.projects.map((proj) => {
+                const pId = proj._id || proj.id;
+                return (
+                  <option key={pId} value={pId}>
+                    {proj.name} ({proj.key})
+                  </option>
+                );
+              })
             ) : (
               <option value="">No projects in workspace</option>
             )}

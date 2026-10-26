@@ -32,7 +32,7 @@ export default function ProjectCard({ project, onSelect, onDelete }) {
 
   const handleOpenBoard = (e) => {
     e.stopPropagation();
-    setActiveProjectId(project.id);
+    setActiveProjectId(project._id || project.id);
     navigate('/kanban');
   };
 
@@ -102,7 +102,7 @@ export default function ProjectCard({ project, onSelect, onDelete }) {
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
-                  onDelete(project.id);
+                  onDelete(project._id || project.id);
                 }}
                 className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition-colors"
                 title="Delete project"
