@@ -1,6 +1,7 @@
 import { Workspace } from '../models/Workspace.js';
 import { Project } from '../models/Project.js';
 import { Task } from '../models/Task.js';
+import { User } from '../models/User.js';
 
 /**
  * Workspace Controller
@@ -179,6 +180,36 @@ export async function createWorkspace(req, res, next) {
 export async function updateWorkspace(req, res, next) {
   try {
     const { id } = req.params;
+
+    const workspace = await Workspace.findById(id);
+    if (!workspace) {
+      return res.status(404).json({
+        success: false,
+        message: `Workspace with ID '${id}' not found.`,
+      });
+    }
+
+    // Role check: Only Owner or Admin can update workspace settings
+    if (req.user) {
+      const isOwnerOrAdmin =
+        req.user.workspaces?.some(
+          (w) => w.workspaceId.toString() === workspace._id.toString() && (w.role === 'Owner' || w.role === 'Admin')
+        ) ||
+        workspace.members?.some(
+          (m) =>
+            ((m.userId && m.userId.toString() === req.user._id.toString()) ||
+              (m.email && m.email.toLowerCase() === req.user.email.toLowerCase())) &&
+            (m.role === 'Owner' || m.role === 'Admin')
+        );
+
+      if (!isOwnerOrAdmin) {
+        return res.status(403).json({
+          success: false,
+          message: 'Access denied: Only workspace Owners or Admins are authorized to update workspace settings.',
+        });
+      }
+    }
+
     const allowedUpdates = ['name', 'plan', 'color', 'badgeColor', 'description', 'currentUserRole'];
     const updates = {};
 
@@ -188,22 +219,15 @@ export async function updateWorkspace(req, res, next) {
       }
     }
 
-    const workspace = await Workspace.findByIdAndUpdate(id, updates, {
+    const updated = await Workspace.findByIdAndUpdate(id, updates, {
       new: true,
       runValidators: true,
     });
 
-    if (!workspace) {
-      return res.status(404).json({
-        success: false,
-        message: `Workspace with ID '${id}' not found.`,
-      });
-    }
-
     res.status(200).json({
       success: true,
       message: 'Workspace updated successfully.',
-      data: workspace,
+      data: updated,
     });
   } catch (error) {
     next(error);
@@ -244,11 +268,15 @@ export async function deleteWorkspace(req, res, next) {
       }
     }
 
-    // Cascade delete: remove all projects and tasks belonging to this workspace
+    // Cascade delete: remove all projects and tasks belonging to this workspace, and clean user references
     await Promise.all([
       Project.deleteMany({ workspaceId: workspace._id }),
       Task.deleteMany({ workspaceId: workspace._id }),
       Workspace.findByIdAndDelete(workspace._id),
+      User.updateMany(
+        { 'workspaces.workspaceId': workspace._id },
+        { $pull: { workspaces: { workspaceId: workspace._id } } }
+      ),
     ]);
 
     res.status(200).json({
@@ -264,6 +292,12 @@ export async function deleteWorkspace(req, res, next) {
 // Seed initial 3 workspaces cleanly into MongoDB
 export async function seedWorkspaces(req, res, next) {
   try {
+    if (process.env.NODE_ENV === 'production') {
+      return res.status(403).json({
+        success: false,
+        message: 'Database seeding endpoint is disabled in production environments.',
+      });
+    }
     const seedData = [
       {
         name: 'Acme Cloud Innovations',

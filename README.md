@@ -225,10 +225,25 @@ npm run dev
 # In root directory
 npm run test:auth
 ```
-This runs `server/tests/authTest.js` and outputs pass/fail status for all 10 security scenarios.
+Runs `server/tests/authTest.js` covering registration, duplicate checks, login, and workspace scoping.
 
-### Step 4: Run Frontend Production Build Check
+### Step 4: Run Comprehensive 42-Point Security Audit Suite
+```bash
+# In root directory
+npm run test:security
+```
+Runs `server/tests/securityAuditTest.js` covering:
+- Tampered, expired, and malformed JWT rejection
+- Genuine server-side token invalidation on logout (saved token rejected)
+- Complete route-by-route authentication requirement audit
+- Cross-tenant isolation and header spoofing defense
+- Nested resource protection against cross-workspace projectId injection
+- Role-based permissions enforcement (Member vs Admin/Owner)
+- CORS origin whitelist and Anti-CSRF protection
+- Production startup environment validations
+
+### Step 5: Run Frontend Production Build Check
 ```bash
 npm run build
 ```
-Verifies full TypeScript/JSX compilation, asset bundling, and zero syntax errors.
+Verifies full JSX compilation, asset bundling, and zero syntax errors.

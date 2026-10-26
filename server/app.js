@@ -1,6 +1,8 @@
 import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
+import { ENV } from './config/env.js';
+import { csrfProtection } from './middleware/csrf.js';
 import authRoutes from './routes/authRoutes.js';
 import workspaceRoutes from './routes/workspaceRoutes.js';
 import projectRoutes from './routes/projectRoutes.js';
@@ -11,24 +13,19 @@ const app = express();
 
 /**
  * CORS Configuration
- * Allows frontend client origins (Vite dev server: 5173, 5174, etc.)
+ * Allows only explicitly whitelisted origins with credentials (no wildcard or blind reflection)
  */
-const allowedOrigins = [
-  process.env.CLIENT_URL,
-  'http://localhost:5173',
-  'http://localhost:5174',
-  'http://127.0.0.1:5173',
-  'http://127.0.0.1:5174',
-].filter(Boolean);
-
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (e.g. mobile apps, curl, server-to-server)
-      if (!origin || allowedOrigins.includes(origin) || process.env.NODE_ENV !== 'production') {
+      // Allow non-browser requests with no origin (e.g. curl, server-to-server)
+      if (!origin) return callback(null, true);
+
+      // Verify origin against configured whitelist
+      if (ENV.ALLOWED_ORIGINS.includes(origin)) {
         return callback(null, true);
       }
-      callback(new Error(`Origin ${origin} not allowed by CORS policy`));
+      return callback(new Error(`Origin '${origin}' not allowed by CORS policy`));
     },
     credentials: true,
     methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
@@ -38,6 +35,9 @@ app.use(
 
 // Cookie Parser Middleware
 app.use(cookieParser());
+
+// Anti-CSRF Middleware for state-changing cookie requests
+app.use(csrfProtection);
 
 // Body Parser Middleware
 app.use(express.json({ limit: '1mb' }));

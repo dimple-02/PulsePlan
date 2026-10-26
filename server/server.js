@@ -3,12 +3,16 @@ dotenv.config();
 
 import app from './app.js';
 import { connectDB } from './config/db.js';
+import { validateEnv, ENV } from './config/env.js';
 
-const PORT = process.env.PORT || 5000;
+const PORT = ENV.PORT;
 
 async function bootstrap() {
   try {
-    // 1. Connect to MongoDB
+    // 1. Validate environment configuration & production security settings
+    validateEnv();
+
+    // 2. Connect to MongoDB
     await connectDB();
 
     // 2. Start Express Server

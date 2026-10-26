@@ -1,16 +1,16 @@
 import jwt from 'jsonwebtoken';
 import { User } from '../models/User.js';
 import { Workspace } from '../models/Workspace.js';
+import { ENV } from '../config/env.js';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'pulseplan_jwt_secret_dev_key_2026';
 const JWT_EXPIRES_IN = '7d';
 
 /**
  * Cookie configuration helper
  * Uses secure flags in production; 'lax' sameSite in local development to allow cross-port cookies.
  */
-function getCookieOptions() {
-  const isProduction = process.env.NODE_ENV === 'production';
+export function getCookieOptions() {
+  const isProduction = ENV.IS_PRODUCTION;
   return {
     httpOnly: true,
     secure: isProduction,
@@ -22,15 +22,17 @@ function getCookieOptions() {
 
 /**
  * Generate JSON Web Token
+ * Explicitly includes tokenVersion and HS256 algorithm
  */
-function generateToken(user) {
+export function generateToken(user) {
   return jwt.sign(
     {
       id: user._id.toString(),
       email: user.email,
+      tokenVersion: user.tokenVersion || 0,
     },
-    JWT_SECRET,
-    { expiresIn: JWT_EXPIRES_IN }
+    ENV.JWT_SECRET,
+    { expiresIn: JWT_EXPIRES_IN, algorithm: 'HS256' }
   );
 }
 
@@ -186,18 +188,27 @@ export async function login(req, res, next) {
 
 /**
  * POST /api/auth/logout
- * Clears the HTTP-only session cookie.
+ * Clears the HTTP-only session cookie and increments tokenVersion to invalidate unexpired JWTs.
  */
-export async function logout(req, res) {
-  res.clearCookie('token', {
-    ...getCookieOptions(),
-    maxAge: 0,
-  });
+export async function logout(req, res, next) {
+  try {
+    if (req.user) {
+      // Server-side invalidation: increment tokenVersion so prior JWTs are immediately rejected
+      await User.findByIdAndUpdate(req.user._id, { $inc: { tokenVersion: 1 } });
+    }
 
-  res.status(200).json({
-    success: true,
-    message: 'Logged out successfully.',
-  });
+    res.clearCookie('token', {
+      ...getCookieOptions(),
+      maxAge: 0,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Logged out successfully.',
+    });
+  } catch (error) {
+    next(error);
+  }
 }
 
 /**

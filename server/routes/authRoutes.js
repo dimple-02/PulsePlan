@@ -1,21 +1,34 @@
 import express from 'express';
 import { body } from 'express-validator';
 import { validate } from '../middleware/validate.js';
-import { requireAuth } from '../middleware/auth.js';
+import { requireAuth, optionalAuth } from '../middleware/auth.js';
+import {
 import {
   signup,
   login,
   logout,
   getMe,
 } from '../controllers/authController.js';
+import { createRateLimiter } from '../middleware/rateLimiter.js';
 
 const router = express.Router();
+
+/**
+ * Rate Limiter for Authentication Endpoints
+ * Limits rapid password guessing and brute force credential attacks.
+ */
+const authRateLimiter = createRateLimiter({
+  windowMs: 15 * 60 * 1000, // 15-minute sliding window
+  max: 20, // 20 requests per window
+  message: 'Too many authentication attempts. Please try again after 15 minutes.',
+});
 
 /**
  * POST /api/auth/signup
  */
 router.post(
   '/signup',
+  authRateLimiter,
   [
     body('name')
       .trim()
@@ -64,7 +77,7 @@ router.post(
 /**
  * POST /api/auth/logout
  */
-router.post('/logout', logout);
+router.post('/logout', optionalAuth, logout);
 
 /**
  * GET /api/auth/me

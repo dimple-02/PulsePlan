@@ -44,36 +44,41 @@ export async function tenantScope(req, res, next) {
     }
 
     // 2. Strict Server-Side Membership Authorization
-    // If request is authenticated, verify that req.user is an authorized member
-    if (req.user) {
-      const isMemberInUserList = req.user.workspaces?.some(
-        (w) => w.workspaceId.toString() === workspace._id.toString()
-      );
-
-      const memberInWorkspace = workspace.members?.find(
-        (m) =>
-          (m.userId && m.userId.toString() === req.user._id.toString()) ||
-          (m.email && m.email.toLowerCase() === req.user.email.toLowerCase())
-      );
-
-      if (!isMemberInUserList && !memberInWorkspace) {
-        return res.status(403).json({
-          success: false,
-          message: `Access denied: You are not an authorized member of workspace '${workspace.name}'. The 'x-workspace-id' header is not proof of authorization.`,
-        });
-      }
-
-      // Synchronize membership link if email matched in workspace members
-      if (memberInWorkspace && !isMemberInUserList) {
-        req.user.workspaces.push({
-          workspaceId: workspace._id,
-          role: memberInWorkspace.role || 'Member',
-        });
-        await req.user.save();
-      }
-
-      req.workspaceRole = memberInWorkspace?.role || 'Member';
+    // Every request accessing workspace data MUST have an authenticated user
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: 'Authentication required. Please log in to access workspace resources.',
+      });
     }
+
+    const isMemberInUserList = req.user.workspaces?.some(
+      (w) => w.workspaceId.toString() === workspace._id.toString()
+    );
+
+    const memberInWorkspace = workspace.members?.find(
+      (m) =>
+        (m.userId && m.userId.toString() === req.user._id.toString()) ||
+        (m.email && m.email.toLowerCase() === req.user.email.toLowerCase())
+    );
+
+    if (!isMemberInUserList && !memberInWorkspace) {
+      return res.status(403).json({
+        success: false,
+        message: `Access denied: You are not an authorized member of workspace '${workspace.name}'. The 'x-workspace-id' header is not proof of authorization.`,
+      });
+    }
+
+    // Synchronize membership link if email matched in workspace members
+    if (memberInWorkspace && !isMemberInUserList) {
+      req.user.workspaces.push({
+        workspaceId: workspace._id,
+        role: memberInWorkspace.role || 'Member',
+      });
+      await req.user.save();
+    }
+
+    req.workspaceRole = memberInWorkspace?.role || 'Member';
 
     req.workspace = workspace;
     req.workspaceId = workspace._id;

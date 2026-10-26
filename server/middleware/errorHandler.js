@@ -11,6 +11,11 @@ export function errorHandler(err, req, res, next) {
   let message = err.message || 'Internal Server Error';
   let errors = null;
 
+  // CORS Origin Policy Rejection
+  if (err.message && err.message.includes('not allowed by CORS policy')) {
+    statusCode = 403;
+  }
+
   // Mongoose CastError (e.g. invalid 24-character hexadecimal ObjectId)
   if (err.name === 'CastError') {
     statusCode = 400;

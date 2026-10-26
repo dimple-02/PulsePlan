@@ -8,7 +8,8 @@
     "server": "node --watch server/server.js",
     "build": "vite build",
     "preview": "vite preview",
-    "test:auth": "node server/tests/authTest.js"
+    "test:auth": "node server/tests/authTest.js",
+    "test:security": "node server/tests/securityAuditTest.js"
   },
   "dependencies": {
     "lucide-react": "^0.468.0",

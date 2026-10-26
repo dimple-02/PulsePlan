@@ -24,6 +24,19 @@ export async function getTasks(req, res, next) {
           message: `Invalid projectId format: '${req.query.projectId}'`,
         });
       }
+
+      const projectExists = await Project.findOne({
+        _id: req.query.projectId,
+        workspaceId: req.workspaceId,
+      });
+
+      if (!projectExists) {
+        return res.status(400).json({
+          success: false,
+          message: `Project '${req.query.projectId}' does not belong to active workspace scope.`,
+        });
+      }
+
       filter.projectId = req.query.projectId;
     }
 
@@ -124,7 +137,7 @@ export async function createTask(req, res, next) {
       description: description || '',
       status: status || 'todo',
       priority: priority || 'medium',
-      assignee: assignee || { name: 'Alex Morgan', avatar: 'AM' },
+      assignee: assignee || { name: req.user?.name || 'Workspace Member', avatar: req.user?.avatar || 'U' },
       dueDate: dueDate || '',
       tags: tags || [],
       storyPoints: Number(storyPoints) || 3,
@@ -136,7 +149,7 @@ export async function createTask(req, res, next) {
         activities: {
           $each: [
             {
-              user: assignee?.name || 'You',
+              user: req.user?.name || assignee?.name || 'You',
               action: 'created task',
               target: task.title,
               destination: status || 'todo',
@@ -215,10 +228,11 @@ export async function updateTask(req, res, next) {
     }
 
     const oldStatus = existingTask.status;
-    const updatedTask = await Task.findByIdAndUpdate(id, updates, {
-      new: true,
-      runValidators: true,
-    });
+    const updatedTask = await Task.findOneAndUpdate(
+      { _id: id, workspaceId: req.workspaceId },
+      updates,
+      { new: true, runValidators: true }
+    );
 
     // If status changed, record activity in workspace
     if (updates.status && updates.status !== oldStatus) {

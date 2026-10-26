@@ -115,8 +115,8 @@ export async function createProject(req, res, next) {
       spent: spent || '$0',
       startDate: startDate || new Date().toISOString().split('T')[0],
       deadline: deadline || '',
-      lead: lead || 'Alex Morgan',
-      members: members || ['AM'],
+      lead: lead || req.user?.name || 'Workspace Member',
+      members: members || [req.user?.avatar || 'U'],
       category: category || 'General',
     });
 
@@ -126,7 +126,7 @@ export async function createProject(req, res, next) {
         activities: {
           $each: [
             {
-              user: lead || 'You',
+              user: req.user?.name || lead || 'You',
               action: 'created new project',
               target: project.name,
               timestamp: 'Just now',

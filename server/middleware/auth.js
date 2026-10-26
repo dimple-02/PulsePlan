@@ -1,13 +1,17 @@
 import jwt from 'jsonwebtoken';
 import { User } from '../models/User.js';
-
-const JWT_SECRET = process.env.JWT_SECRET || 'pulseplan_jwt_secret_dev_key_2026';
+import { ENV } from '../config/env.js';
+import { getCookieOptions } from '../controllers/authController.js';
 
 /**
  * Authentication Middleware
  * 
  * Verifies HTTP-only session cookie or Bearer token header.
- * Attaches the authenticated user document to req.user.
+ * Enforces:
+ * - HMAC-SHA256 (HS256) signature verification
+ * - Expiration and required claims verification
+ * - Server-side session invalidation via tokenVersion check
+ * - Attaches sanitized user document to req.user
  */
 export async function requireAuth(req, res, next) {
   try {
@@ -32,24 +36,48 @@ export async function requireAuth(req, res, next) {
       });
     }
 
-    // Verify token
-    const decoded = jwt.verify(token, JWT_SECRET);
+    // Verify token with explicit algorithm check
+    const decoded = jwt.verify(token, ENV.JWT_SECRET, { algorithms: ['HS256'] });
+
+    // Validate required claims
+    if (!decoded || !decoded.id) {
+      res.clearCookie('token', getCookieOptions());
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid session token claims.',
+      });
+    }
 
     // Fetch user from DB
     const user = await User.findById(decoded.id);
     if (!user) {
-      res.clearCookie('token');
+      res.clearCookie('token', getCookieOptions());
       return res.status(401).json({
         success: false,
         message: 'The user account associated with this session no longer exists.',
       });
     }
 
+    // Genuine Server-Side Session Invalidation (Requirement 2)
+    // If the user has logged out or invalidated sessions, tokenVersion will not match
+    const userTokenVersion = user.tokenVersion || 0;
+    if (decoded.tokenVersion === undefined || decoded.tokenVersion !== userTokenVersion) {
+      res.clearCookie('token', getCookieOptions());
+      return res.status(401).json({
+        success: false,
+        message: 'Session has been invalidated. Please log in again.',
+      });
+    }
+
     req.user = user;
     next();
   } catch (error) {
-    if (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError') {
-      res.clearCookie('token');
+    if (
+      error.name === 'JsonWebTokenError' ||
+      error.name === 'TokenExpiredError' ||
+      error.name === 'NotBeforeError'
+    ) {
+      res.clearCookie('token', getCookieOptions());
       return res.status(401).json({
         success: false,
         message: 'Session has expired or is invalid. Please log in again.',
@@ -61,7 +89,7 @@ export async function requireAuth(req, res, next) {
 
 /**
  * Optional Authentication Middleware
- * Populates req.user if token is present, but doesn't block unauthenticated requests.
+ * Populates req.user if a valid, un-revoked token is present, but doesn't block unauthenticated requests.
  */
 export async function optionalAuth(req, res, next) {
   try {
@@ -72,10 +100,13 @@ export async function optionalAuth(req, res, next) {
         : null);
 
     if (token) {
-      const decoded = jwt.verify(token, JWT_SECRET);
-      const user = await User.findById(decoded.id);
-      if (user) {
-        req.user = user;
+      const decoded = jwt.verify(token, ENV.JWT_SECRET, { algorithms: ['HS256'] });
+      if (decoded && decoded.id) {
+        const user = await User.findById(decoded.id);
+        const userTokenVersion = user?.tokenVersion || 0;
+        if (user && decoded.tokenVersion === userTokenVersion) {
+          req.user = user;
+        }
       }
     }
     next();
