@@ -2,6 +2,7 @@ import { Workspace } from '../models/Workspace.js';
 import { Project } from '../models/Project.js';
 import { Task } from '../models/Task.js';
 import { User } from '../models/User.js';
+import { sendWorkspaceInviteEmail } from '../services/mailService.js';
 
 /**
  * Workspace Controller
@@ -37,8 +38,17 @@ export async function getWorkspaces(req, res, next) {
           Task.find({ workspaceId: ws._id }).sort({ createdAt: -1 }),
         ]);
 
+        const enhancedProjects = projects.map((p) => {
+          const pTasks = tasks.filter((t) => t.projectId?.toString() === p._id.toString());
+          const doneTasks = pTasks.filter((t) => t.status === 'done');
+          const progress = pTasks.length > 0 ? Math.round((doneTasks.length / pTasks.length) * 100) : (p.progress || 0);
+          const pObj = p.toJSON ? p.toJSON() : { ...p };
+          pObj.progress = progress;
+          return pObj;
+        });
+
         const wsObj = ws.toJSON();
-        wsObj.projects = projects;
+        wsObj.projects = enhancedProjects;
         wsObj.tasks = tasks;
         return wsObj;
       })
@@ -90,8 +100,17 @@ export async function getWorkspaceById(req, res, next) {
       Task.find({ workspaceId: workspace._id }).sort({ createdAt: -1 }),
     ]);
 
+    const enhancedProjects = projects.map((p) => {
+      const pTasks = tasks.filter((t) => t.projectId?.toString() === p._id.toString());
+      const doneTasks = pTasks.filter((t) => t.status === 'done');
+      const progress = pTasks.length > 0 ? Math.round((doneTasks.length / pTasks.length) * 100) : (p.progress || 0);
+      const pObj = p.toJSON ? p.toJSON() : { ...p };
+      pObj.progress = progress;
+      return pObj;
+    });
+
     const result = workspace.toJSON();
-    result.projects = projects;
+    result.projects = enhancedProjects;
     result.tasks = tasks;
 
     res.status(200).json({
@@ -360,6 +379,17 @@ export async function addWorkspaceMember(req, res, next) {
       }
     }
 
+    // Send member invitation email in background
+    sendWorkspaceInviteEmail({
+      to: newMember.email,
+      recipientName: newMember.name,
+      inviterName: req.user ? req.user.name : 'Team Administrator',
+      workspaceName: workspace.name,
+      role: newMember.role,
+    }).catch((err) => {
+      console.error('[MailService Error]: Failed to dispatch member invitation:', err.message);
+    });
+
     res.status(201).json({
       success: true,
       message: `Member '${name}' added to workspace successfully.`,
@@ -370,3 +400,75 @@ export async function addWorkspaceMember(req, res, next) {
   }
 }
 
+
+// DELETE /api/workspaces/:id/members/:memberId
+export async function removeWorkspaceMember(req, res, next) {
+  try {
+    const { id, memberId } = req.params;
+
+    const workspace = await Workspace.findById(id);
+    if (!workspace) {
+      return res.status(404).json({
+        success: false,
+        message: `Workspace with ID '${id}' not found.`,
+      });
+    }
+
+    // Find member by _id or email
+    const memberIndex = workspace.members.findIndex(
+      (m) => m._id.toString() === memberId || m.email.toLowerCase() === memberId.toLowerCase()
+    );
+
+    if (memberIndex === -1) {
+      return res.status(404).json({
+        success: false,
+        message: `Member with ID or email '${memberId}' not found in workspace.`,
+      });
+    }
+
+    const memberToRemove = workspace.members[memberIndex];
+
+    // Security check: Prevent removing the sole Owner
+    if (memberToRemove.role === 'Owner') {
+      const ownerCount = workspace.members.filter((m) => m.role === 'Owner').length;
+      if (ownerCount <= 1) {
+        return res.status(400).json({
+          success: false,
+          message: 'Cannot remove the primary Workspace Owner. Transfer ownership first.',
+        });
+      }
+    }
+
+    // Remove from array
+    workspace.members.splice(memberIndex, 1);
+    workspace.membersCount = workspace.members.length;
+
+    // Record activity
+    workspace.activities.unshift({
+      user: req.user ? req.user.name : 'You',
+      action: 'removed member',
+      target: memberToRemove.name,
+      timestamp: 'Just now',
+    });
+
+    await workspace.save();
+
+    // If member has registered user account, unlink workspace
+    if (memberToRemove.userId) {
+      await User.findByIdAndUpdate(memberToRemove.userId, {
+        $pull: { workspaces: { workspaceId: workspace._id } },
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: `Member '${memberToRemove.name}' was removed from the workspace.`,
+      data: {
+        memberId: memberToRemove._id,
+        email: memberToRemove.email,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+}

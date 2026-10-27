@@ -67,6 +67,20 @@ export const ENV = {
   MONGODB_URI: process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/pulseplan_db',
   JWT_SECRET: process.env.JWT_SECRET || DEFAULT_DEV_JWT_SECRET,
   CLIENT_URL: process.env.CLIENT_URL || 'http://localhost:5173',
+
+  // Mail / SMTP Configuration
+  SMTP_HOST: process.env.SMTP_HOST || '',
+  SMTP_PORT: Number(process.env.SMTP_PORT || 587),
+  SMTP_USER: process.env.SMTP_USER || '',
+  SMTP_PASS: process.env.SMTP_PASS || '',
+  SMTP_SECURE: process.env.SMTP_SECURE === 'true',
+  EMAIL_FROM: process.env.EMAIL_FROM || 'PulsePlan <no-reply@pulseplan.io>',
+
+  // Cloudinary Configuration for Attachments
+  CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME || '',
+  CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY || '',
+  CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET || '',
+
   ALLOWED_ORIGINS: [
     process.env.CLIENT_URL,
     'http://localhost:5173',
@@ -98,4 +112,3 @@ export function isAllowedOrigin(origin) {
   }
   return false;
 }
-

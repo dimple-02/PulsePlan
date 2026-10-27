@@ -1,7 +1,7 @@
 import express from 'express';
 import { body, param } from 'express-validator';
 import { validate } from '../middleware/validate.js';
-import { requireAuth, optionalAuth } from '../middleware/auth.js';
+import { requireAuth } from '../middleware/auth.js';
 import {
   getWorkspaces,
   getWorkspaceById,
@@ -9,7 +9,9 @@ import {
   updateWorkspace,
   deleteWorkspace,
   addWorkspaceMember,
+  removeWorkspaceMember,
 } from '../controllers/workspaceController.js';
+import { getMessages, sendMessage } from '../controllers/messageController.js';
 
 const router = express.Router();
 
@@ -17,8 +19,10 @@ const router = express.Router();
  * Workspace Routes: /api/workspaces
  */
 
+// 1. Workspace Collection
 router.get('/', requireAuth, getWorkspaces);
 
+// 2. Member Management
 router.post(
   '/:id/members',
   requireAuth,
@@ -32,7 +36,37 @@ router.post(
   addWorkspaceMember
 );
 
+router.delete(
+  '/:id/members/:memberId',
+  requireAuth,
+  [
+    param('id').isMongoId().withMessage('Invalid workspace ID format'),
+    param('memberId').trim().notEmpty().withMessage('Member identifier is required'),
+    validate,
+  ],
+  removeWorkspaceMember
+);
 
+// 3. Workspace Messages & Team/Direct Chat
+router.get(
+  '/:id/messages',
+  requireAuth,
+  [param('id').isMongoId().withMessage('Invalid workspace ID format'), validate],
+  getMessages
+);
+
+router.post(
+  '/:id/messages',
+  requireAuth,
+  [
+    param('id').isMongoId().withMessage('Invalid workspace ID format'),
+    body('content').trim().notEmpty().withMessage('Message content cannot be empty'),
+    validate,
+  ],
+  sendMessage
+);
+
+// 4. Single Workspace Operations
 router.get(
   '/:id',
   requireAuth,

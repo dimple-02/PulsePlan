@@ -2,6 +2,7 @@ import jwt from 'jsonwebtoken';
 import { User } from '../models/User.js';
 import { Workspace } from '../models/Workspace.js';
 import { ENV } from '../config/env.js';
+import { sendWelcomeEmail } from '../services/mailService.js';
 
 const JWT_EXPIRES_IN = '7d';
 
@@ -125,6 +126,15 @@ export async function signup(req, res, next) {
     res.cookie('token', token, getCookieOptions());
 
     const userJson = user.toJSON();
+
+    // Send welcome email in background
+    sendWelcomeEmail({
+      to: user.email,
+      recipientName: user.name,
+      loginUrl: `${ENV.CLIENT_URL}/login`,
+    }).catch((err) => {
+      console.error('[MailService Error]: Failed to dispatch welcome email:', err.message);
+    });
 
     res.status(201).json({
       success: true,
