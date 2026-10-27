@@ -1,4 +1,4 @@
-import { ENV } from '../config/env.js';
+import { ENV, isAllowedOrigin } from '../config/env.js';
 
 /**
  * CSRF Protection Middleware
@@ -7,9 +7,11 @@ import { ENV } from '../config/env.js';
  * from Cross-Site Request Forgery (CSRF).
  * 
  * Defense Layers:
- * 1. Checks 'Sec-Fetch-Site': Blocks browser requests initiated from 'cross-site' contexts.
- * 2. Checks 'Origin' / 'Referer': Validates that the request origin matches the configured allowed client origins.
- * 3. Exempts Bearer-token-authenticated API requests (as custom headers cannot be forged via standard cross-site HTML forms).
+ * 1. Checks 'Origin': Validates that requests initiated by the browser originate from
+ *    authorized client origins (browsers forbid JavaScript from spoofing Origin).
+ * 2. Checks 'Sec-Fetch-Site': Blocks cross-site requests that lack an authorized origin.
+ * 3. Checks 'Referer': Fallback origin validation if Origin header is omitted.
+ * 4. Exempts Bearer-token-authenticated API requests (as custom headers cannot be forged via standard cross-site HTML forms).
  */
 export function csrfProtection(req, res, next) {
   const stateChangingMethods = ['POST', 'PATCH', 'PUT', 'DELETE'];
@@ -32,7 +34,23 @@ export function csrfProtection(req, res, next) {
 
   // If the request carries an HTTP-only session cookie, enforce strict origin verification
   if (req.cookies && req.cookies.token) {
+    const origin = req.headers.origin;
     const secFetchSite = req.headers['sec-fetch-site'];
+
+    // 1. If an Origin header is present, verify against allowed origins.
+    // The browser strictly controls the Origin header; scripts on malicious sites cannot spoof it.
+    if (origin) {
+      if (!isAllowedOrigin(origin)) {
+        return res.status(403).json({
+          success: false,
+          message: `Cross-Site Request Forgery (CSRF) blocked: Origin '${origin}' is not authorized.`,
+        });
+      }
+      return next();
+    }
+
+    // 2. If no Origin header is present, check Sec-Fetch-Site.
+    // Blocks requests initiated from cross-site contexts without an authorized origin.
     if (secFetchSite === 'cross-site') {
       return res.status(403).json({
         success: false,
@@ -40,18 +58,11 @@ export function csrfProtection(req, res, next) {
       });
     }
 
-    const origin = req.headers.origin;
-    if (origin) {
-      if (!ENV.ALLOWED_ORIGINS.includes(origin)) {
-        return res.status(403).json({
-          success: false,
-          message: `Cross-Site Request Forgery (CSRF) blocked: Origin '${origin}' is not authorized.`,
-        });
-      }
-    } else if (req.headers.referer) {
+    // 3. Fallback: Check Referer header if Origin header was omitted
+    if (req.headers.referer) {
       try {
         const refererOrigin = new URL(req.headers.referer).origin;
-        if (!ENV.ALLOWED_ORIGINS.includes(refererOrigin)) {
+        if (!isAllowedOrigin(refererOrigin)) {
           return res.status(403).json({
             success: false,
             message: `Cross-Site Request Forgery (CSRF) blocked: Referer '${refererOrigin}' is not authorized.`,

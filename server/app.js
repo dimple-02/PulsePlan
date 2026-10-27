@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
-import { ENV } from './config/env.js';
+import { ENV, isAllowedOrigin } from './config/env.js';
 import { csrfProtection } from './middleware/csrf.js';
 import authRoutes from './routes/authRoutes.js';
 import workspaceRoutes from './routes/workspaceRoutes.js';
@@ -22,7 +22,7 @@ app.use(
       if (!origin) return callback(null, true);
 
       // Verify origin against configured whitelist
-      if (ENV.ALLOWED_ORIGINS.includes(origin)) {
+      if (isAllowedOrigin(origin)) {
         return callback(null, true);
       }
       return callback(new Error(`Origin '${origin}' not allowed by CORS policy`));
