@@ -13,7 +13,11 @@ export function validateEnv() {
 
   // 1. Validate MONGODB_URI
   if (!process.env.MONGODB_URI) {
-    errors.push('MONGODB_URI is required. Please provide a valid MongoDB connection string.');
+    if (isProduction) {
+      errors.push('MONGODB_URI is required in production. Please provide a valid MongoDB connection string.');
+    } else {
+      console.log('[Notice] No MONGODB_URI in environment; using local fallback: mongodb://127.0.0.1:27017/pulseplan_db');
+    }
   }
 
   // 2. Validate JWT_SECRET
