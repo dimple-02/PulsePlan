@@ -49,16 +49,7 @@ export function csrfProtection(req, res, next) {
       return next();
     }
 
-    // 2. If no Origin header is present, check Sec-Fetch-Site.
-    // Blocks requests initiated from cross-site contexts without an authorized origin.
-    if (secFetchSite === 'cross-site') {
-      return res.status(403).json({
-        success: false,
-        message: 'Cross-Site Request Forgery (CSRF) blocked: Cross-site request rejected.',
-      });
-    }
-
-    // 3. Fallback: Check Referer header if Origin header was omitted
+    // 2. Fallback: Check Referer header if Origin header was omitted
     if (req.headers.referer) {
       try {
         const refererOrigin = new URL(req.headers.referer).origin;
@@ -68,12 +59,21 @@ export function csrfProtection(req, res, next) {
             message: `Cross-Site Request Forgery (CSRF) blocked: Referer '${refererOrigin}' is not authorized.`,
           });
         }
+        return next();
       } catch {
         return res.status(403).json({
           success: false,
           message: 'Cross-Site Request Forgery (CSRF) blocked: Malformed referer header.',
         });
       }
+    }
+
+    // 3. If neither Origin nor Referer is present, block if Sec-Fetch-Site indicates cross-site
+    if (secFetchSite === 'cross-site') {
+      return res.status(403).json({
+        success: false,
+        message: 'Cross-Site Request Forgery (CSRF) blocked: Cross-site request rejected.',
+      });
     }
   }
 
