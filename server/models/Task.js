@@ -5,6 +5,7 @@ import mongoose from 'mongoose';
  * 
  * Each task belongs strictly to a Project and its parent Workspace.
  * Verification rule: task.projectId MUST belong to task.workspaceId.
+ * Supports Cloudinary attachments with metadata (url, publicId, fileName, fileSize).
  */
 const taskSchema = new mongoose.Schema(
   {
@@ -61,6 +62,17 @@ const taskSchema = new mongoose.Schema(
       default: 3,
       min: [0, 'Story points cannot be negative'],
     },
+    // Cloudinary File Attachments
+    attachments: [
+      {
+        url: { type: String, required: true },
+        publicId: { type: String },
+        fileName: { type: String, required: true },
+        fileType: { type: String, default: 'application/octet-stream' },
+        fileSize: { type: Number, default: 0 },
+        uploadedAt: { type: Date, default: Date.now },
+      },
+    ],
   },
   {
     timestamps: true,

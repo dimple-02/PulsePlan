@@ -135,6 +135,15 @@ export async function deleteWorkspace(id) {
   });
 }
 
+export async function addWorkspaceMember(workspaceId, memberData) {
+  const result = await apiRequest(`/workspaces/${workspaceId}/members`, {
+    method: 'POST',
+    body: JSON.stringify(memberData),
+  }, workspaceId);
+  return result.data;
+}
+
+
 // -------------------------------------------------------------
 // Project API Calls (Scoped to Workspace)
 // -------------------------------------------------------------
@@ -231,4 +240,32 @@ export async function deleteTask(workspaceId, taskId) {
     },
     workspaceId
   );
+}
+
+
+
+export async function removeWorkspaceMember(workspaceId, memberId) {
+  const result = await apiRequest(`/workspaces/${workspaceId}/members/${memberId}`, {
+    method: 'DELETE',
+  }, workspaceId);
+  return result.data;
+}
+
+// -------------------------------------------------------------
+// Chat & Messaging API
+// -------------------------------------------------------------
+export async function getWorkspaceMessages(workspaceId, recipientEmail = null) {
+  const query = recipientEmail ? `?recipientEmail=${encodeURIComponent(recipientEmail)}` : '';
+  const result = await apiRequest(`/workspaces/${workspaceId}/messages${query}`, {
+    method: 'GET',
+  }, workspaceId);
+  return result.data || [];
+}
+
+export async function sendWorkspaceMessage(workspaceId, messageData) {
+  const result = await apiRequest(`/workspaces/${workspaceId}/messages`, {
+    method: 'POST',
+    body: JSON.stringify(messageData),
+  }, workspaceId);
+  return result.data;
 }

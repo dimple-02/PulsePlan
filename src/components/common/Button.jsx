@@ -55,10 +55,14 @@ export default function Button({
           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
         </svg>
       ) : (
-        Icon && iconPosition === 'left' && <Icon className="w-4 h-4 shrink-0" />
+        Icon && iconPosition === 'left' && (
+          React.isValidElement(Icon) ? Icon : <Icon className="w-4 h-4 shrink-0" />
+        )
       )}
       <span>{children}</span>
-      {!isLoading && Icon && iconPosition === 'right' && <Icon className="w-4 h-4 shrink-0" />}
+      {!isLoading && Icon && iconPosition === 'right' && (
+        React.isValidElement(Icon) ? Icon : <Icon className="w-4 h-4 shrink-0" />
+      )}
     </button>
   );
 }

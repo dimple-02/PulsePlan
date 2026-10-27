@@ -62,7 +62,16 @@ export default function ProjectCard({ project, onSelect, onDelete }) {
         {/* Progress Bar */}
         <div className="mb-4">
           <div className="flex justify-between text-[11px] font-medium text-slate-500 mb-1">
-            <span>Completion</span>
+            <span>
+              Completion{' '}
+              {project.totalTasksCount > 0 ? (
+                <span className="text-slate-400 font-normal">
+                  ({project.doneTasksCount}/{project.totalTasksCount} done)
+                </span>
+              ) : (
+                <span className="text-slate-400 font-normal">(0 tasks)</span>
+              )}
+            </span>
             <span className="font-semibold text-slate-700">{project.progress}%</span>
           </div>
           <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">

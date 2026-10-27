@@ -17,7 +17,11 @@ export function validateEnv() {
 
   // 1. Validate MONGODB_URI
   if (!process.env.MONGODB_URI) {
-    errors.push('MONGODB_URI is required. Please provide a valid MongoDB connection string.');
+    if (isProduction) {
+      errors.push('MONGODB_URI is required in production. Please provide a valid MongoDB connection string.');
+    } else {
+      console.log('[Notice] No MONGODB_URI in environment; using local fallback: mongodb://127.0.0.1:27017/pulseplan_db');
+    }
   }
 
   // 2. Validate JWT_SECRET
@@ -67,11 +71,48 @@ export const ENV = {
   MONGODB_URI: process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/pulseplan_db',
   JWT_SECRET: process.env.JWT_SECRET || DEFAULT_DEV_JWT_SECRET,
   CLIENT_URL: process.env.CLIENT_URL || 'http://localhost:5173',
+
+  // Mail / SMTP Configuration
+  SMTP_HOST: process.env.SMTP_HOST || '',
+  SMTP_PORT: Number(process.env.SMTP_PORT || 587),
+  SMTP_USER: process.env.SMTP_USER || '',
+  SMTP_PASS: process.env.SMTP_PASS || '',
+  SMTP_SECURE: process.env.SMTP_SECURE === 'true',
+  EMAIL_FROM: process.env.EMAIL_FROM || 'PulsePlan <no-reply@pulseplan.io>',
+
+  // Cloudinary Configuration for Attachments
+  CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME || '',
+  CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY || '',
+  CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET || '',
+
   ALLOWED_ORIGINS: [
     process.env.CLIENT_URL,
     'http://localhost:5173',
     'http://localhost:5174',
+    'http://localhost:5175',
+    'http://localhost:3000',
     'http://127.0.0.1:5173',
     'http://127.0.0.1:5174',
+    'http://127.0.0.1:5175',
+    'http://127.0.0.1:3000',
   ].filter(Boolean),
 };
+
+/**
+ * Checks whether an incoming HTTP Origin or Referer is authorized.
+ */
+export function isAllowedOrigin(origin) {
+  if (!origin) return false;
+  if (ENV.ALLOWED_ORIGINS.includes(origin)) return true;
+  if (!ENV.IS_PRODUCTION) {
+    try {
+      const url = new URL(origin);
+      if (url.hostname === 'localhost' || url.hostname === '127.0.0.1') {
+        return true;
+      }
+    } catch {
+      return false;
+    }
+  }
+  return false;
+}

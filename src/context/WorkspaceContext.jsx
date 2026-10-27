@@ -383,6 +383,66 @@ export function WorkspaceProvider({ children }) {
     }
   }, [showToast]);
 
+  // Add Member to Workspace
+  const addMember = useCallback(async (memberData) => {
+    if (!activeWorkspaceId) {
+      showToast('No active workspace selected', 'danger');
+      return;
+    }
+    try {
+      const newMember = await api.addWorkspaceMember(activeWorkspaceId, memberData);
+      setWorkspaces((prevWorkspaces) =>
+        prevWorkspaces.map((ws) => {
+          if (ws._id === activeWorkspaceId || ws.id === activeWorkspaceId) {
+            return {
+              ...ws,
+              members: [...(ws.members || []), newMember],
+              membersCount: (ws.members?.length || 0) + 1,
+            };
+          }
+          return ws;
+        })
+      );
+      showToast(`Added ${newMember.name} to workspace!`, 'success');
+      return newMember;
+    } catch (error) {
+      console.error('[Frontend] Error adding member:', error);
+      showToast(error.message || 'Failed to add member', 'danger');
+      throw error;
+    }
+  }, [activeWorkspaceId, showToast]);
+
+  // Remove Member from Workspace
+  const removeMember = useCallback(async (memberId) => {
+    if (!activeWorkspaceId) {
+      showToast('No active workspace selected', 'danger');
+      return;
+    }
+    try {
+      await api.removeWorkspaceMember(activeWorkspaceId, memberId);
+      setWorkspaces((prevWorkspaces) =>
+        prevWorkspaces.map((ws) => {
+          if (ws._id === activeWorkspaceId || ws.id === activeWorkspaceId) {
+            const updatedMembers = (ws.members || []).filter(
+              (m) => m._id !== memberId && m.id !== memberId && m.email !== memberId
+            );
+            return {
+              ...ws,
+              members: updatedMembers,
+              membersCount: updatedMembers.length,
+            };
+          }
+          return ws;
+        })
+      );
+      showToast('Member removed from workspace.', 'info');
+    } catch (error) {
+      console.error('[Frontend] Error removing member:', error);
+      showToast(error.message || 'Failed to remove member', 'danger');
+      throw error;
+    }
+  }, [activeWorkspaceId, showToast]);
+
   const value = {
     workspaces,
     activeWorkspaceId,
@@ -399,6 +459,8 @@ export function WorkspaceProvider({ children }) {
     notification,
     showToast,
     updateWorkspace,
+    addMember,
+    removeMember,
     addProject,
     updateProject,
     deleteProject,

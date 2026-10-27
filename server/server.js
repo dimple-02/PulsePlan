@@ -15,7 +15,7 @@ async function bootstrap() {
     // 2. Connect to MongoDB
     await connectDB();
 
-    // 2. Start Express Server
+    // 3. Start Express Server
     const server = app.listen(PORT, () => {
       console.log(`====================================================`);
       console.log(`PulsePlan SaaS API Server running on port ${PORT}`);
@@ -25,6 +25,18 @@ async function bootstrap() {
       console.log(`====================================================`);
     });
 
+    server.on('error', (err) => {
+      if (err.code === 'EADDRINUSE') {
+        console.error(`\n[Server Error]: Port ${PORT} is already in use.`);
+        console.error(`Another process is already listening on port ${PORT}.`);
+        console.error(`To release port ${PORT} on Windows PowerShell, run:`);
+        console.error(`  Stop-Process -Id (Get-NetTCPConnection -LocalPort ${PORT}).OwningProcess -Force\n`);
+      } else {
+        console.error('[Server Error]:', err.message);
+      }
+      process.exit(1);
+    });
+
     // Graceful Shutdown
     const shutdown = () => {
       console.log('\n[Server] Gracefully shutting down...');
@@ -32,6 +44,9 @@ async function bootstrap() {
         console.log('[Server] Process terminated.');
         process.exit(0);
       });
+      setTimeout(() => {
+        process.exit(0);
+      }, 2000).unref();
     };
 
     process.on('SIGTERM', shutdown);

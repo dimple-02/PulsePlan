@@ -1,7 +1,22 @@
+
+// Helper to synchronize project completion rate based on task statuses
+async function recalculateProjectProgress(projectId, workspaceId) {
+  if (!projectId || !workspaceId) return;
+  try {
+    const tasks = await Task.find({ projectId, workspaceId });
+    const doneCount = tasks.filter((t) => t.status === 'done').length;
+    const progress = tasks.length > 0 ? Math.round((doneCount / tasks.length) * 100) : 0;
+    await Project.findByIdAndUpdate(projectId, { progress });
+  } catch (err) {
+    console.error('[RecalculateProjectProgress Error]:', err.message);
+  }
+}
+
 import { Task } from '../models/Task.js';
 import { Project } from '../models/Project.js';
 import { Workspace } from '../models/Workspace.js';
 import mongoose from 'mongoose';
+import { sendTaskAssignmentEmail } from '../services/mailService.js';
 
 /**
  * Task Controller
@@ -146,6 +161,7 @@ export async function createTask(req, res, next) {
     });
 
     // Record activity in parent workspace
+    await recalculateProjectProgress(project._id, req.workspaceId);
     await Workspace.findByIdAndUpdate(req.workspaceId, {
       $push: {
         activities: {
@@ -163,6 +179,27 @@ export async function createTask(req, res, next) {
         },
       },
     });
+
+    // Dispatch task assignment email if assigned to a team member
+    if (task.assignee?.name) {
+      Workspace.findById(req.workspaceId).then((ws) => {
+        const member = ws?.members?.find(
+          (m) => m.name.toLowerCase() === task.assignee.name.toLowerCase()
+        );
+        if (member?.email && member.email.toLowerCase() !== req.user?.email?.toLowerCase()) {
+          sendTaskAssignmentEmail({
+            to: member.email,
+            recipientName: member.name,
+            taskTitle: task.title,
+            projectName: project.name,
+            priority: task.priority,
+            dueDate: task.dueDate,
+          }).catch((err) => {
+            console.error('[MailService Error]: Failed to dispatch task assignment email:', err.message);
+          });
+        }
+      }).catch(() => {});
+    }
 
     res.status(201).json({
       success: true,
@@ -236,6 +273,8 @@ export async function updateTask(req, res, next) {
       { new: true, runValidators: true }
     );
 
+    await recalculateProjectProgress(updatedTask.projectId, req.workspaceId);
+
     // If status changed, record activity in workspace
     if (updates.status && updates.status !== oldStatus) {
       await Workspace.findByIdAndUpdate(req.workspaceId, {
@@ -283,6 +322,8 @@ export async function deleteTask(req, res, next) {
         message: `Task with ID '${id}' was not found in active workspace scope.`,
       });
     }
+
+    await recalculateProjectProgress(task.projectId, req.workspaceId);
 
     await Workspace.findByIdAndUpdate(req.workspaceId, {
       $push: {

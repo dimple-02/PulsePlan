@@ -33,7 +33,33 @@ export default function ProjectsPage() {
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
-  const projects = activeWorkspace?.projects || [];
+  // Calculate dynamic completion from tasks in real time
+  const projects = useMemo(() => {
+    const rawProjects = activeWorkspace?.projects || [];
+    const allTasks = activeWorkspace?.tasks || [];
+
+    return rawProjects.map((p) => {
+      const pId = String(p._id || p.id);
+      const pTasks = allTasks.filter((t) => {
+        const tProjId =
+          typeof t.projectId === 'object' && t.projectId !== null
+            ? (t.projectId._id || t.projectId.id)
+            : t.projectId;
+        return String(tProjId) === pId;
+      });
+
+      const doneTasks = pTasks.filter((t) => t.status === 'done');
+      const calculatedProgress =
+        pTasks.length > 0 ? Math.round((doneTasks.length / pTasks.length) * 100) : (p.progress || 0);
+
+      return {
+        ...p,
+        progress: calculatedProgress,
+        totalTasksCount: pTasks.length,
+        doneTasksCount: doneTasks.length,
+      };
+    });
+  }, [activeWorkspace?.projects, activeWorkspace?.tasks]);
 
   // Derived filtered projects list using useMemo
   const filteredProjects = useMemo(() => {
