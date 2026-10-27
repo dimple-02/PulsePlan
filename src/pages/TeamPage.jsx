@@ -80,7 +80,7 @@ export default function TeamPage() {
         <Button
           variant="primary"
           onClick={handleOpenModal}
-          icon={<UserPlus className="w-4 h-4" />}
+          icon={UserPlus}
           className="self-start sm:self-auto"
         >
           Add Member
