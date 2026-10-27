@@ -135,6 +135,15 @@ export async function deleteWorkspace(id) {
   });
 }
 
+export async function addWorkspaceMember(workspaceId, memberData) {
+  const result = await apiRequest(`/workspaces/${workspaceId}/members`, {
+    method: 'POST',
+    body: JSON.stringify(memberData),
+  }, workspaceId);
+  return result.data;
+}
+
+
 // -------------------------------------------------------------
 // Project API Calls (Scoped to Workspace)
 // -------------------------------------------------------------

@@ -287,3 +287,86 @@ export async function deleteWorkspace(req, res, next) {
     next(error);
   }
 }
+
+// POST /api/workspaces/:id/members
+export async function addWorkspaceMember(req, res, next) {
+  try {
+    const { id } = req.params;
+    const { name, email, role } = req.body;
+
+    const workspace = await Workspace.findById(id);
+    if (!workspace) {
+      return res.status(404).json({
+        success: false,
+        message: `Workspace with ID '${id}' not found.`,
+      });
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+
+    // Check if member already exists in this workspace
+    const existingMember = workspace.members.find(
+      (m) => m.email.toLowerCase() === normalizedEmail
+    );
+    if (existingMember) {
+      return res.status(409).json({
+        success: false,
+        message: `A member with email '${normalizedEmail}' is already part of this workspace.`,
+      });
+    }
+
+    // Check if user account already exists in MongoDB with this email
+    const registeredUser = await User.findOne({ email: normalizedEmail });
+
+    const initials =
+      name
+        .split(' ')
+        .map((n) => n[0])
+        .join('')
+        .toUpperCase()
+        .slice(0, 2) || 'U';
+
+    const newMember = {
+      name: name.trim(),
+      email: normalizedEmail,
+      role: role || 'Member',
+      avatar: initials,
+      status: registeredUser ? 'Active' : 'Offline',
+      userId: registeredUser ? registeredUser._id : undefined,
+    };
+
+    workspace.members.push(newMember);
+    workspace.membersCount = workspace.members.length;
+    workspace.activities.unshift({
+      user: req.user ? req.user.name : 'You',
+      action: 'added new member',
+      target: newMember.name,
+      timestamp: 'Just now',
+    });
+
+    await workspace.save();
+
+    // If user account exists, link this workspace to their account profile
+    if (registeredUser) {
+      const alreadyLinked = registeredUser.workspaces?.some(
+        (w) => w.workspaceId.toString() === workspace._id.toString()
+      );
+      if (!alreadyLinked) {
+        registeredUser.workspaces.push({
+          workspaceId: workspace._id,
+          role: newMember.role,
+        });
+        await registeredUser.save();
+      }
+    }
+
+    res.status(201).json({
+      success: true,
+      message: `Member '${name}' added to workspace successfully.`,
+      data: workspace.members[workspace.members.length - 1],
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+

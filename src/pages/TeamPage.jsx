@@ -1,9 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useWorkspace } from '../hooks/useWorkspace';
 import { Card, CardHeader, CardTitle, CardDescription, CardBody } from '../components/common/Card';
 import Avatar from '../components/common/Avatar';
 import Badge from '../components/common/Badge';
-import { Users, Shield } from 'lucide-react';
+import Button from '../components/common/Button';
+import Modal from '../components/common/Modal';
+import Input from '../components/common/Input';
+import Select from '../components/common/Select';
+import { Users, Shield, UserPlus } from 'lucide-react';
 
 /**
  * TeamPage Component
@@ -12,7 +16,15 @@ import { Users, Shield } from 'lucide-react';
  * Highlights tenant user isolation.
  */
 export default function TeamPage() {
-  const { activeWorkspace } = useWorkspace();
+  const { activeWorkspace, addMember } = useWorkspace();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    role: 'Member',
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState('');
 
   const members = activeWorkspace?.members || [];
 
@@ -20,6 +32,35 @@ export default function TeamPage() {
     Owner: 'purple',
     Admin: 'primary',
     Member: 'neutral',
+  };
+
+  const handleOpenModal = () => {
+    setFormData({ name: '', email: '', role: 'Member' });
+    setError('');
+    setIsModalOpen(true);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!formData.name.trim()) {
+      setError('Member name is required');
+      return;
+    }
+    if (!formData.email.trim()) {
+      setError('Member email is required');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setError('');
+    try {
+      await addMember(formData);
+      setIsModalOpen(false);
+    } catch (err) {
+      setError(err.message || 'Failed to add member');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -35,7 +76,17 @@ export default function TeamPage() {
             Managing members and roles for <span className="font-semibold text-slate-700">{activeWorkspace?.name}</span>
           </p>
         </div>
+
+        <Button
+          variant="primary"
+          onClick={handleOpenModal}
+          icon={<UserPlus className="w-4 h-4" />}
+          className="self-start sm:self-auto"
+        >
+          Add Member
+        </Button>
       </div>
+
 
       {/* Members Table Card */}
       <Card>
@@ -131,6 +182,61 @@ export default function TeamPage() {
           </p>
         </div>
       </div>
+
+      {/* Add Member Modal */}
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title="Add Team Collaborator"
+        description={`Add a new member to ${activeWorkspace?.name || 'this workspace'}`}
+        footer={
+          <div className="flex items-center justify-end gap-2 w-full">
+            <Button variant="ghost" onClick={() => setIsModalOpen(false)} disabled={isSubmitting}>
+              Cancel
+            </Button>
+            <Button variant="primary" onClick={handleSubmit} disabled={isSubmitting}>
+              {isSubmitting ? 'Adding...' : 'Add Member'}
+            </Button>
+          </div>
+        }
+      >
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {error && (
+            <div className="p-2.5 bg-rose-50 text-rose-700 border border-rose-200 rounded-lg text-xs">
+              {error}
+            </div>
+          )}
+
+          <Input
+            label="Full Name *"
+            placeholder="e.g. Dimple Sharma"
+            value={formData.name}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            required
+          />
+
+          <Input
+            label="Email Address *"
+            type="email"
+            placeholder="e.g. dimple@example.com"
+            value={formData.email}
+            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            required
+          />
+
+          <Select
+            label="Workspace Role"
+            value={formData.role}
+            onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+            options={[
+              { value: 'Member', label: 'Member — Can create & update tasks' },
+              { value: 'Admin', label: 'Admin — Can manage projects & team' },
+              { value: 'Owner', label: 'Owner — Full workspace access' },
+            ]}
+          />
+        </form>
+      </Modal>
     </div>
   );
 }
+

@@ -8,6 +8,7 @@ import {
   createWorkspace,
   updateWorkspace,
   deleteWorkspace,
+  addWorkspaceMember,
 } from '../controllers/workspaceController.js';
 
 const router = express.Router();
@@ -17,6 +18,20 @@ const router = express.Router();
  */
 
 router.get('/', requireAuth, getWorkspaces);
+
+router.post(
+  '/:id/members',
+  requireAuth,
+  [
+    param('id').isMongoId().withMessage('Invalid workspace ID format'),
+    body('name').trim().notEmpty().withMessage('Member name is required'),
+    body('email').isEmail().withMessage('A valid email address is required'),
+    body('role').optional().isIn(['Owner', 'Admin', 'Member']).withMessage('Invalid role'),
+    validate,
+  ],
+  addWorkspaceMember
+);
+
 
 router.get(
   '/:id',

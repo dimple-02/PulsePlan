@@ -383,6 +383,35 @@ export function WorkspaceProvider({ children }) {
     }
   }, [showToast]);
 
+  // Add Member to Workspace
+  const addMember = useCallback(async (memberData) => {
+    if (!activeWorkspaceId) {
+      showToast('No active workspace selected', 'danger');
+      return;
+    }
+    try {
+      const newMember = await api.addWorkspaceMember(activeWorkspaceId, memberData);
+      setWorkspaces((prevWorkspaces) =>
+        prevWorkspaces.map((ws) => {
+          if (ws._id === activeWorkspaceId || ws.id === activeWorkspaceId) {
+            return {
+              ...ws,
+              members: [...(ws.members || []), newMember],
+              membersCount: (ws.members?.length || 0) + 1,
+            };
+          }
+          return ws;
+        })
+      );
+      showToast(`Added ${newMember.name} to workspace!`, 'success');
+      return newMember;
+    } catch (error) {
+      console.error('[Frontend] Error adding member:', error);
+      showToast(error.message || 'Failed to add member', 'danger');
+      throw error;
+    }
+  }, [activeWorkspaceId, showToast]);
+
   const value = {
     workspaces,
     activeWorkspaceId,
@@ -399,6 +428,7 @@ export function WorkspaceProvider({ children }) {
     notification,
     showToast,
     updateWorkspace,
+    addMember,
     addProject,
     updateProject,
     deleteProject,
