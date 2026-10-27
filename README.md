@@ -357,7 +357,8 @@ Run these from the repository root:
 | Command | What it does |
 | --- | --- |
 | `npm run dev` | Start the Vite frontend |
-| `npm run server` | Start the backend with Node watch mode |
+| `npm run server` | Start the backend in normal mode |
+| `npm run server:watch` | Start the backend with Node watch mode |
 | `npm run build` | Create the production frontend build |
 | `npm run preview` | Preview the production frontend build |
 | `npm run test:auth` | Run authentication and tenant-isolation checks |

@@ -4,7 +4,6 @@ import { Card, CardHeader, CardTitle, CardDescription, CardBody, CardFooter } fr
 import Button from '../components/common/Button';
 import Input from '../components/common/Input';
 import Badge from '../components/common/Badge';
-import BootstrapSyllabusShowcase from '../components/common/BootstrapSyllabusShowcase';
 import { Settings, Save, Building2, Shield, Sparkles } from 'lucide-react';
 
 /**
@@ -116,9 +115,6 @@ export default function SettingsPage() {
           </CardFooter>
         </form>
       </Card>
-
-      {/* Syllabus Showcase: Bootstrap 5, Tailwind CSS, & JavaScript Promises */}
-      <BootstrapSyllabusShowcase />
     </div>
   );
 }
