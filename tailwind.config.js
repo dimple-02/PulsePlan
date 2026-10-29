@@ -7,6 +7,18 @@ export default {
   theme: {
     extend: {
       colors: {
+        pulse: {
+          bg: '#0B0A0F',
+          surface: '#14121C',
+          surface2: '#1C1926',
+          surface3: '#262234',
+          lavender: '#C9B8FF',
+          pink: '#FFD6E8',
+          white: '#F8F6EF',
+          muted: '#A6A1B5',
+          border: 'rgba(201, 184, 255, 0.12)',
+          borderHover: 'rgba(201, 184, 255, 0.28)',
+        },
         brand: {
           50: '#eef2ff',
           100: '#e0e7ff',

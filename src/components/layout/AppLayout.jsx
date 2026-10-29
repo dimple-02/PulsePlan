@@ -18,7 +18,7 @@ import Button from '../common/Button';
  * - Global Modals (Create Project, Create Task)
  * - Feedback Toast messages
  */
-export default function AppLayout() {
+export default function AppLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [createProjectOpen, setCreateProjectOpen] = useState(false);
   const [createTaskOpen, setCreateTaskOpen] = useState(false);
@@ -79,7 +79,7 @@ export default function AppLayout() {
 
         {/* Dynamic Route Content */}
         <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
-          <Outlet />
+          {children || <Outlet />}
         </main>
       </div>
 
