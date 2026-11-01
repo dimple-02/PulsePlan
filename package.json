@@ -10,7 +10,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "test:auth": "node server/tests/authTest.js",
-    "test:security": "node server/tests/securityAuditTest.js"
+    "test:security": "node server/tests/securityAuditTest.js",
+    "test:hardening": "node server/tests/securityHardeningTest.js"
   },
   "dependencies": {
     "bootstrap": "^5.3.8",

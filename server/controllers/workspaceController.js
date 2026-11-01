@@ -230,6 +230,27 @@ export async function updateWorkspace(req, res, next) {
       }
     }
 
+    // Role check: Only Owner or Admin can update workspace settings
+    if (req.user) {
+      const isOwnerOrAdmin =
+        req.user.workspaces?.some(
+          (w) => w.workspaceId.toString() === workspace._id.toString() && (w.role === 'Owner' || w.role === 'Admin')
+        ) ||
+        workspace.members?.some(
+          (m) =>
+            ((m.userId && m.userId.toString() === req.user._id.toString()) ||
+              (m.email && m.email.toLowerCase() === req.user.email.toLowerCase())) &&
+            (m.role === 'Owner' || m.role === 'Admin')
+        );
+
+      if (!isOwnerOrAdmin) {
+        return res.status(403).json({
+          success: false,
+          message: 'Access denied: Only workspace Owners or Admins are authorized to update workspace settings.',
+        });
+      }
+    }
+
     const allowedUpdates = ['name', 'plan', 'color', 'badgeColor', 'description', 'currentUserRole'];
     const updates = {};
 
@@ -320,6 +341,46 @@ export async function addWorkspaceMember(req, res, next) {
         success: false,
         message: `Workspace with ID '${id}' not found.`,
       });
+    }
+
+    // Role-Based Access Control: Only Owners and Admins can add members
+    const isOwnerOrAdmin =
+      req.user.workspaces?.some(
+        (w) => w.workspaceId.toString() === workspace._id.toString() && (w.role === 'Owner' || w.role === 'Admin')
+      ) ||
+      workspace.members?.some(
+        (m) =>
+          ((m.userId && m.userId.toString() === req.user._id.toString()) ||
+            (m.email && m.email.toLowerCase() === req.user.email.toLowerCase())) &&
+          (m.role === 'Owner' || m.role === 'Admin')
+      );
+
+    if (!isOwnerOrAdmin) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied: Only workspace Owners or Admins are authorized to add members.',
+      });
+    }
+
+    // Privilege Escalation Prevention: Only Owners can grant the Owner role
+    if (role === 'Owner') {
+      const isOwner =
+        req.user.workspaces?.some(
+          (w) => w.workspaceId.toString() === workspace._id.toString() && w.role === 'Owner'
+        ) ||
+        workspace.members?.some(
+          (m) =>
+            ((m.userId && m.userId.toString() === req.user._id.toString()) ||
+              (m.email && m.email.toLowerCase() === req.user.email.toLowerCase())) &&
+            m.role === 'Owner'
+        );
+
+      if (!isOwner) {
+        return res.status(403).json({
+          success: false,
+          message: 'Access denied: Only existing Owners can grant the Owner role to another user.',
+        });
+      }
     }
 
     const normalizedEmail = email.toLowerCase().trim();
@@ -413,6 +474,25 @@ export async function removeWorkspaceMember(req, res, next) {
       return res.status(404).json({
         success: false,
         message: `Workspace with ID '${id}' not found.`,
+      });
+    }
+
+    // Role-Based Access Control: Only Owners and Admins can remove members
+    const isOwnerOrAdmin =
+      req.user.workspaces?.some(
+        (w) => w.workspaceId.toString() === workspace._id.toString() && (w.role === 'Owner' || w.role === 'Admin')
+      ) ||
+      workspace.members?.some(
+        (m) =>
+          ((m.userId && m.userId.toString() === req.user._id.toString()) ||
+            (m.email && m.email.toLowerCase() === req.user.email.toLowerCase())) &&
+          (m.role === 'Owner' || m.role === 'Admin')
+      );
+
+    if (!isOwnerOrAdmin) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied: Only workspace Owners or Admins are authorized to remove members.',
       });
     }
 

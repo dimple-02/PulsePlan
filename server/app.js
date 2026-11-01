@@ -11,6 +11,26 @@ import { errorHandler } from './middleware/errorHandler.js';
 
 const app = express();
 
+// Disable x-powered-by header to prevent fingerprinting
+app.disable('x-powered-by');
+
+// Express reverse proxy trust setting for Render / Vercel
+if (ENV.IS_PRODUCTION) {
+  app.set('trust proxy', 1);
+}
+
+// HTTP Security Headers
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  if (ENV.IS_PRODUCTION) {
+    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  }
+  next();
+});
+
 /**
  * CORS Configuration
  * Allows only explicitly whitelisted origins with credentials (no wildcard or blind reflection)
@@ -41,7 +61,7 @@ app.use(csrfProtection);
 
 // Body Parser Middleware
 app.use(express.json({ limit: '1mb' }));
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
 /**
  * Healthcheck Route

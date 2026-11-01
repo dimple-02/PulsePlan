@@ -4,6 +4,7 @@ import { Workspace } from '../models/Workspace.js';
 /**
  * Message Controller
  * Handles direct messaging between members and workspace team chat.
+ * Protected by multi-tenant membership checks to prevent IDOR vulnerabilities.
  */
 
 // GET /api/workspaces/:id/messages
@@ -12,7 +13,7 @@ export async function getMessages(req, res, next) {
     const { id: workspaceId } = req.params;
     const { recipientEmail } = req.query;
 
-    // Verify workspace access
+    // Verify workspace exists
     const workspace = await Workspace.findById(workspaceId);
     if (!workspace) {
       return res.status(404).json({
@@ -21,11 +22,26 @@ export async function getMessages(req, res, next) {
       });
     }
 
-    const userEmail = req.user.email.toLowerCase();
+    // Strict Tenant Membership Authorization Check (IDOR Prevention)
+    const isMember =
+      req.user.workspaces?.some((w) => w.workspaceId.toString() === workspace._id.toString()) ||
+      workspace.members?.some(
+        (m) =>
+          (m.userId && m.userId.toString() === req.user._id.toString()) ||
+          (m.email && m.email.toLowerCase() === req.user.email.toLowerCase())
+      );
 
+    if (!isMember) {
+      return res.status(403).json({
+        success: false,
+        message: `Access denied: You are not authorized to view messages in workspace '${workspace.name}'.`,
+      });
+    }
+
+    const userEmail = req.user.email.toLowerCase();
     let query = { workspaceId };
 
-    if (recipientEmail) {
+    if (recipientEmail && typeof recipientEmail === 'string' && recipientEmail.trim()) {
       const otherEmail = recipientEmail.toLowerCase().trim();
       // 1-on-1 direct messages between current user and specified recipient
       query.$or = [
@@ -73,8 +89,24 @@ export async function sendMessage(req, res, next) {
       });
     }
 
+    // Strict Tenant Membership Authorization Check (IDOR Prevention)
+    const isMember =
+      req.user.workspaces?.some((w) => w.workspaceId.toString() === workspace._id.toString()) ||
+      workspace.members?.some(
+        (m) =>
+          (m.userId && m.userId.toString() === req.user._id.toString()) ||
+          (m.email && m.email.toLowerCase() === req.user.email.toLowerCase())
+      );
+
+    if (!isMember) {
+      return res.status(403).json({
+        success: false,
+        message: `Access denied: You are not authorized to post messages in workspace '${workspace.name}'.`,
+      });
+    }
+
     let recipientData = null;
-    if (recipientEmail) {
+    if (recipientEmail && typeof recipientEmail === 'string' && recipientEmail.trim()) {
       const normalizedRecipient = recipientEmail.toLowerCase().trim();
       // Verify recipient exists in this workspace
       const targetMember = workspace.members.find(
