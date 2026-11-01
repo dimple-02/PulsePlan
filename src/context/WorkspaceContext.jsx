@@ -14,12 +14,27 @@ export const WorkspaceContext = createContext(null);
  * - Transparent loading and error states (no silent fake-mock fallback)
  * - Multi-tenant workspace scoping via 'x-workspace-id' header
  */
+const STORAGE_KEY_WS = 'pulseplan_active_workspace_id';
+const STORAGE_KEY_PROJ = 'pulseplan_active_project_id';
+
 export function WorkspaceProvider({ children }) {
   const { isAuthenticated, user } = useAuth();
 
   const [workspaces, setWorkspaces] = useState([]);
-  const [activeWorkspaceId, setActiveWorkspaceId] = useState(null);
-  const [activeProjectId, setActiveProjectId] = useState(null);
+  const [activeWorkspaceId, setActiveWorkspaceId] = useState(() => {
+    try {
+      return localStorage.getItem(STORAGE_KEY_WS) || null;
+    } catch {
+      return null;
+    }
+  });
+  const [activeProjectId, setActiveProjectId] = useState(() => {
+    try {
+      return localStorage.getItem(STORAGE_KEY_PROJ) || null;
+    } catch {
+      return null;
+    }
+  });
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [apiError, setApiError] = useState(null);
@@ -40,6 +55,10 @@ export function WorkspaceProvider({ children }) {
       setActiveWorkspaceId(null);
       setActiveProjectId(null);
       setIsLoading(false);
+      try {
+        localStorage.removeItem(STORAGE_KEY_WS);
+        localStorage.removeItem(STORAGE_KEY_PROJ);
+      } catch {}
       return;
     }
 
@@ -50,18 +69,41 @@ export function WorkspaceProvider({ children }) {
       setWorkspaces(data || []);
 
       if (data && data.length > 0) {
-        // Keep current active workspace if still valid, or pick first
+        // Retrieve stored preference or current state or fallback
+        const savedWsId = localStorage.getItem(STORAGE_KEY_WS);
+        const savedProjId = localStorage.getItem(STORAGE_KEY_PROJ);
+
         setActiveWorkspaceId((prevId) => {
-          const exists = data.some((w) => (w._id === prevId || w.id === prevId));
-          const chosenId = exists ? prevId : (data[0]._id || data[0].id);
+          const candidateId = prevId || savedWsId;
+          const exists = candidateId && data.some((w) => String(w._id || w.id) === String(candidateId));
+          const chosenId = exists ? candidateId : (data[0]._id || data[0].id);
 
-          const chosenWs = data.find((w) => (w._id === chosenId || w.id === chosenId));
-          if (chosenWs && chosenWs.projects && chosenWs.projects.length > 0) {
-            setActiveProjectId(chosenWs.projects[0]._id || chosenWs.projects[0].id);
-          } else {
-            setActiveProjectId(null);
-          }
+          const chosenWs = data.find((w) => String(w._id || w.id) === String(chosenId));
 
+          setActiveProjectId((prevProjId) => {
+            const candidateProjId = prevProjId || savedProjId;
+            const projExists = candidateProjId && chosenWs?.projects?.some(
+              (p) => String(p._id || p.id) === String(candidateProjId)
+            );
+            const chosenProjId = projExists
+              ? candidateProjId
+              : (chosenWs?.projects?.[0] ? (chosenWs.projects[0]._id || chosenWs.projects[0].id) : null);
+
+            try {
+              if (chosenProjId) {
+                localStorage.setItem(STORAGE_KEY_PROJ, String(chosenProjId));
+              } else {
+                localStorage.removeItem(STORAGE_KEY_PROJ);
+              }
+            } catch {}
+            return chosenProjId;
+          });
+
+          try {
+            if (chosenId) {
+              localStorage.setItem(STORAGE_KEY_WS, String(chosenId));
+            }
+          } catch {}
           return chosenId;
         });
       } else {
@@ -87,7 +129,7 @@ export function WorkspaceProvider({ children }) {
   const activeWorkspace = useMemo(() => {
     if (!activeWorkspaceId) return null;
     return (
-      workspaces.find((w) => (w._id && w._id === activeWorkspaceId) || (w.id && w.id === activeWorkspaceId)) || null
+      workspaces.find((w) => String(w._id || w.id) === String(activeWorkspaceId)) || null
     );
   }, [workspaces, activeWorkspaceId]);
 
@@ -95,7 +137,7 @@ export function WorkspaceProvider({ children }) {
   const activeProject = useMemo(() => {
     if (!activeWorkspace || !activeWorkspace.projects || activeWorkspace.projects.length === 0) return null;
     return (
-      activeWorkspace.projects.find((p) => (p._id && p._id === activeProjectId) || (p.id && p.id === activeProjectId)) ||
+      activeWorkspace.projects.find((p) => String(p._id || p.id) === String(activeProjectId)) ||
       activeWorkspace.projects[0] ||
       null
     );
@@ -104,14 +146,86 @@ export function WorkspaceProvider({ children }) {
   // Switch active workspace
   const switchWorkspace = useCallback((wsId) => {
     setActiveWorkspaceId(wsId);
-    const targetWs = workspaces.find((w) => (w._id && w._id === wsId) || (w.id && w.id === wsId));
+    try {
+      localStorage.setItem(STORAGE_KEY_WS, String(wsId));
+    } catch {}
+
+    const targetWs = workspaces.find((w) => String(w._id || w.id) === String(wsId));
     if (targetWs && targetWs.projects && targetWs.projects.length > 0) {
-      setActiveProjectId(targetWs.projects[0]._id || targetWs.projects[0].id);
+      const defaultProjId = targetWs.projects[0]._id || targetWs.projects[0].id;
+      setActiveProjectId(defaultProjId);
+      try {
+        localStorage.setItem(STORAGE_KEY_PROJ, String(defaultProjId));
+      } catch {}
     } else {
       setActiveProjectId(null);
+      try {
+        localStorage.removeItem(STORAGE_KEY_PROJ);
+      } catch {}
     }
     showToast(`Switched workspace to "${targetWs?.name || wsId}"`, 'success');
   }, [workspaces, showToast]);
+
+  // Select active project (or switch workspace if item is a workspace)
+  const selectProject = useCallback((projOrWsId) => {
+    if (!projOrWsId) {
+      setActiveProjectId(null);
+      try {
+        localStorage.removeItem(STORAGE_KEY_PROJ);
+      } catch {}
+      return null;
+    }
+
+    const targetId = String(projOrWsId);
+
+    // 1. Check if targetId is a project in the currently active workspace
+    const projectInActive = activeWorkspace?.projects?.find(
+      (p) => String(p._id || p.id) === targetId
+    );
+
+    if (projectInActive) {
+      const chosenId = projectInActive._id || projectInActive.id;
+      setActiveProjectId(chosenId);
+      try {
+        localStorage.setItem(STORAGE_KEY_PROJ, String(chosenId));
+      } catch {}
+      showToast(`Active project: "${projectInActive.name}" (${projectInActive.key})`, 'info');
+      return { type: 'project', data: projectInActive };
+    }
+
+    // 2. Check if targetId matches a workspace (e.g. if a workspace was passed)
+    const matchingWs = workspaces.find(
+      (w) => String(w._id || w.id) === targetId
+    );
+    if (matchingWs) {
+      switchWorkspace(matchingWs._id || matchingWs.id);
+      return { type: 'workspace', data: matchingWs };
+    }
+
+    // 3. Check if targetId is a project belonging to another authorized workspace
+    for (const ws of workspaces) {
+      const matchingProj = (ws.projects || []).find(
+        (p) => String(p._id || p.id) === targetId
+      );
+      if (matchingProj) {
+        const wsId = ws._id || ws.id;
+        const pId = matchingProj._id || matchingProj.id;
+        setActiveWorkspaceId(wsId);
+        setActiveProjectId(pId);
+        try {
+          localStorage.setItem(STORAGE_KEY_WS, String(wsId));
+          localStorage.setItem(STORAGE_KEY_PROJ, String(pId));
+        } catch {}
+        showToast(`Switched to "${ws.name}" • Project: "${matchingProj.name}"`, 'success');
+        return { type: 'project', data: matchingProj, workspace: ws };
+      }
+    }
+
+    // 4. Not found in any tenant context accessible to this user
+    console.warn(`[WorkspaceContext] Project or Workspace '${projOrWsId}' not found.`);
+    showToast('The requested project could not be found in your workspaces.', 'warning');
+    return null;
+  }, [activeWorkspace, workspaces, switchWorkspace, showToast]);
 
   // -------------------------------------------------------------
   // Project Management Actions (Persisted to MongoDB)
@@ -139,6 +253,7 @@ export function WorkspaceProvider({ children }) {
                   action: 'created new project',
                   target: createdProject.name,
                   timestamp: 'Just now',
+                  createdAt: new Date().toISOString(),
                 },
                 ...(ws.activities || []),
               ],
@@ -269,6 +384,7 @@ export function WorkspaceProvider({ children }) {
                   target: createdTask.title,
                   destination: createdTask.status,
                   timestamp: 'Just now',
+                  createdAt: new Date().toISOString(),
                 },
                 ...(ws.activities || []),
               ],
@@ -296,11 +412,26 @@ export function WorkspaceProvider({ children }) {
       setWorkspaces((prevWorkspaces) =>
         prevWorkspaces.map((ws) => {
           if (ws._id === activeWorkspaceId || ws.id === activeWorkspaceId) {
+            const currentTask = (ws.tasks || []).find((t) => (t._id === taskId || t.id === taskId));
+            const oldStatus = currentTask?.status;
+            const newActivities = (oldStatus && oldStatus !== newStatus) ? [
+              {
+                id: `act-${Date.now()}`,
+                user: updatedTask?.assignee?.name || 'You',
+                action: 'moved task',
+                target: updatedTask?.title || currentTask?.title || 'Task',
+                destination: newStatus,
+                timestamp: 'Just now',
+                createdAt: new Date().toISOString(),
+              },
+              ...(ws.activities || []),
+            ] : (ws.activities || []);
             return {
               ...ws,
               tasks: (ws.tasks || []).map((t) =>
                 (t._id === taskId || t.id === taskId) ? { ...t, status: newStatus } : t
               ),
+              activities: newActivities,
             };
           }
           return ws;
@@ -398,6 +529,17 @@ export function WorkspaceProvider({ children }) {
               ...ws,
               members: [...(ws.members || []), newMember],
               membersCount: (ws.members?.length || 0) + 1,
+              activities: [
+                {
+                  id: `act-${Date.now()}`,
+                  user: 'You',
+                  action: 'added new member',
+                  target: newMember.name,
+                  timestamp: 'Just now',
+                  createdAt: new Date().toISOString(),
+                },
+                ...(ws.activities || []),
+              ],
             };
           }
           return ws;
@@ -451,6 +593,7 @@ export function WorkspaceProvider({ children }) {
     activeProjectId,
     activeProject,
     setActiveProjectId,
+    selectProject,
     searchQuery,
     setSearchQuery,
     isLoading,

@@ -107,6 +107,7 @@ export async function signup(req, res, next) {
           action: 'created workspace',
           target: `${firstName}'s Workspace`,
           timestamp: 'Just now',
+          createdAt: new Date(),
         },
       ],
     });

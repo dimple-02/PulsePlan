@@ -168,6 +168,7 @@ export async function createWorkspace(req, res, next) {
           action: 'created workspace',
           target: name,
           timestamp: 'Just now',
+          createdAt: new Date(),
         },
       ],
     });
@@ -361,6 +362,7 @@ export async function addWorkspaceMember(req, res, next) {
       action: 'added new member',
       target: newMember.name,
       timestamp: 'Just now',
+      createdAt: new Date(),
     });
 
     await workspace.save();
@@ -449,6 +451,7 @@ export async function removeWorkspaceMember(req, res, next) {
       action: 'removed member',
       target: memberToRemove.name,
       timestamp: 'Just now',
+      createdAt: new Date(),
     });
 
     await workspace.save();

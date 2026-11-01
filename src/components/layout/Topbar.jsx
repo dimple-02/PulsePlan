@@ -16,6 +16,7 @@ import { useAuth } from '../../context/AuthContext';
 import Button from '../common/Button';
 import Badge from '../common/Badge';
 import ThemeToggle from '../common/ThemeToggle';
+import { formatRelativeTime, sortActivitiesNewestFirst } from '../../utils/dateUtils';
 
 /**
  * Topbar Component
@@ -163,8 +164,8 @@ export default function Topbar({
 
               <div className="max-h-72 overflow-y-auto divide-y divide-slate-100 dark:divide-white/5">
                 {activeWorkspace?.activities && activeWorkspace.activities.length > 0 ? (
-                  activeWorkspace.activities.map((act) => (
-                    <div key={act.id} className="p-3 text-xs hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
+                  sortActivitiesNewestFirst(activeWorkspace.activities).map((act, index) => (
+                    <div key={act.id || act._id || `topbar-act-${index}`} className="p-3 text-xs hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
                       <p className="text-slate-800 dark:text-[#F8F6EF]">
                         <span className="font-semibold text-slate-900 dark:text-[#F8F6EF]">{act.user}</span>{' '}
                         {act.action}{' '}
@@ -174,7 +175,7 @@ export default function Topbar({
                         )}
                       </p>
                       <span className="text-[10px] text-slate-400 dark:text-[#A6A1B5]/70 mt-1 block">
-                        {act.timestamp}
+                        {formatRelativeTime(act.createdAt)}
                       </span>
                     </div>
                   ))

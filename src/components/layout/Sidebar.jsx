@@ -26,7 +26,7 @@ import ThemeToggle from '../common/ThemeToggle';
  */
 export default function Sidebar({ isOpen, onClose }) {
   const navigate = useNavigate();
-  const { activeWorkspace, activeProjectId, setActiveProjectId } = useWorkspace();
+  const { activeWorkspace, activeProjectId, selectProject, setActiveProjectId } = useWorkspace();
   const { user, logout } = useAuth();
 
   const handleLogout = async () => {
@@ -140,28 +140,38 @@ export default function Sidebar({ isOpen, onClose }) {
               <div className="space-y-1">
                 {activeWorkspace.projects.slice(0, 4).map((proj) => {
                   const projId = proj._id || proj.id;
-                  const isSelected = projId === activeProjectId;
+                  const isSelected = String(projId) === String(activeProjectId);
                   return (
                     <button
                       key={projId}
                       type="button"
                       onClick={() => {
-                        setActiveProjectId(projId);
+                        const result = selectProject ? selectProject(projId) : setActiveProjectId(projId);
+                        if (result?.type !== 'workspace') {
+                          navigate('/kanban');
+                        }
                         if (window.innerWidth < 1024) onClose();
                       }}
+                      aria-current={isSelected ? 'true' : undefined}
+                      title={`Open Kanban board for ${proj.name} (${proj.key})`}
                       className={`w-full flex items-center justify-between px-3 py-1.5 rounded-lg text-xs transition-colors text-left ${
                         isSelected
-                          ? 'bg-slate-100 dark:bg-white/10 text-slate-900 dark:text-[#F8F6EF] font-medium'
-                          : 'text-slate-600 dark:text-[#A6A1B5] hover:bg-slate-50 dark:hover:bg-white/5'
+                          ? 'bg-indigo-50 dark:bg-[#C9B8FF]/15 text-indigo-700 dark:text-[#C9B8FF] font-semibold border border-indigo-100 dark:border-[#C9B8FF]/30 shadow-xs'
+                          : 'text-slate-600 dark:text-[#A6A1B5] hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-[#F8F6EF]'
                       }`}
                     >
                       <div className="flex items-center gap-2 truncate">
                         <Folder className={`w-3.5 h-3.5 shrink-0 ${isSelected ? 'text-indigo-600 dark:text-[#C9B8FF]' : 'text-slate-400 dark:text-[#A6A1B5]/60'}`} />
                         <span className="truncate">{proj.name}</span>
                       </div>
-                      <span className="text-[10px] font-mono text-slate-400 dark:text-[#A6A1B5]/60 shrink-0 ml-1">
-                        {proj.key}
-                      </span>
+                      <div className="flex items-center gap-1.5 shrink-0 ml-1">
+                        {isSelected && (
+                          <span className="w-1.5 h-1.5 rounded-full bg-indigo-600 dark:bg-[#C9B8FF] animate-pulse" />
+                        )}
+                        <span className="text-[10px] font-mono text-slate-400 dark:text-[#A6A1B5]/60">
+                          {proj.key}
+                        </span>
+                      </div>
                     </button>
                   );
                 })}

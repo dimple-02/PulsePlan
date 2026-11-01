@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useWorkspace } from '../hooks/useWorkspace';
 import ProjectCard from '../components/projects/ProjectCard';
 import ProjectTableRow from '../components/projects/ProjectTableRow';
@@ -25,7 +26,16 @@ import {
  * - Empty states for zero-result queries
  */
 export default function ProjectsPage() {
-  const { activeWorkspace, deleteProject } = useWorkspace();
+  const { activeWorkspace, deleteProject, selectProject } = useWorkspace();
+  const navigate = useNavigate();
+
+  const handleSelectProject = (project) => {
+    const pId = project._id || project.id;
+    if (selectProject) {
+      selectProject(pId);
+    }
+    navigate('/kanban');
+  };
 
   const [viewMode, setViewMode] = useState('grid'); // 'grid' | 'table'
   const [searchFilter, setSearchFilter] = useState('');
@@ -227,7 +237,7 @@ export default function ProjectsPage() {
             <ProjectCard
               key={project._id || project.id}
               project={project}
-              onSelect={() => {}}
+              onSelect={handleSelectProject}
               onDelete={deleteProject}
             />
           ))}
@@ -252,7 +262,7 @@ export default function ProjectsPage() {
                   <ProjectTableRow
                     key={project._id || project.id}
                     project={project}
-                    onSelect={() => {}}
+                    onSelect={handleSelectProject}
                     onDelete={deleteProject}
                   />
                 ))}
