@@ -50,7 +50,7 @@ export default function Input({
           onChange={onChange}
           placeholder={placeholder}
           required={required}
-          className={`block w-full rounded-lg text-sm border transition-colors focus:outline-none focus:ring-2 focus:ring-offset-0 ${
+          className={`block w-full rounded-lg text-base sm:text-sm border transition-colors focus:outline-none focus:ring-2 focus:ring-offset-0 ${
             Icon ? 'pl-9' : 'pl-3.5'
           } pr-3.5 py-2.5 ${
             error

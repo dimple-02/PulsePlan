@@ -98,17 +98,27 @@ export default function Topbar({
 
       {/* Right section: Tenant badge, Quick Actions & Notifications */}
       <div className="flex items-center gap-2 sm:gap-3">
-        {/* Active Multi-Tenant Workspace Badge */}
+        {/* Active Multi-Tenant Workspace Badge / Switcher Shortcut */}
         {activeWorkspace && (
-          <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs text-slate-700 dark:text-[#A6A1B5]">
-            <Building2 className="w-3.5 h-3.5 text-indigo-600 dark:text-[#C9B8FF]" />
-            <span className="font-semibold text-slate-900 dark:text-[#F8F6EF] truncate max-w-[120px]">
+          <button
+            type="button"
+            onClick={() => navigate('/workspaces')}
+            title={`Active Workspace: ${activeWorkspace.name} (Tap to manage or switch)`}
+            className="flex items-center gap-1.5 px-2 sm:px-2.5 py-1 rounded-full bg-slate-100 hover:bg-slate-200/80 dark:bg-white/5 dark:hover:bg-white/10 border border-slate-200 dark:border-white/10 text-xs text-slate-700 dark:text-[#A6A1B5] transition-colors focus:outline-none"
+          >
+            <div
+              className="w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold text-white shrink-0"
+              style={{ backgroundColor: activeWorkspace.color || '#4f46e5' }}
+            >
+              {activeWorkspace.name.substring(0, 1).toUpperCase()}
+            </div>
+            <span className="font-semibold text-slate-900 dark:text-[#F8F6EF] truncate max-w-[70px] xs:max-w-[100px] md:max-w-[130px]">
               {activeWorkspace.name}
             </span>
-            <Badge variant="primary" size="sm">
-              {activeWorkspace.plan}
+            <Badge variant="primary" size="xs" className="hidden sm:inline-flex">
+              {activeWorkspace.plan || 'Starter'}
             </Badge>
-          </div>
+          </button>
         )}
 
         {/* Quick Create Project */}

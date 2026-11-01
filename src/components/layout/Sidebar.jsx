@@ -11,6 +11,8 @@ import {
   Folder,
   CheckCircle2,
   LogOut,
+  Building2,
+  X,
 } from 'lucide-react';
 import WorkspaceSwitcher from './WorkspaceSwitcher';
 import { useWorkspace } from '../../hooks/useWorkspace';
@@ -26,7 +28,7 @@ import ThemeToggle from '../common/ThemeToggle';
  */
 export default function Sidebar({ isOpen, onClose }) {
   const navigate = useNavigate();
-  const { activeWorkspace, activeProjectId, selectProject, setActiveProjectId } = useWorkspace();
+  const { workspaces, activeWorkspace, activeProjectId, selectProject, setActiveProjectId } = useWorkspace();
   const { user, logout } = useAuth();
 
   const handleLogout = async () => {
@@ -39,6 +41,7 @@ export default function Sidebar({ isOpen, onClose }) {
 
   const navigation = [
     { name: 'Dashboard', to: '/', icon: LayoutDashboard },
+    { name: 'Workspaces', to: '/workspaces', icon: Building2, count: workspaces?.length },
     { name: 'Projects', to: '/projects', icon: FolderKanban, count: activeWorkspace?.projects?.length },
     { name: 'Kanban Board', to: '/kanban', icon: Kanban },
     { name: 'Team & Roles', to: '/team', icon: Users, count: activeWorkspace?.members?.length },
@@ -58,12 +61,12 @@ export default function Sidebar({ isOpen, onClose }) {
 
       {/* Sidebar container */}
       <aside
-        className={`fixed top-0 bottom-0 left-0 z-40 w-64 bg-white dark:bg-[#14121C] border-r border-slate-200 dark:border-white/10 flex flex-col transition-all duration-300 ease-in-out lg:translate-x-0 ${
+        className={`fixed top-0 bottom-0 left-0 z-40 w-72 max-w-[85vw] lg:w-64 bg-white dark:bg-[#14121C] border-r border-slate-200 dark:border-white/10 flex flex-col transition-all duration-300 ease-in-out lg:translate-x-0 ${
           isOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'
         }`}
       >
         {/* App Brand Header */}
-        <div className="h-16 px-5 border-b border-slate-100 dark:border-white/10 flex items-center justify-between">
+        <div className="h-16 px-4 sm:px-5 border-b border-slate-100 dark:border-white/10 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg bg-indigo-600 dark:bg-gradient-to-br dark:from-[#C9B8FF] dark:to-[#FFD6E8] flex items-center justify-center text-white dark:text-[#0B0A0F] shadow-md shadow-indigo-200 dark:shadow-[0_0_15px_rgba(201,184,255,0.3)] font-semibold">
               <Layers className="w-4 h-4" />
@@ -77,6 +80,16 @@ export default function Sidebar({ isOpen, onClose }) {
               </span>
             </div>
           </div>
+
+          {/* Close button on mobile */}
+          <button
+            type="button"
+            onClick={onClose}
+            className="lg:hidden p-2 text-slate-400 dark:text-[#A6A1B5] hover:text-slate-700 dark:hover:text-[#F8F6EF] hover:bg-slate-100 dark:hover:bg-white/10 rounded-lg transition-colors focus:outline-none"
+            aria-label="Close navigation sidebar"
+          >
+            <X className="w-5 h-5" />
+          </button>
         </div>
 
         {/* Workspace Switcher Section */}

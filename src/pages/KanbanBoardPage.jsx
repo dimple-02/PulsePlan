@@ -148,7 +148,7 @@ export default function KanbanBoardPage() {
         <EmptyState
           icon={FolderPlus}
           title="No projects in this workspace yet"
-          description={`Workspace "${activeWorkspace?.name}" currently has no projects. Create your first project to enable the Kanban board and task management.`}
+          description={`Workspace "${activeWorkspace?.name || 'Your Workspace'}" currently has no projects. Create your first project to enable the Kanban board and task management.`}
           actionLabel="Create Project"
           onAction={() => setIsCreateProjectOpen(true)}
           actionIcon={FolderPlus}
@@ -168,28 +168,53 @@ export default function KanbanBoardPage() {
             isFiltered={isFiltered}
           />
 
+          {/* Mobile Column Quick-Jump Tabs */}
+          <div className="sm:hidden flex items-center gap-1.5 overflow-x-auto pb-2 scrollbar-none">
+            {columns.map((col) => (
+              <button
+                key={col.id}
+                type="button"
+                data-column={col.id}
+                onClick={() => {
+                  const el = document.getElementById(`kanban-col-${col.id}`);
+                  if (el) {
+                    el.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                  }
+                }}
+                className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-700 dark:text-[#A6A1B5] border border-slate-200 dark:border-white/10 transition-colors"
+              >
+                <span className={`w-2 h-2 rounded-full ${col.color}`} />
+                <span>{col.title}</span>
+                <span className="text-[10px] font-semibold opacity-75">
+                  ({col.tasks.length})
+                </span>
+              </button>
+            ))}
+          </div>
+
           {/* Kanban Board Horizontal Scroll Track */}
           {projectTasks.length === 0 && !isFiltered ? (
             <EmptyState
               icon={Kanban}
               title="No tasks in this project yet"
-              description={`Project "${activeProject?.name}" currently has no tasks. Add user stories, bugs, or feature tickets to begin.`}
+              description={`Project "${activeProject?.name || 'Selected Project'}" currently has no tasks. Add user stories, bugs, or feature tickets to begin.`}
               actionLabel="Create First Task"
               onAction={() => handleQuickAdd('todo')}
               actionIcon={Plus}
             />
           ) : (
-            <div className="flex items-start gap-4 overflow-x-auto pb-6 pt-1">
+            <div className="flex items-start gap-3 sm:gap-4 overflow-x-auto pb-6 pt-1 snap-x snap-mandatory sm:snap-none -mx-3.5 px-3.5 sm:mx-0 sm:px-0 scroll-smooth">
               {columns.map((col) => (
-                <KanbanColumn
-                  key={col.id}
-                  id={col.id}
-                  title={col.title}
-                  indicatorColor={col.color}
-                  tasks={col.tasks}
-                  onCardClick={handleCardClick}
-                  onQuickAdd={handleQuickAdd}
-                />
+                <div key={col.id} id={`kanban-col-${col.id}`} className="snap-center sm:snap-align-none shrink-0">
+                  <KanbanColumn
+                    id={col.id}
+                    title={col.title}
+                    indicatorColor={col.color}
+                    tasks={col.tasks}
+                    onCardClick={handleCardClick}
+                    onQuickAdd={handleQuickAdd}
+                  />
+                </div>
               ))}
             </div>
           )}

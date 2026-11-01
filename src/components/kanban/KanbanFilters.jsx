@@ -29,7 +29,7 @@ export default function KanbanFilters({
           <select
             value={activeProjectId || ''}
             onChange={(e) => setActiveProjectId(e.target.value)}
-            className="text-xs sm:text-sm font-semibold rounded-lg border border-slate-300 dark:border-white/15 py-1.5 px-3 bg-white dark:bg-[#100E17] text-slate-900 dark:text-[#F8F6EF] focus:outline-none focus:ring-2 focus:ring-indigo-100 dark:focus:ring-[#C9B8FF]/20"
+            className="w-full sm:w-auto text-base sm:text-sm font-semibold rounded-lg border border-slate-300 dark:border-white/15 py-1.5 px-3 bg-white dark:bg-[#100E17] text-slate-900 dark:text-[#F8F6EF] focus:outline-none focus:ring-2 focus:ring-indigo-100 dark:focus:ring-[#C9B8FF]/20"
           >
             {activeWorkspace?.projects && activeWorkspace.projects.length > 0 ? (
               activeWorkspace.projects.map((proj) => {
@@ -56,17 +56,17 @@ export default function KanbanFilters({
             value={searchTerm}
             onChange={(e) => onSearchChange(e.target.value)}
             placeholder="Filter tasks on board..."
-            className="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 dark:bg-[#0B0A0F] border border-slate-200 dark:border-white/10 rounded-lg text-slate-800 dark:text-[#F8F6EF] placeholder-slate-400 dark:placeholder-[#A6A1B5]/50 focus:outline-none focus:ring-2 focus:ring-indigo-100 dark:focus:ring-[#C9B8FF]/20 focus:bg-white dark:focus:bg-[#100E17] transition-all"
+            className="w-full pl-8 pr-3 py-1.5 text-base sm:text-xs bg-slate-50 dark:bg-[#0B0A0F] border border-slate-200 dark:border-white/10 rounded-lg text-slate-800 dark:text-[#F8F6EF] placeholder-slate-400 dark:placeholder-[#A6A1B5]/50 focus:outline-none focus:ring-2 focus:ring-indigo-100 dark:focus:ring-[#C9B8FF]/20 focus:bg-white dark:focus:bg-[#100E17] transition-all"
           />
         </div>
       </div>
 
       {/* Right side: Priority & Assignee dropdowns */}
-      <div className="flex items-center gap-2 shrink-0">
+      <div className="flex flex-wrap items-center gap-2 shrink-0">
         <select
           value={priorityFilter}
           onChange={(e) => onPriorityChange(e.target.value)}
-          className="text-xs rounded-lg border border-slate-300 dark:border-white/15 py-1.5 px-2.5 bg-white dark:bg-[#100E17] text-slate-700 dark:text-[#F8F6EF] focus:outline-none focus:ring-2 focus:ring-indigo-100 dark:focus:ring-[#C9B8FF]/20"
+          className="text-base sm:text-xs rounded-lg border border-slate-300 dark:border-white/15 py-1.5 px-2.5 bg-white dark:bg-[#100E17] text-slate-700 dark:text-[#F8F6EF] focus:outline-none focus:ring-2 focus:ring-indigo-100 dark:focus:ring-[#C9B8FF]/20"
         >
           <option value="all" className="bg-white dark:bg-[#1A1726] text-slate-900 dark:text-[#F8F6EF]">All Priorities</option>
           <option value="urgent" className="bg-white dark:bg-[#1A1726] text-slate-900 dark:text-[#F8F6EF]">Urgent</option>

@@ -35,7 +35,7 @@ export default function Select({
         value={value}
         onChange={onChange}
         required={required}
-        className={`block w-full rounded-lg text-sm border transition-colors px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-offset-0 bg-white dark:bg-[#100E17] ${
+        className={`block w-full rounded-lg text-base sm:text-sm border transition-colors px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-offset-0 bg-white dark:bg-[#100E17] ${
           error
             ? 'border-rose-300 dark:border-rose-500/50 text-rose-900 dark:text-rose-200 focus:border-rose-500 focus:ring-rose-200 dark:focus:ring-rose-900/40'
             : 'border-slate-300 dark:border-white/15 text-slate-800 dark:text-[#F8F6EF] focus:border-indigo-500 dark:focus:border-[#C9B8FF]/60 focus:ring-indigo-100 dark:focus:ring-[#C9B8FF]/20'

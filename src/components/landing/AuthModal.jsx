@@ -146,7 +146,7 @@ export default function AuthModal({ isOpen, initialMode = 'login', onClose }) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 dark:bg-black/55 backdrop-blur-sm animate-in fade-in duration-200"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/40 dark:bg-black/55 backdrop-blur-sm animate-in fade-in duration-200 overflow-y-auto"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
@@ -155,7 +155,7 @@ export default function AuthModal({ isOpen, initialMode = 'login', onClose }) {
       {/* Modal Dialog Card (Stops backdrop click propagation) */}
       <div
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full max-w-md bg-white dark:bg-[#14121C] border border-[#E5E1EE] dark:border-[#C9B8FF]/25 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] dark:shadow-[0_25px_60px_rgba(0,0,0,0.9),0_0_35px_rgba(201,184,255,0.12)] p-6 sm:p-8 animate-in zoom-in-95 duration-200 overflow-hidden"
+        className="relative w-full max-w-md bg-white dark:bg-[#14121C] border border-[#E5E1EE] dark:border-[#C9B8FF]/25 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] dark:shadow-[0_25px_60px_rgba(0,0,0,0.9),0_0_35px_rgba(201,184,255,0.12)] p-5 sm:p-8 animate-in zoom-in-95 duration-200 max-h-[94dvh] overflow-y-auto my-auto"
       >
         {/* Subtle Top Glowing Line */}
         <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-transparent via-[#7C5CFC] dark:via-[#C9B8FF] to-transparent pointer-events-none" />
@@ -239,7 +239,7 @@ export default function AuthModal({ isOpen, initialMode = 'login', onClose }) {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="name@company.com"
-                  className="w-full pl-9 pr-3 py-2 text-sm bg-[#F9F8FC] dark:bg-[#100E17] border border-[#E5E1EE] dark:border-white/10 rounded-xl text-[#14121C] dark:text-[#F8F6EF] placeholder-[#5C576C]/50 dark:placeholder-[#A6A1B5]/50 focus:outline-none focus:border-[#7C5CFC] dark:focus:border-[#C9B8FF] focus:ring-1 focus:ring-[#7C5CFC] dark:focus:ring-[#C9B8FF] transition-all"
+                  className="w-full pl-9 pr-3 py-2 text-base sm:text-sm bg-[#F9F8FC] dark:bg-[#100E17] border border-[#E5E1EE] dark:border-white/10 rounded-xl text-[#14121C] dark:text-[#F8F6EF] placeholder-[#5C576C]/50 dark:placeholder-[#A6A1B5]/50 focus:outline-none focus:border-[#7C5CFC] dark:focus:border-[#C9B8FF] focus:ring-1 focus:ring-[#7C5CFC] dark:focus:ring-[#C9B8FF] transition-all"
                 />
               </div>
             </div>
@@ -258,7 +258,7 @@ export default function AuthModal({ isOpen, initialMode = 'login', onClose }) {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full pl-9 pr-10 py-2 text-sm bg-[#F9F8FC] dark:bg-[#100E17] border border-[#E5E1EE] dark:border-white/10 rounded-xl text-[#14121C] dark:text-[#F8F6EF] placeholder-[#5C576C]/50 dark:placeholder-[#A6A1B5]/50 focus:outline-none focus:border-[#7C5CFC] dark:focus:border-[#C9B8FF] focus:ring-1 focus:ring-[#7C5CFC] dark:focus:ring-[#C9B8FF] transition-all"
+                  className="w-full pl-9 pr-10 py-2 text-base sm:text-sm bg-[#F9F8FC] dark:bg-[#100E17] border border-[#E5E1EE] dark:border-white/10 rounded-xl text-[#14121C] dark:text-[#F8F6EF] placeholder-[#5C576C]/50 dark:placeholder-[#A6A1B5]/50 focus:outline-none focus:border-[#7C5CFC] dark:focus:border-[#C9B8FF] focus:ring-1 focus:ring-[#7C5CFC] dark:focus:ring-[#C9B8FF] transition-all"
                 />
                 <button
                   type="button"
@@ -308,7 +308,7 @@ export default function AuthModal({ isOpen, initialMode = 'login', onClose }) {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="e.g. Jordan Lee"
-                  className="w-full pl-9 pr-3 py-2 text-sm bg-[#F9F8FC] dark:bg-[#100E17] border border-[#E5E1EE] dark:border-white/10 rounded-xl text-[#14121C] dark:text-[#F8F6EF] placeholder-[#5C576C]/50 dark:placeholder-[#A6A1B5]/50 focus:outline-none focus:border-[#7C5CFC] dark:focus:border-[#C9B8FF] focus:ring-1 focus:ring-[#7C5CFC] dark:focus:ring-[#C9B8FF] transition-all"
+                  className="w-full pl-9 pr-3 py-2 text-base sm:text-sm bg-[#F9F8FC] dark:bg-[#100E17] border border-[#E5E1EE] dark:border-white/10 rounded-xl text-[#14121C] dark:text-[#F8F6EF] placeholder-[#5C576C]/50 dark:placeholder-[#A6A1B5]/50 focus:outline-none focus:border-[#7C5CFC] dark:focus:border-[#C9B8FF] focus:ring-1 focus:ring-[#7C5CFC] dark:focus:ring-[#C9B8FF] transition-all"
                 />
               </div>
             </div>
@@ -327,7 +327,7 @@ export default function AuthModal({ isOpen, initialMode = 'login', onClose }) {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="jordan@company.com"
-                  className="w-full pl-9 pr-3 py-2 text-sm bg-[#F9F8FC] dark:bg-[#100E17] border border-[#E5E1EE] dark:border-white/10 rounded-xl text-[#14121C] dark:text-[#F8F6EF] placeholder-[#5C576C]/50 dark:placeholder-[#A6A1B5]/50 focus:outline-none focus:border-[#7C5CFC] dark:focus:border-[#C9B8FF] focus:ring-1 focus:ring-[#7C5CFC] dark:focus:ring-[#C9B8FF] transition-all"
+                  className="w-full pl-9 pr-3 py-2 text-base sm:text-sm bg-[#F9F8FC] dark:bg-[#100E17] border border-[#E5E1EE] dark:border-white/10 rounded-xl text-[#14121C] dark:text-[#F8F6EF] placeholder-[#5C576C]/50 dark:placeholder-[#A6A1B5]/50 focus:outline-none focus:border-[#7C5CFC] dark:focus:border-[#C9B8FF] focus:ring-1 focus:ring-[#7C5CFC] dark:focus:ring-[#C9B8FF] transition-all"
                 />
               </div>
             </div>
@@ -346,7 +346,7 @@ export default function AuthModal({ isOpen, initialMode = 'login', onClose }) {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Min. 6 characters"
-                  className="w-full pl-9 pr-10 py-2 text-sm bg-[#F9F8FC] dark:bg-[#100E17] border border-[#E5E1EE] dark:border-white/10 rounded-xl text-[#14121C] dark:text-[#F8F6EF] placeholder-[#5C576C]/50 dark:placeholder-[#A6A1B5]/50 focus:outline-none focus:border-[#7C5CFC] dark:focus:border-[#C9B8FF] focus:ring-1 focus:ring-[#7C5CFC] dark:focus:ring-[#C9B8FF] transition-all"
+                  className="w-full pl-9 pr-10 py-2 text-base sm:text-sm bg-[#F9F8FC] dark:bg-[#100E17] border border-[#E5E1EE] dark:border-white/10 rounded-xl text-[#14121C] dark:text-[#F8F6EF] placeholder-[#5C576C]/50 dark:placeholder-[#A6A1B5]/50 focus:outline-none focus:border-[#7C5CFC] dark:focus:border-[#C9B8FF] focus:ring-1 focus:ring-[#7C5CFC] dark:focus:ring-[#C9B8FF] transition-all"
                 />
                 <button
                   type="button"
@@ -373,7 +373,7 @@ export default function AuthModal({ isOpen, initialMode = 'login', onClose }) {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="Re-type password"
-                  className="w-full pl-9 pr-3 py-2 text-sm bg-[#F9F8FC] dark:bg-[#100E17] border border-[#E5E1EE] dark:border-white/10 rounded-xl text-[#14121C] dark:text-[#F8F6EF] placeholder-[#5C576C]/50 dark:placeholder-[#A6A1B5]/50 focus:outline-none focus:border-[#7C5CFC] dark:focus:border-[#C9B8FF] focus:ring-1 focus:ring-[#7C5CFC] dark:focus:ring-[#C9B8FF] transition-all"
+                  className="w-full pl-9 pr-3 py-2 text-base sm:text-sm bg-[#F9F8FC] dark:bg-[#100E17] border border-[#E5E1EE] dark:border-white/10 rounded-xl text-[#14121C] dark:text-[#F8F6EF] placeholder-[#5C576C]/50 dark:placeholder-[#A6A1B5]/50 focus:outline-none focus:border-[#7C5CFC] dark:focus:border-[#C9B8FF] focus:ring-1 focus:ring-[#7C5CFC] dark:focus:ring-[#C9B8FF] transition-all"
                 />
               </div>
             </div>

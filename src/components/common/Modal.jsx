@@ -52,7 +52,7 @@ export default function Modal({
     <div
       role="dialog"
       aria-modal="true"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto"
     >
       {/* Dark backdrop overlay with click-to-close */}
       <div
@@ -63,13 +63,13 @@ export default function Modal({
 
       {/* Modal Dialog Content Container */}
       <div
-        className={`relative w-full ${sizeWidths[size] || sizeWidths.md} bg-white dark:bg-[#14121C] rounded-2xl shadow-2xl border border-slate-200 dark:border-white/10 z-10 overflow-hidden transform transition-all my-8`}
+        className={`relative w-full ${sizeWidths[size] || sizeWidths.md} bg-white dark:bg-[#14121C] rounded-2xl shadow-2xl border border-slate-200 dark:border-white/10 z-10 overflow-hidden transform transition-all my-auto sm:my-8 max-h-[92dvh] flex flex-col`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
-        <div className="px-6 py-5 border-b border-slate-100 dark:border-white/10 flex items-start justify-between bg-white dark:bg-[#14121C]">
-          <div>
-            <h3 className="text-lg font-semibold text-slate-900 dark:text-[#F8F6EF]">{title}</h3>
+        <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-slate-100 dark:border-white/10 flex items-start justify-between bg-white dark:bg-[#14121C] shrink-0">
+          <div className="pr-2">
+            <h3 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-[#F8F6EF]">{title}</h3>
             {description && (
               <p className="text-xs text-slate-500 dark:text-[#A6A1B5] mt-1">{description}</p>
             )}
@@ -77,7 +77,7 @@ export default function Modal({
           <button
             type="button"
             onClick={onClose}
-            className="text-slate-400 dark:text-[#A6A1B5] hover:text-slate-600 dark:hover:text-[#F8F6EF] hover:bg-slate-100 dark:hover:bg-white/10 p-1.5 rounded-lg transition-colors"
+            className="text-slate-400 dark:text-[#A6A1B5] hover:text-slate-600 dark:hover:text-[#F8F6EF] hover:bg-slate-100 dark:hover:bg-white/10 p-2 min-w-[40px] min-h-[40px] flex items-center justify-center rounded-lg transition-colors shrink-0"
             aria-label="Close dialog"
           >
             <X className="w-5 h-5" />
@@ -85,13 +85,13 @@ export default function Modal({
         </div>
 
         {/* Modal Body */}
-        <div className="px-6 py-5 max-h-[calc(85vh-140px)] overflow-y-auto text-slate-800 dark:text-[#F8F6EF]">
+        <div className="px-4 sm:px-6 py-4 sm:py-5 flex-1 overflow-y-auto text-slate-800 dark:text-[#F8F6EF]">
           {children}
         </div>
 
         {/* Modal Footer */}
         {footer && (
-          <div className="px-6 py-4 bg-slate-50/80 dark:bg-[#100E17]/80 border-t border-slate-100 dark:border-white/10 flex items-center justify-end gap-3">
+          <div className="px-4 sm:px-6 py-3.5 sm:py-4 bg-slate-50/80 dark:bg-[#100E17]/80 border-t border-slate-100 dark:border-white/10 flex flex-wrap items-center justify-end gap-2.5 sm:gap-3 shrink-0">
             {footer}
           </div>
         )}

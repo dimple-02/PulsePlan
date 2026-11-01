@@ -1,0 +1,578 @@
+[
+  {
+    "viewport": "iPhone SE (1st gen)",
+    "dimensions": "320x568",
+    "route": "/",
+    "label": "Landing Page",
+    "metrics": {
+      "title": "PulsePlan | Multi-Tenant Project Management SaaS",
+      "scrollWidth": 320,
+      "clientWidth": 320,
+      "innerWidth": 320,
+      "hasHorizontalOverflow": false,
+      "isBlank": false,
+      "textSnippet": "PulsePlan Toggle theme (current: dark) Get Started PROJECT MANAGEMENT, REIMAGINED Your projects. In ",
+      "smallFontCount": 0,
+      "smallFontInputs": [],
+      "hasBottomNav": false
+    }
+  },
+  {
+    "viewport": "iPhone SE (1st gen)",
+    "dimensions": "320x568",
+    "route": "/workspaces",
+    "label": "Workspaces Directory",
+    "metrics": {
+      "title": "PulsePlan | Multi-Tenant Project Management SaaS",
+      "scrollWidth": 320,
+      "clientWidth": 320,
+      "innerWidth": 320,
+      "hasHorizontalOverflow": false,
+      "isBlank": false,
+      "textSnippet": "PulsePlan Toggle theme (current: dark) Get Started PROJECT MANAGEMENT, REIMAGINED Your projects. In ",
+      "smallFontCount": 0,
+      "smallFontInputs": [],
+      "hasBottomNav": false
+    }
+  },
+  {
+    "viewport": "iPhone SE (1st gen)",
+    "dimensions": "320x568",
+    "route": "/workspace",
+    "label": "Workspace Dashboard",
+    "metrics": {
+      "title": "PulsePlan | Multi-Tenant Project Management SaaS",
+      "scrollWidth": 320,
+      "clientWidth": 320,
+      "innerWidth": 320,
+      "hasHorizontalOverflow": false,
+      "isBlank": false,
+      "textSnippet": "PulsePlan Toggle theme (current: dark) Get Started PROJECT MANAGEMENT, REIMAGINED Your projects. In ",
+      "smallFontCount": 0,
+      "smallFontInputs": [],
+      "hasBottomNav": false
+    }
+  },
+  {
+    "viewport": "iPhone SE (1st gen)",
+    "dimensions": "320x568",
+    "route": "/settings",
+    "label": "Workspace Settings",
+    "metrics": {
+      "title": "PulsePlan | Multi-Tenant Project Management SaaS",
+      "scrollWidth": 320,
+      "clientWidth": 320,
+      "innerWidth": 320,
+      "hasHorizontalOverflow": false,
+      "isBlank": false,
+      "textSnippet": "PulsePlan Toggle theme (current: dark) Get Started PROJECT MANAGEMENT, REIMAGINED Your projects. In ",
+      "smallFontCount": 0,
+      "smallFontInputs": [],
+      "hasBottomNav": false
+    }
+  },
+  {
+    "viewport": "iPhone SE (1st gen)",
+    "dimensions": "320x568",
+    "route": "/dashboard",
+    "label": "Main Dashboard",
+    "metrics": {
+      "title": "PulsePlan | Multi-Tenant Project Management SaaS",
+      "scrollWidth": 320,
+      "clientWidth": 320,
+      "innerWidth": 320,
+      "hasHorizontalOverflow": false,
+      "isBlank": false,
+      "textSnippet": "PulsePlan Toggle theme (current: dark) Get Started PROJECT MANAGEMENT, REIMAGINED Your projects. In ",
+      "smallFontCount": 0,
+      "smallFontInputs": [],
+      "hasBottomNav": false
+    }
+  },
+  {
+    "viewport": "iPhone SE (1st gen)",
+    "dimensions": "320x568",
+    "route": "/projects",
+    "label": "Projects Page",
+    "metrics": {
+      "title": "PulsePlan | Multi-Tenant Project Management SaaS",
+      "scrollWidth": 320,
+      "clientWidth": 320,
+      "innerWidth": 320,
+      "hasHorizontalOverflow": false,
+      "isBlank": false,
+      "textSnippet": "PulsePlan Toggle theme (current: dark) Get Started PROJECT MANAGEMENT, REIMAGINED Your projects. In ",
+      "smallFontCount": 0,
+      "smallFontInputs": [],
+      "hasBottomNav": false
+    }
+  },
+  {
+    "viewport": "iPhone SE (1st gen)",
+    "dimensions": "320x568",
+    "route": "/kanban",
+    "label": "Kanban Board",
+    "metrics": {
+      "title": "PulsePlan | Multi-Tenant Project Management SaaS",
+      "scrollWidth": 320,
+      "clientWidth": 320,
+      "innerWidth": 320,
+      "hasHorizontalOverflow": false,
+      "isBlank": false,
+      "textSnippet": "PulsePlan Toggle theme (current: dark) Get Started PROJECT MANAGEMENT, REIMAGINED Your projects. In ",
+      "smallFontCount": 0,
+      "smallFontInputs": [],
+      "hasBottomNav": false
+    }
+  },
+  {
+    "viewport": "iPhone SE (1st gen)",
+    "dimensions": "320x568",
+    "route": "/team",
+    "label": "Team Page",
+    "metrics": {
+      "title": "PulsePlan | Multi-Tenant Project Management SaaS",
+      "scrollWidth": 320,
+      "clientWidth": 320,
+      "innerWidth": 320,
+      "hasHorizontalOverflow": false,
+      "isBlank": false,
+      "textSnippet": "PulsePlan Toggle theme (current: dark) Get Started PROJECT MANAGEMENT, REIMAGINED Your projects. In ",
+      "smallFontCount": 0,
+      "smallFontInputs": [],
+      "hasBottomNav": false
+    }
+  },
+  {
+    "viewport": "iPhone 8 / SE (2nd gen)",
+    "dimensions": "375x667",
+    "route": "/",
+    "label": "Landing Page",
+    "metrics": {
+      "title": "PulsePlan | Multi-Tenant Project Management SaaS",
+      "scrollWidth": 375,
+      "clientWidth": 375,
+      "innerWidth": 375,
+      "hasHorizontalOverflow": false,
+      "isBlank": false,
+      "textSnippet": "PulsePlan Toggle theme (current: dark) Get Started PROJECT MANAGEMENT, REIMAGINED Your projects. In ",
+      "smallFontCount": 0,
+      "smallFontInputs": [],
+      "hasBottomNav": false
+    }
+  },
+  {
+    "viewport": "iPhone 8 / SE (2nd gen)",
+    "dimensions": "375x667",
+    "route": "/workspaces",
+    "label": "Workspaces Directory",
+    "metrics": {
+      "title": "PulsePlan | Multi-Tenant Project Management SaaS",
+      "scrollWidth": 375,
+      "clientWidth": 375,
+      "innerWidth": 375,
+      "hasHorizontalOverflow": false,
+      "isBlank": false,
+      "textSnippet": "PulsePlan Toggle theme (current: dark) Get Started PROJECT MANAGEMENT, REIMAGINED Your projects. In ",
+      "smallFontCount": 0,
+      "smallFontInputs": [],
+      "hasBottomNav": false
+    }
+  },
+  {
+    "viewport": "iPhone 8 / SE (2nd gen)",
+    "dimensions": "375x667",
+    "route": "/workspace",
+    "label": "Workspace Dashboard",
+    "metrics": {
+      "title": "PulsePlan | Multi-Tenant Project Management SaaS",
+      "scrollWidth": 375,
+      "clientWidth": 375,
+      "innerWidth": 375,
+      "hasHorizontalOverflow": false,
+      "isBlank": false,
+      "textSnippet": "PulsePlan Toggle theme (current: dark) Get Started PROJECT MANAGEMENT, REIMAGINED Your projects. In ",
+      "smallFontCount": 0,
+      "smallFontInputs": [],
+      "hasBottomNav": false
+    }
+  },
+  {
+    "viewport": "iPhone 8 / SE (2nd gen)",
+    "dimensions": "375x667",
+    "route": "/settings",
+    "label": "Workspace Settings",
+    "metrics": {
+      "title": "PulsePlan | Multi-Tenant Project Management SaaS",
+      "scrollWidth": 375,
+      "clientWidth": 375,
+      "innerWidth": 375,
+      "hasHorizontalOverflow": false,
+      "isBlank": false,
+      "textSnippet": "PulsePlan Toggle theme (current: dark) Get Started PROJECT MANAGEMENT, REIMAGINED Your projects. In ",
+      "smallFontCount": 0,
+      "smallFontInputs": [],
+      "hasBottomNav": false
+    }
+  },
+  {
+    "viewport": "iPhone 8 / SE (2nd gen)",
+    "dimensions": "375x667",
+    "route": "/dashboard",
+    "label": "Main Dashboard",
+    "metrics": {
+      "title": "PulsePlan | Multi-Tenant Project Management SaaS",
+      "scrollWidth": 375,
+      "clientWidth": 375,
+      "innerWidth": 375,
+      "hasHorizontalOverflow": false,
+      "isBlank": false,
+      "textSnippet": "PulsePlan Toggle theme (current: dark) Get Started PROJECT MANAGEMENT, REIMAGINED Your projects. In ",
+      "smallFontCount": 0,
+      "smallFontInputs": [],
+      "hasBottomNav": false
+    }
+  },
+  {
+    "viewport": "iPhone 8 / SE (2nd gen)",
+    "dimensions": "375x667",
+    "route": "/projects",
+    "label": "Projects Page",
+    "metrics": {
+      "title": "PulsePlan | Multi-Tenant Project Management SaaS",
+      "scrollWidth": 375,
+      "clientWidth": 375,
+      "innerWidth": 375,
+      "hasHorizontalOverflow": false,
+      "isBlank": false,
+      "textSnippet": "PulsePlan Toggle theme (current: dark) Get Started PROJECT MANAGEMENT, REIMAGINED Your projects. In ",
+      "smallFontCount": 0,
+      "smallFontInputs": [],
+      "hasBottomNav": false
+    }
+  },
+  {
+    "viewport": "iPhone 8 / SE (2nd gen)",
+    "dimensions": "375x667",
+    "route": "/kanban",
+    "label": "Kanban Board",
+    "metrics": {
+      "title": "PulsePlan | Multi-Tenant Project Management SaaS",
+      "scrollWidth": 375,
+      "clientWidth": 375,
+      "innerWidth": 375,
+      "hasHorizontalOverflow": false,
+      "isBlank": false,
+      "textSnippet": "PulsePlan Toggle theme (current: dark) Get Started PROJECT MANAGEMENT, REIMAGINED Your projects. In ",
+      "smallFontCount": 0,
+      "smallFontInputs": [],
+      "hasBottomNav": false
+    }
+  },
+  {
+    "viewport": "iPhone 8 / SE (2nd gen)",
+    "dimensions": "375x667",
+    "route": "/team",
+    "label": "Team Page",
+    "metrics": {
+      "title": "PulsePlan | Multi-Tenant Project Management SaaS",
+      "scrollWidth": 375,
+      "clientWidth": 375,
+      "innerWidth": 375,
+      "hasHorizontalOverflow": false,
+      "isBlank": false,
+      "textSnippet": "PulsePlan Toggle theme (current: dark) Get Started PROJECT MANAGEMENT, REIMAGINED Your projects. In ",
+      "smallFontCount": 0,
+      "smallFontInputs": [],
+      "hasBottomNav": false
+    }
+  },
+  {
+    "viewport": "iPhone 12/13/14",
+    "dimensions": "390x844",
+    "route": "/",
+    "label": "Landing Page",
+    "metrics": {
+      "title": "PulsePlan | Multi-Tenant Project Management SaaS",
+      "scrollWidth": 390,
+      "clientWidth": 390,
+      "innerWidth": 390,
+      "hasHorizontalOverflow": false,
+      "isBlank": false,
+      "textSnippet": "PulsePlan Toggle theme (current: dark) Get Started PROJECT MANAGEMENT, REIMAGINED Your projects. In ",
+      "smallFontCount": 0,
+      "smallFontInputs": [],
+      "hasBottomNav": false
+    }
+  },
+  {
+    "viewport": "iPhone 12/13/14",
+    "dimensions": "390x844",
+    "route": "/workspaces",
+    "label": "Workspaces Directory",
+    "metrics": {
+      "title": "PulsePlan | Multi-Tenant Project Management SaaS",
+      "scrollWidth": 390,
+      "clientWidth": 390,
+      "innerWidth": 390,
+      "hasHorizontalOverflow": false,
+      "isBlank": false,
+      "textSnippet": "PulsePlan Toggle theme (current: dark) Get Started PROJECT MANAGEMENT, REIMAGINED Your projects. In ",
+      "smallFontCount": 0,
+      "smallFontInputs": [],
+      "hasBottomNav": false
+    }
+  },
+  {
+    "viewport": "iPhone 12/13/14",
+    "dimensions": "390x844",
+    "route": "/workspace",
+    "label": "Workspace Dashboard",
+    "metrics": {
+      "title": "PulsePlan | Multi-Tenant Project Management SaaS",
+      "scrollWidth": 390,
+      "clientWidth": 390,
+      "innerWidth": 390,
+      "hasHorizontalOverflow": false,
+      "isBlank": false,
+      "textSnippet": "PulsePlan Toggle theme (current: dark) Get Started PROJECT MANAGEMENT, REIMAGINED Your projects. In ",
+      "smallFontCount": 0,
+      "smallFontInputs": [],
+      "hasBottomNav": false
+    }
+  },
+  {
+    "viewport": "iPhone 12/13/14",
+    "dimensions": "390x844",
+    "route": "/settings",
+    "label": "Workspace Settings",
+    "metrics": {
+      "title": "PulsePlan | Multi-Tenant Project Management SaaS",
+      "scrollWidth": 390,
+      "clientWidth": 390,
+      "innerWidth": 390,
+      "hasHorizontalOverflow": false,
+      "isBlank": false,
+      "textSnippet": "PulsePlan Toggle theme (current: dark) Get Started PROJECT MANAGEMENT, REIMAGINED Your projects. In ",
+      "smallFontCount": 0,
+      "smallFontInputs": [],
+      "hasBottomNav": false
+    }
+  },
+  {
+    "viewport": "iPhone 12/13/14",
+    "dimensions": "390x844",
+    "route": "/dashboard",
+    "label": "Main Dashboard",
+    "metrics": {
+      "title": "PulsePlan | Multi-Tenant Project Management SaaS",
+      "scrollWidth": 390,
+      "clientWidth": 390,
+      "innerWidth": 390,
+      "hasHorizontalOverflow": false,
+      "isBlank": false,
+      "textSnippet": "PulsePlan Toggle theme (current: dark) Get Started PROJECT MANAGEMENT, REIMAGINED Your projects. In ",
+      "smallFontCount": 0,
+      "smallFontInputs": [],
+      "hasBottomNav": false
+    }
+  },
+  {
+    "viewport": "iPhone 12/13/14",
+    "dimensions": "390x844",
+    "route": "/projects",
+    "label": "Projects Page",
+    "metrics": {
+      "title": "PulsePlan | Multi-Tenant Project Management SaaS",
+      "scrollWidth": 390,
+      "clientWidth": 390,
+      "innerWidth": 390,
+      "hasHorizontalOverflow": false,
+      "isBlank": false,
+      "textSnippet": "PulsePlan Toggle theme (current: dark) Get Started PROJECT MANAGEMENT, REIMAGINED Your projects. In ",
+      "smallFontCount": 0,
+      "smallFontInputs": [],
+      "hasBottomNav": false
+    }
+  },
+  {
+    "viewport": "iPhone 12/13/14",
+    "dimensions": "390x844",
+    "route": "/kanban",
+    "label": "Kanban Board",
+    "metrics": {
+      "title": "PulsePlan | Multi-Tenant Project Management SaaS",
+      "scrollWidth": 390,
+      "clientWidth": 390,
+      "innerWidth": 390,
+      "hasHorizontalOverflow": false,
+      "isBlank": false,
+      "textSnippet": "PulsePlan Toggle theme (current: dark) Get Started PROJECT MANAGEMENT, REIMAGINED Your projects. In ",
+      "smallFontCount": 0,
+      "smallFontInputs": [],
+      "hasBottomNav": false
+    }
+  },
+  {
+    "viewport": "iPhone 12/13/14",
+    "dimensions": "390x844",
+    "route": "/team",
+    "label": "Team Page",
+    "metrics": {
+      "title": "PulsePlan | Multi-Tenant Project Management SaaS",
+      "scrollWidth": 390,
+      "clientWidth": 390,
+      "innerWidth": 390,
+      "hasHorizontalOverflow": false,
+      "isBlank": false,
+      "textSnippet": "PulsePlan Toggle theme (current: dark) Get Started PROJECT MANAGEMENT, REIMAGINED Your projects. In ",
+      "smallFontCount": 0,
+      "smallFontInputs": [],
+      "hasBottomNav": false
+    }
+  },
+  {
+    "viewport": "iPhone 14/15 Pro Max",
+    "dimensions": "430x932",
+    "route": "/",
+    "label": "Landing Page",
+    "metrics": {
+      "title": "PulsePlan | Multi-Tenant Project Management SaaS",
+      "scrollWidth": 430,
+      "clientWidth": 430,
+      "innerWidth": 430,
+      "hasHorizontalOverflow": false,
+      "isBlank": false,
+      "textSnippet": "PulsePlan Toggle theme (current: dark) Get Started PROJECT MANAGEMENT, REIMAGINED Your projects. In ",
+      "smallFontCount": 0,
+      "smallFontInputs": [],
+      "hasBottomNav": false
+    }
+  },
+  {
+    "viewport": "iPhone 14/15 Pro Max",
+    "dimensions": "430x932",
+    "route": "/workspaces",
+    "label": "Workspaces Directory",
+    "metrics": {
+      "title": "PulsePlan | Multi-Tenant Project Management SaaS",
+      "scrollWidth": 430,
+      "clientWidth": 430,
+      "innerWidth": 430,
+      "hasHorizontalOverflow": false,
+      "isBlank": false,
+      "textSnippet": "PulsePlan Toggle theme (current: dark) Get Started PROJECT MANAGEMENT, REIMAGINED Your projects. In ",
+      "smallFontCount": 0,
+      "smallFontInputs": [],
+      "hasBottomNav": false
+    }
+  },
+  {
+    "viewport": "iPhone 14/15 Pro Max",
+    "dimensions": "430x932",
+    "route": "/workspace",
+    "label": "Workspace Dashboard",
+    "metrics": {
+      "title": "PulsePlan | Multi-Tenant Project Management SaaS",
+      "scrollWidth": 430,
+      "clientWidth": 430,
+      "innerWidth": 430,
+      "hasHorizontalOverflow": false,
+      "isBlank": false,
+      "textSnippet": "PulsePlan Toggle theme (current: dark) Get Started PROJECT MANAGEMENT, REIMAGINED Your projects. In ",
+      "smallFontCount": 0,
+      "smallFontInputs": [],
+      "hasBottomNav": false
+    }
+  },
+  {
+    "viewport": "iPhone 14/15 Pro Max",
+    "dimensions": "430x932",
+    "route": "/settings",
+    "label": "Workspace Settings",
+    "metrics": {
+      "title": "PulsePlan | Multi-Tenant Project Management SaaS",
+      "scrollWidth": 430,
+      "clientWidth": 430,
+      "innerWidth": 430,
+      "hasHorizontalOverflow": false,
+      "isBlank": false,
+      "textSnippet": "PulsePlan Toggle theme (current: dark) Get Started PROJECT MANAGEMENT, REIMAGINED Your projects. In ",
+      "smallFontCount": 0,
+      "smallFontInputs": [],
+      "hasBottomNav": false
+    }
+  },
+  {
+    "viewport": "iPhone 14/15 Pro Max",
+    "dimensions": "430x932",
+    "route": "/dashboard",
+    "label": "Main Dashboard",
+    "metrics": {
+      "title": "PulsePlan | Multi-Tenant Project Management SaaS",
+      "scrollWidth": 430,
+      "clientWidth": 430,
+      "innerWidth": 430,
+      "hasHorizontalOverflow": false,
+      "isBlank": false,
+      "textSnippet": "PulsePlan Toggle theme (current: dark) Get Started PROJECT MANAGEMENT, REIMAGINED Your projects. In ",
+      "smallFontCount": 0,
+      "smallFontInputs": [],
+      "hasBottomNav": false
+    }
+  },
+  {
+    "viewport": "iPhone 14/15 Pro Max",
+    "dimensions": "430x932",
+    "route": "/projects",
+    "label": "Projects Page",
+    "metrics": {
+      "title": "PulsePlan | Multi-Tenant Project Management SaaS",
+      "scrollWidth": 430,
+      "clientWidth": 430,
+      "innerWidth": 430,
+      "hasHorizontalOverflow": false,
+      "isBlank": false,
+      "textSnippet": "PulsePlan Toggle theme (current: dark) Get Started PROJECT MANAGEMENT, REIMAGINED Your projects. In ",
+      "smallFontCount": 0,
+      "smallFontInputs": [],
+      "hasBottomNav": false
+    }
+  },
+  {
+    "viewport": "iPhone 14/15 Pro Max",
+    "dimensions": "430x932",
+    "route": "/kanban",
+    "label": "Kanban Board",
+    "metrics": {
+      "title": "PulsePlan | Multi-Tenant Project Management SaaS",
+      "scrollWidth": 430,
+      "clientWidth": 430,
+      "innerWidth": 430,
+      "hasHorizontalOverflow": false,
+      "isBlank": false,
+      "textSnippet": "PulsePlan Toggle theme (current: dark) Get Started PROJECT MANAGEMENT, REIMAGINED Your projects. In ",
+      "smallFontCount": 0,
+      "smallFontInputs": [],
+      "hasBottomNav": false
+    }
+  },
+  {
+    "viewport": "iPhone 14/15 Pro Max",
+    "dimensions": "430x932",
+    "route": "/team",
+    "label": "Team Page",
+    "metrics": {
+      "title": "PulsePlan | Multi-Tenant Project Management SaaS",
+      "scrollWidth": 430,
+      "clientWidth": 430,
+      "innerWidth": 430,
+      "hasHorizontalOverflow": false,
+      "isBlank": false,
+      "textSnippet": "PulsePlan Toggle theme (current: dark) Get Started PROJECT MANAGEMENT, REIMAGINED Your projects. In ",
+      "smallFontCount": 0,
+      "smallFontInputs": [],
+      "hasBottomNav": false
+    }
+  }
+]

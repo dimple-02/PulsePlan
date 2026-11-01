@@ -1,11 +1,22 @@
 import React, { useState } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, NavLink } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Topbar from './Topbar';
 import CreateProjectModal from '../projects/CreateProjectModal';
 import CreateTaskModal from '../kanban/CreateTaskModal';
 import { useWorkspace } from '../../hooks/useWorkspace';
-import { CheckCircle2, AlertCircle, Info, RefreshCw, AlertTriangle } from 'lucide-react';
+import {
+  CheckCircle2,
+  AlertCircle,
+  Info,
+  RefreshCw,
+  AlertTriangle,
+  LayoutDashboard,
+  Building2,
+  FolderKanban,
+  Kanban,
+  Users,
+} from 'lucide-react';
 import Button from '../common/Button';
 
 /**
@@ -78,10 +89,88 @@ export default function AppLayout({ children }) {
         />
 
         {/* Dynamic Route Content */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
+        <main className="flex-1 p-3.5 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto pb-24 lg:pb-8">
           {children || <Outlet />}
         </main>
       </div>
+
+      {/* Mobile Bottom Navigation Bar */}
+      <nav
+        aria-label="Mobile navigation"
+        className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-white/95 dark:bg-[#14121C]/95 backdrop-blur-lg border-t border-slate-200 dark:border-white/10 px-2 py-1.5 flex items-center justify-around shadow-[0_-4px_20px_rgba(0,0,0,0.08)] dark:shadow-[0_-4px_20px_rgba(0,0,0,0.4)]"
+        style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 0.5rem)' }}
+      >
+        <NavLink
+          to="/"
+          end
+          className={({ isActive }) =>
+            `flex flex-col items-center justify-center py-1 px-2 rounded-xl text-[10px] font-medium transition-colors min-w-[56px] min-h-[44px] ${
+              isActive
+                ? 'text-indigo-600 dark:text-[#C9B8FF] font-semibold'
+                : 'text-slate-500 dark:text-[#A6A1B5] hover:text-slate-900 dark:hover:text-[#F8F6EF]'
+            }`
+          }
+        >
+          <LayoutDashboard className="w-5 h-5 mb-0.5" />
+          <span>Dashboard</span>
+        </NavLink>
+
+        <NavLink
+          to="/workspaces"
+          className={({ isActive }) =>
+            `flex flex-col items-center justify-center py-1 px-2 rounded-xl text-[10px] font-medium transition-colors min-w-[56px] min-h-[44px] ${
+              isActive
+                ? 'text-indigo-600 dark:text-[#C9B8FF] font-semibold'
+                : 'text-slate-500 dark:text-[#A6A1B5] hover:text-slate-900 dark:hover:text-[#F8F6EF]'
+            }`
+          }
+        >
+          <Building2 className="w-5 h-5 mb-0.5" />
+          <span>Workspaces</span>
+        </NavLink>
+
+        <NavLink
+          to="/projects"
+          className={({ isActive }) =>
+            `flex flex-col items-center justify-center py-1 px-2 rounded-xl text-[10px] font-medium transition-colors min-w-[56px] min-h-[44px] ${
+              isActive
+                ? 'text-indigo-600 dark:text-[#C9B8FF] font-semibold'
+                : 'text-slate-500 dark:text-[#A6A1B5] hover:text-slate-900 dark:hover:text-[#F8F6EF]'
+            }`
+          }
+        >
+          <FolderKanban className="w-5 h-5 mb-0.5" />
+          <span>Projects</span>
+        </NavLink>
+
+        <NavLink
+          to="/kanban"
+          className={({ isActive }) =>
+            `flex flex-col items-center justify-center py-1 px-2 rounded-xl text-[10px] font-medium transition-colors min-w-[56px] min-h-[44px] ${
+              isActive
+                ? 'text-indigo-600 dark:text-[#C9B8FF] font-semibold'
+                : 'text-slate-500 dark:text-[#A6A1B5] hover:text-slate-900 dark:hover:text-[#F8F6EF]'
+            }`
+          }
+        >
+          <Kanban className="w-5 h-5 mb-0.5" />
+          <span>Kanban</span>
+        </NavLink>
+
+        <NavLink
+          to="/team"
+          className={({ isActive }) =>
+            `flex flex-col items-center justify-center py-1 px-2 rounded-xl text-[10px] font-medium transition-colors min-w-[56px] min-h-[44px] ${
+              isActive
+                ? 'text-indigo-600 dark:text-[#C9B8FF] font-semibold'
+                : 'text-slate-500 dark:text-[#A6A1B5] hover:text-slate-900 dark:hover:text-[#F8F6EF]'
+            }`
+          }
+        >
+          <Users className="w-5 h-5 mb-0.5" />
+          <span>Team</span>
+        </NavLink>
+      </nav>
 
       {/* Global Modals */}
       <CreateProjectModal

@@ -21,7 +21,7 @@ export default function KanbanColumn({
   onQuickAdd,
 }) {
   return (
-    <div className="w-72 sm:w-80 shrink-0 flex flex-col bg-slate-100/70 dark:bg-[#14121C]/80 rounded-2xl border border-slate-200/80 dark:border-white/10 p-3 max-h-[calc(100vh-210px)]">
+    <div className="w-[82vw] max-w-[310px] sm:w-80 shrink-0 flex flex-col bg-slate-100/70 dark:bg-[#14121C]/80 rounded-2xl border border-slate-200/80 dark:border-white/10 p-3 max-h-[calc(100vh-230px)] sm:max-h-[calc(100vh-210px)]">
       {/* Column Header */}
       <div className="flex items-center justify-between pb-3 px-1">
         <div className="flex items-center gap-2">

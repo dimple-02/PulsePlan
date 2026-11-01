@@ -6,6 +6,7 @@ import ProjectsPage from '../pages/ProjectsPage';
 import KanbanBoardPage from '../pages/KanbanBoardPage';
 import TeamPage from '../pages/TeamPage';
 import SettingsPage from '../pages/SettingsPage';
+import WorkspacePage from '../pages/WorkspacePage';
 import NotFoundPage from '../pages/NotFoundPage';
 import LandingPage from '../pages/LandingPage';
 import ProtectedRoute from '../components/auth/ProtectedRoute';
@@ -90,6 +91,10 @@ export default function AppRoutes() {
       <Route element={<ProtectedRoute />}>
         <Route element={<AppLayout />}>
           <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/workspaces" element={<WorkspacePage />} />
+          <Route path="/workspaces/:workspaceId" element={<WorkspacePage />} />
+          <Route path="/workspace" element={<WorkspacePage />} />
+          <Route path="/workspace/:workspaceId" element={<WorkspacePage />} />
           <Route path="/projects" element={<ProjectsPage />} />
           <Route path="/kanban" element={<KanbanBoardPage />} />
           <Route path="/team" element={<TeamPage />} />

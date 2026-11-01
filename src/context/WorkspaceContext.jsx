@@ -125,12 +125,15 @@ export function WorkspaceProvider({ children }) {
     loadWorkspacesFromBackend();
   }, [loadWorkspacesFromBackend, user?.id]);
 
-  // Compute active workspace object
+  // Compute active workspace object with graceful fallback to prevent blank views
   const activeWorkspace = useMemo(() => {
-    if (!activeWorkspaceId) return null;
-    return (
-      workspaces.find((w) => String(w._id || w.id) === String(activeWorkspaceId)) || null
-    );
+    if (!workspaces || workspaces.length === 0) return null;
+    if (activeWorkspaceId) {
+      const found = workspaces.find((w) => String(w._id || w.id) === String(activeWorkspaceId));
+      if (found) return found;
+    }
+    // Graceful fallback to first available workspace so pages never render blank
+    return workspaces[0] || null;
   }, [workspaces, activeWorkspaceId]);
 
   // Compute active project object
@@ -496,6 +499,28 @@ export function WorkspaceProvider({ children }) {
     }
   }, [activeWorkspaceId, showToast]);
 
+  // Create Workspace
+  const createWorkspace = useCallback(async (workspaceData) => {
+    setIsLoading(true);
+    try {
+      const created = await api.createWorkspace(workspaceData);
+      setWorkspaces((prev) => [created, ...(prev || [])]);
+      const newWsId = created._id || created.id;
+      setActiveWorkspaceId(newWsId);
+      try {
+        localStorage.setItem(STORAGE_KEY_WS, String(newWsId));
+      } catch {}
+      showToast(`Created new workspace "${created.name}"!`, 'success');
+      return created;
+    } catch (error) {
+      console.error('[Frontend] Error creating workspace:', error);
+      showToast(error.message || 'Failed to create workspace', 'danger');
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [showToast]);
+
   // Update Workspace settings
   const updateWorkspace = useCallback(async (workspaceId, updatedData) => {
     try {
@@ -601,6 +626,7 @@ export function WorkspaceProvider({ children }) {
     reloadWorkspaces: loadWorkspacesFromBackend,
     notification,
     showToast,
+    createWorkspace,
     updateWorkspace,
     addMember,
     removeMember,

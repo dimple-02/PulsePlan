@@ -121,7 +121,73 @@ export default function TeamPage() {
         </CardHeader>
 
         <CardBody className="p-0">
-          <div className="overflow-x-auto">
+          {/* Mobile Card List (sm:hidden) */}
+          <div className="sm:hidden divide-y divide-slate-100 dark:divide-white/5 p-3 space-y-3">
+            {members.map((member) => (
+              <div
+                key={member._id || member.id || member.email}
+                className="p-3.5 bg-slate-50/70 dark:bg-[#100E17]/70 rounded-xl border border-slate-100 dark:border-white/5 space-y-3"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <Avatar
+                      name={member.name}
+                      initials={member.avatar}
+                      status={member.status === 'Active' ? 'online' : 'offline'}
+                      size="sm"
+                    />
+                    <div className="min-w-0">
+                      <h4 className="text-xs font-semibold text-slate-900 dark:text-[#F8F6EF] truncate">
+                        {member.name}
+                      </h4>
+                      <p className="text-[11px] text-slate-500 dark:text-[#A6A1B5] font-mono truncate">
+                        {member.email}
+                      </p>
+                    </div>
+                  </div>
+                  <Badge variant={roleBadges[member.role] || 'neutral'} size="xs">
+                    {member.role}
+                  </Badge>
+                </div>
+
+                <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-white/5 text-xs">
+                  <span className="inline-flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-[#A6A1B5]">
+                    <span
+                      className={`w-1.5 h-1.5 rounded-full ${
+                        member.status === 'Active' ? 'bg-emerald-500' : 'bg-slate-300'
+                      }`}
+                    />
+                    {member.status}
+                  </span>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setChatMember(member)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 min-h-[38px] text-xs font-medium text-indigo-600 dark:text-[#C9B8FF] bg-indigo-50 dark:bg-[#C9B8FF]/15 active:bg-indigo-100 dark:active:bg-[#C9B8FF]/25 rounded-lg transition-colors cursor-pointer"
+                      aria-label={`Chat with ${member.name}`}
+                    >
+                      <MessageSquare className="w-3.5 h-3.5" />
+                      <span>Chat</span>
+                    </button>
+                    {member.role !== 'Owner' && (
+                      <button
+                        type="button"
+                        onClick={() => setMemberToDelete(member)}
+                        className="p-2 min-h-[38px] min-w-[38px] flex items-center justify-center text-slate-400 hover:text-rose-600 active:bg-rose-50 dark:active:bg-rose-950/30 rounded-lg transition-colors cursor-pointer"
+                        aria-label={`Remove ${member.name}`}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop Table (hidden sm:block) */}
+          <div className="hidden sm:block overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-slate-50/80 dark:bg-[#100E17]/80 border-b border-slate-100 dark:border-white/10 text-[11px] font-semibold text-slate-500 dark:text-[#A6A1B5] uppercase tracking-wider">

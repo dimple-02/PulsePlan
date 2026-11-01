@@ -165,7 +165,7 @@ export default function ProjectsPage() {
             value={searchFilter}
             onChange={(e) => setSearchFilter(e.target.value)}
             placeholder="Search by project name, key, or scope..."
-            className="w-full pl-9 pr-4 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-[#0B0A0F] border border-slate-200 dark:border-white/10 rounded-lg text-slate-800 dark:text-[#F8F6EF] placeholder-slate-400 dark:placeholder-[#A6A1B5]/50 focus:outline-none focus:ring-2 focus:ring-indigo-100 dark:focus:ring-[#C9B8FF]/20 focus:bg-white dark:focus:bg-[#100E17]"
+            className="w-full pl-9 pr-4 py-2 text-base sm:text-sm bg-slate-50 dark:bg-[#0B0A0F] border border-slate-200 dark:border-white/10 rounded-lg text-slate-800 dark:text-[#F8F6EF] placeholder-slate-400 dark:placeholder-[#A6A1B5]/50 focus:outline-none focus:ring-2 focus:ring-indigo-100 dark:focus:ring-[#C9B8FF]/20 focus:bg-white dark:focus:bg-[#100E17]"
           />
         </div>
 
@@ -173,7 +173,7 @@ export default function ProjectsPage() {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="text-xs rounded-lg border border-slate-300 dark:border-white/15 py-2 px-3 bg-white dark:bg-[#100E17] text-slate-700 dark:text-[#F8F6EF] focus:outline-none focus:ring-2 focus:ring-indigo-100 dark:focus:ring-[#C9B8FF]/20"
+            className="text-base sm:text-xs rounded-lg border border-slate-300 dark:border-white/15 py-2 px-3 bg-white dark:bg-[#100E17] text-slate-700 dark:text-[#F8F6EF] focus:outline-none focus:ring-2 focus:ring-indigo-100 dark:focus:ring-[#C9B8FF]/20"
           >
             <option value="all">All Statuses</option>
             <option value="In Progress">In Progress</option>
@@ -186,7 +186,7 @@ export default function ProjectsPage() {
             <select
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
-              className="text-xs rounded-lg border border-slate-300 dark:border-white/15 py-2 px-3 bg-white dark:bg-[#100E17] text-slate-700 dark:text-[#F8F6EF] focus:outline-none focus:ring-2 focus:ring-indigo-100 dark:focus:ring-[#C9B8FF]/20"
+              className="text-base sm:text-xs rounded-lg border border-slate-300 dark:border-white/15 py-2 px-3 bg-white dark:bg-[#100E17] text-slate-700 dark:text-[#F8F6EF] focus:outline-none focus:ring-2 focus:ring-indigo-100 dark:focus:ring-[#C9B8FF]/20"
             >
               <option value="all">All Categories</option>
               {categories.map((c) => (
@@ -244,7 +244,42 @@ export default function ProjectsPage() {
         </div>
       ) : (
         <div className="bg-white dark:bg-[#14121C] rounded-xl border border-slate-200 dark:border-white/10 shadow-xs overflow-hidden">
-          <div className="overflow-x-auto">
+          {/* Mobile Table View Fallback */}
+          <div className="sm:hidden divide-y divide-slate-100 dark:divide-white/5 p-3 space-y-3">
+            {filteredProjects.map((project) => (
+              <div
+                key={project._id || project.id}
+                onClick={() => handleSelectProject(project)}
+                className="p-3.5 bg-slate-50/70 dark:bg-[#100E17]/70 rounded-xl border border-slate-100 dark:border-white/5 space-y-2.5 active:bg-slate-100 dark:active:bg-white/5 cursor-pointer"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <span className="text-[10px] font-mono font-semibold text-indigo-600 dark:text-[#C9B8FF] bg-indigo-50 dark:bg-[#C9B8FF]/15 px-1.5 py-0.5 rounded uppercase">
+                      {project.key}
+                    </span>
+                    <h4 className="text-xs font-semibold text-slate-900 dark:text-[#F8F6EF] mt-1">
+                      {project.name}
+                    </h4>
+                  </div>
+                  <span className="text-xs font-semibold text-slate-700 dark:text-[#F8F6EF]">
+                    {project.progress}%
+                  </span>
+                </div>
+                <div className="w-full bg-slate-200 dark:bg-white/10 rounded-full h-1.5 overflow-hidden">
+                  <div
+                    className="h-full bg-indigo-600 dark:bg-[#C9B8FF] rounded-full"
+                    style={{ width: `${project.progress}%` }}
+                  />
+                </div>
+                <div className="flex items-center justify-between pt-1 text-[11px] text-slate-500 dark:text-[#A6A1B5]">
+                  <span>{project.status}</span>
+                  <span>{project.deadline}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="hidden sm:block overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-slate-50/80 dark:bg-[#100E17]/80 border-b border-slate-200 dark:border-white/10 text-[11px] font-semibold text-slate-500 dark:text-[#A6A1B5] uppercase tracking-wider">

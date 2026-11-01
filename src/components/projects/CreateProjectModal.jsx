@@ -176,7 +176,7 @@ export default function CreateProjectModal({ isOpen, onClose }) {
             value={formData.description}
             onChange={handleChange}
             placeholder="Describe the scope, objectives, and deliverables of this project..."
-            className="w-full rounded-lg text-sm border border-slate-300 dark:border-white/15 p-3 focus:outline-none focus:ring-2 focus:ring-indigo-100 dark:focus:ring-[#C9B8FF]/20 focus:border-indigo-500 dark:focus:border-[#C9B8FF]/60 bg-white dark:bg-[#100E17] text-slate-900 dark:text-[#F8F6EF] placeholder-slate-400 dark:placeholder-[#A6A1B5]/50"
+            className="w-full rounded-lg text-base sm:text-sm border border-slate-300 dark:border-white/15 p-3 focus:outline-none focus:ring-2 focus:ring-indigo-100 dark:focus:ring-[#C9B8FF]/20 focus:border-indigo-500 dark:focus:border-[#C9B8FF]/60 bg-white dark:bg-[#100E17] text-slate-900 dark:text-[#F8F6EF] placeholder-slate-400 dark:placeholder-[#A6A1B5]/50"
           />
         </div>
       </form>

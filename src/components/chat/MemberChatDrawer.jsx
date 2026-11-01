@@ -166,7 +166,7 @@ export default function MemberChatDrawer({ isOpen, onClose, member }) {
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 text-slate-400 dark:text-[#A6A1B5] hover:text-slate-600 dark:hover:text-[#F8F6EF] rounded-lg hover:bg-slate-200/60 dark:hover:bg-white/10 transition-colors"
+            className="p-2 min-w-[40px] min-h-[40px] flex items-center justify-center text-slate-400 dark:text-[#A6A1B5] hover:text-slate-600 dark:hover:text-[#F8F6EF] rounded-lg hover:bg-slate-200/60 dark:hover:bg-white/10 transition-colors" aria-label="Close chat"
             title="Close chat"
           >
             <X className="w-5 h-5" />
@@ -244,7 +244,7 @@ export default function MemberChatDrawer({ isOpen, onClose, member }) {
         {/* Input Footer */}
         <form
           onSubmit={handleSendMessage}
-          className="p-3 border-t border-slate-200 dark:border-white/10 bg-white dark:bg-[#14121C] flex items-center gap-2"
+          className="p-3 pb-6 sm:pb-3 border-t border-slate-200 dark:border-white/10 bg-white dark:bg-[#14121C] flex items-center gap-2"
         >
           <input
             ref={inputRef}
@@ -252,7 +252,7 @@ export default function MemberChatDrawer({ isOpen, onClose, member }) {
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
             placeholder={`Message ${member.name.split(' ')[0]}...`}
-            className="flex-1 px-3.5 py-2.5 text-xs bg-slate-50 dark:bg-[#0B0A0F] border border-slate-200 dark:border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-[#C9B8FF]/20 focus:bg-white dark:focus:bg-[#100E17] transition-all text-slate-800 dark:text-[#F8F6EF] placeholder:text-slate-400 dark:placeholder:text-[#A6A1B5]/50"
+            className="flex-1 px-3.5 py-2.5 text-base sm:text-xs bg-slate-50 dark:bg-[#0B0A0F] border border-slate-200 dark:border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-[#C9B8FF]/20 focus:bg-white dark:focus:bg-[#100E17] transition-all text-slate-800 dark:text-[#F8F6EF] placeholder:text-slate-400 dark:placeholder:text-[#A6A1B5]/50"
             maxLength={2000}
             disabled={isSending}
           />

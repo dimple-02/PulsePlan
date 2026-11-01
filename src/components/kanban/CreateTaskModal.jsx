@@ -160,7 +160,7 @@ export default function CreateTaskModal({ isOpen, onClose, initialStatus = 'todo
               <select
                 value={activeProjectId || activeProject?._id || activeProject?.id}
                 onChange={(e) => setActiveProjectId(e.target.value)}
-                className="w-full text-xs font-semibold py-1.5 px-2 rounded border border-slate-300 dark:border-white/15 bg-white dark:bg-[#100E17] text-slate-900 dark:text-[#F8F6EF]"
+                className="w-full text-base sm:text-xs font-semibold py-1.5 px-2 rounded border border-slate-300 dark:border-white/15 bg-white dark:bg-[#100E17] text-slate-900 dark:text-[#F8F6EF]"
               >
                 {activeWorkspace.projects.map((p) => {
                   const projId = p._id || p.id;
@@ -260,7 +260,7 @@ export default function CreateTaskModal({ isOpen, onClose, initialStatus = 'todo
               value={formData.description}
               onChange={handleChange}
               placeholder="Provide acceptance criteria, notes, or implementation details..."
-              className="w-full rounded-lg text-sm border border-slate-300 dark:border-white/15 p-3 focus:outline-none focus:ring-2 focus:ring-indigo-100 dark:focus:ring-[#C9B8FF]/20 focus:border-indigo-500 dark:focus:border-[#C9B8FF]/60 bg-white dark:bg-[#100E17] text-slate-900 dark:text-[#F8F6EF] placeholder-slate-400 dark:placeholder-[#A6A1B5]/50"
+              className="w-full rounded-lg text-base sm:text-sm border border-slate-300 dark:border-white/15 p-3 focus:outline-none focus:ring-2 focus:ring-indigo-100 dark:focus:ring-[#C9B8FF]/20 focus:border-indigo-500 dark:focus:border-[#C9B8FF]/60 bg-white dark:bg-[#100E17] text-slate-900 dark:text-[#F8F6EF] placeholder-slate-400 dark:placeholder-[#A6A1B5]/50"
             />
           </div>
         </form>
