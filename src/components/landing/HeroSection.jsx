@@ -23,23 +23,23 @@ export default function HeroSection({ onOpenSignup, onExploreWorkspace }) {
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center z-10">
         {/* Eyebrow Label */}
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#14121C]/90 border border-[#C9B8FF]/25 shadow-[0_0_15px_rgba(201,184,255,0.08)] mb-6 sm:mb-8 animate-in fade-in slide-in-from-bottom-3 duration-500">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#C9B8FF] animate-pulse" />
-          <span className="text-[11px] sm:text-xs font-semibold tracking-widest text-[#C9B8FF] uppercase font-mono">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white dark:bg-[#14121C]/90 border border-[#7C5CFC]/30 dark:border-[#C9B8FF]/25 shadow-[0_0_15px_rgba(89,53,214,0.08)] dark:shadow-[0_0_15px_rgba(201,184,255,0.08)] mb-6 sm:mb-8 animate-in fade-in slide-in-from-bottom-3 duration-500">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#5935D6] dark:bg-[#C9B8FF] animate-pulse" />
+          <span className="text-[11px] sm:text-xs font-semibold tracking-widest text-[#5935D6] dark:text-[#C9B8FF] uppercase font-mono">
             Project Management, Reimagined
           </span>
         </div>
 
         {/* Headline */}
-        <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight text-[#F8F6EF] font-sans max-w-4xl mx-auto leading-[1.08] sm:leading-[1.1] mb-6">
+        <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight text-[#14121C] dark:text-[#F8F6EF] font-sans max-w-4xl mx-auto leading-[1.08] sm:leading-[1.1] mb-6">
           Your projects.{' '}
-          <span className="inline-block bg-gradient-to-r from-[#C9B8FF] via-[#E2D5FF] to-[#FFD6E8] bg-clip-text text-transparent">
+          <span className="inline-block bg-gradient-to-r from-[#5935D6] via-[#7C5CFC] to-[#D946EF] dark:from-[#C9B8FF] dark:via-[#E2D5FF] dark:to-[#FFD6E8] bg-clip-text text-transparent">
             In sync.
           </span>
         </h1>
 
         {/* Supporting Copy */}
-        <p className="text-base sm:text-lg lg:text-xl text-[#A6A1B5] max-w-2xl mx-auto font-normal leading-relaxed mb-9 sm:mb-11">
+        <p className="text-base sm:text-lg lg:text-xl text-[#5C576C] dark:text-[#A6A1B5] max-w-2xl mx-auto font-normal leading-relaxed mb-9 sm:mb-11">
           Bring projects, tasks and teams together in one organized workspace.
           Less chaos, clearer priorities, better progress.
         </p>
@@ -49,7 +49,7 @@ export default function HeroSection({ onOpenSignup, onExploreWorkspace }) {
           <button
             type="button"
             onClick={onOpenSignup}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 text-sm sm:text-base font-semibold text-[#0B0A0F] bg-[#C9B8FF] hover:bg-[#ded2ff] px-6 py-3.5 rounded-xl transition-all duration-200 shadow-[0_0_25px_rgba(201,184,255,0.3)] hover:shadow-[0_0_35px_rgba(201,184,255,0.5)] hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C9B8FF]"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 text-sm sm:text-base font-semibold text-white dark:text-[#0B0A0F] bg-[#5935D6] hover:bg-[#4828b8] dark:bg-[#C9B8FF] dark:hover:bg-[#ded2ff] px-6 py-3.5 rounded-xl transition-all duration-200 shadow-[0_0_25px_rgba(89,53,214,0.3)] dark:shadow-[0_0_25px_rgba(201,184,255,0.3)] hover:shadow-[0_0_35px_rgba(89,53,214,0.5)] dark:hover:shadow-[0_0_35px_rgba(201,184,255,0.5)] hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C9B8FF]"
           >
             <span>Get Started Free</span>
             <ArrowRight className="w-4 h-4" />
@@ -58,25 +58,25 @@ export default function HeroSection({ onOpenSignup, onExploreWorkspace }) {
           <button
             type="button"
             onClick={onExploreWorkspace}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 text-sm sm:text-base font-medium text-[#F8F6EF] bg-[#14121C] hover:bg-[#1C1926] border border-[#C9B8FF]/20 hover:border-[#C9B8FF]/40 px-6 py-3.5 rounded-xl transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C9B8FF]/50"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 text-sm sm:text-base font-medium text-[#14121C] dark:text-[#F8F6EF] bg-white dark:bg-[#14121C] hover:bg-[#F3F1F8] dark:hover:bg-[#1C1926] border border-[#E5E1EE] dark:border-[#C9B8FF]/20 hover:border-[#7C5CFC]/40 dark:hover:border-[#C9B8FF]/40 px-6 py-3.5 rounded-xl transition-all duration-200 shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C9B8FF]/50"
           >
             <span>Explore the Workspace</span>
-            <ChevronDown className="w-4 h-4 text-[#A6A1B5]" />
+            <ChevronDown className="w-4 h-4 text-[#5C576C] dark:text-[#A6A1B5]" />
           </button>
         </div>
 
         {/* Trust Badges */}
-        <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-10 text-xs text-[#A6A1B5] mb-12 sm:mb-16">
+        <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-10 text-xs text-[#5C576C] dark:text-[#A6A1B5] mb-12 sm:mb-16">
           <div className="flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 text-[#C9B8FF]" />
+            <CheckCircle2 className="w-4 h-4 text-[#5935D6] dark:text-[#C9B8FF]" />
             <span>Strict multi-tenant data boundaries</span>
           </div>
           <div className="flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 text-[#C9B8FF]" />
+            <CheckCircle2 className="w-4 h-4 text-[#5935D6] dark:text-[#C9B8FF]" />
             <span>Zero configuration required</span>
           </div>
           <div className="flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 text-[#C9B8FF]" />
+            <CheckCircle2 className="w-4 h-4 text-[#5935D6] dark:text-[#C9B8FF]" />
             <span>Encrypted HTTP-only auth</span>
           </div>
         </div>

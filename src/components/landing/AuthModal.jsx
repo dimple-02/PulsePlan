@@ -146,7 +146,7 @@ export default function AuthModal({ isOpen, initialMode = 'login', onClose }) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 dark:bg-black/55 backdrop-blur-sm animate-in fade-in duration-200"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
@@ -155,16 +155,16 @@ export default function AuthModal({ isOpen, initialMode = 'login', onClose }) {
       {/* Modal Dialog Card (Stops backdrop click propagation) */}
       <div
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full max-w-md bg-[#14121C] border border-[#C9B8FF]/25 rounded-2xl shadow-[0_25px_60px_rgba(0,0,0,0.9),0_0_35px_rgba(201,184,255,0.12)] p-6 sm:p-8 animate-in zoom-in-95 duration-200 overflow-hidden"
+        className="relative w-full max-w-md bg-white dark:bg-[#14121C] border border-[#E5E1EE] dark:border-[#C9B8FF]/25 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] dark:shadow-[0_25px_60px_rgba(0,0,0,0.9),0_0_35px_rgba(201,184,255,0.12)] p-6 sm:p-8 animate-in zoom-in-95 duration-200 overflow-hidden"
       >
         {/* Subtle Top Glowing Line */}
-        <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-transparent via-[#C9B8FF] to-transparent pointer-events-none" />
+        <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-transparent via-[#7C5CFC] dark:via-[#C9B8FF] to-transparent pointer-events-none" />
 
         {/* Close Button */}
         <button
           type="button"
           onClick={onClose}
-          className="absolute top-4 right-4 p-1.5 rounded-lg text-[#A6A1B5] hover:text-[#F8F6EF] hover:bg-white/5 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C9B8FF]"
+          className="absolute top-4 right-4 p-1.5 rounded-lg text-[#5C576C] dark:text-[#A6A1B5] hover:text-[#14121C] dark:hover:text-[#F8F6EF] hover:bg-black/5 dark:hover:bg-white/5 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C9B8FF]"
           aria-label="Close authentication modal"
         >
           <X className="w-5 h-5" />
@@ -172,16 +172,16 @@ export default function AuthModal({ isOpen, initialMode = 'login', onClose }) {
 
         {/* Brand Header */}
         <div className="text-center mb-6">
-          <div className="inline-flex items-center justify-center w-11 h-11 rounded-xl bg-[#1C1926] border border-[#C9B8FF]/30 text-[#C9B8FF] shadow-[0_0_20px_rgba(201,184,255,0.15)] mb-3">
+          <div className="inline-flex items-center justify-center w-11 h-11 rounded-xl bg-[#EFEAFE] dark:bg-[#1C1926] border border-[#7C5CFC]/30 dark:border-[#C9B8FF]/30 text-[#5935D6] dark:text-[#C9B8FF] shadow-[0_0_20px_rgba(89,53,214,0.15)] dark:shadow-[0_0_20px_rgba(201,184,255,0.15)] mb-3">
             <Layers className="w-5 h-5" />
           </div>
           <h2
             id="auth-modal-title"
-            className="text-xl sm:text-2xl font-bold tracking-tight text-[#F8F6EF]"
+            className="text-xl sm:text-2xl font-bold tracking-tight text-[#14121C] dark:text-[#F8F6EF]"
           >
             {mode === 'login' ? 'Sign in to PulsePlan' : 'Create your workspace'}
           </h2>
-          <p className="mt-1 text-xs text-[#A6A1B5]">
+          <p className="mt-1 text-xs text-[#5C576C] dark:text-[#A6A1B5]">
             {mode === 'login'
               ? 'Multi-Tenant Workspace & Project Management'
               : 'Launch your dedicated, isolated team environment'}
@@ -189,14 +189,14 @@ export default function AuthModal({ isOpen, initialMode = 'login', onClose }) {
         </div>
 
         {/* Segmented Mode Toggle Tabs */}
-        <div className="grid grid-cols-2 p-1 rounded-xl bg-[#100E17] border border-white/5 mb-5">
+        <div className="grid grid-cols-2 p-1 rounded-xl bg-[#F4F2F8] dark:bg-[#100E17] border border-[#E5E1EE] dark:border-white/5 mb-5">
           <button
             type="button"
             onClick={() => handleModeSwitch('login')}
             className={`py-1.5 text-xs font-semibold rounded-lg transition-all ${
               mode === 'login'
-                ? 'bg-[#1C1829] text-[#C9B8FF] shadow-sm border border-[#C9B8FF]/20'
-                : 'text-[#A6A1B5] hover:text-[#F8F6EF]'
+                ? 'bg-white dark:bg-[#1C1829] text-[#5935D6] dark:text-[#C9B8FF] shadow-sm border border-[#E5E1EE] dark:border-[#C9B8FF]/20'
+                : 'text-[#5C576C] dark:text-[#A6A1B5] hover:text-[#14121C] dark:hover:text-[#F8F6EF]'
             }`}
           >
             Sign In
@@ -206,8 +206,8 @@ export default function AuthModal({ isOpen, initialMode = 'login', onClose }) {
             onClick={() => handleModeSwitch('signup')}
             className={`py-1.5 text-xs font-semibold rounded-lg transition-all ${
               mode === 'signup'
-                ? 'bg-[#1C1829] text-[#C9B8FF] shadow-sm border border-[#C9B8FF]/20'
-                : 'text-[#A6A1B5] hover:text-[#F8F6EF]'
+                ? 'bg-white dark:bg-[#1C1829] text-[#5935D6] dark:text-[#C9B8FF] shadow-sm border border-[#E5E1EE] dark:border-[#C9B8FF]/20'
+                : 'text-[#5C576C] dark:text-[#A6A1B5] hover:text-[#14121C] dark:hover:text-[#F8F6EF]'
             }`}
           >
             Create Account
@@ -216,8 +216,8 @@ export default function AuthModal({ isOpen, initialMode = 'login', onClose }) {
 
         {/* Error Banner */}
         {errorMessage && (
-          <div className="mb-4 p-3 rounded-xl bg-rose-950/40 border border-rose-800/60 flex items-start gap-2.5 text-xs text-rose-300 animate-in fade-in duration-150">
-            <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+          <div className="mb-4 p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/60 flex items-start gap-2.5 text-xs text-rose-700 dark:text-rose-300 animate-in fade-in duration-150">
+            <AlertCircle className="w-4 h-4 text-rose-500 dark:text-rose-400 shrink-0 mt-0.5" />
             <div className="flex-1 font-medium">{errorMessage}</div>
           </div>
         )}
@@ -226,11 +226,11 @@ export default function AuthModal({ isOpen, initialMode = 'login', onClose }) {
         {mode === 'login' && (
           <form className="space-y-4" onSubmit={handleLoginSubmit}>
             <div>
-              <label className="block text-[11px] font-mono font-medium text-[#A6A1B5] uppercase tracking-wider mb-1.5">
+              <label className="block text-[11px] font-mono font-medium text-[#5C576C] dark:text-[#A6A1B5] uppercase tracking-wider mb-1.5">
                 Work Email
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#A6A1B5]">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#5C576C] dark:text-[#A6A1B5]">
                   <Mail className="w-4 h-4" />
                 </div>
                 <input
@@ -239,17 +239,17 @@ export default function AuthModal({ isOpen, initialMode = 'login', onClose }) {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="name@company.com"
-                  className="w-full pl-9 pr-3 py-2 text-sm bg-[#100E17] border border-white/10 rounded-xl text-[#F8F6EF] placeholder-[#A6A1B5]/50 focus:outline-none focus:border-[#C9B8FF] focus:ring-1 focus:ring-[#C9B8FF] transition-all"
+                  className="w-full pl-9 pr-3 py-2 text-sm bg-[#F9F8FC] dark:bg-[#100E17] border border-[#E5E1EE] dark:border-white/10 rounded-xl text-[#14121C] dark:text-[#F8F6EF] placeholder-[#5C576C]/50 dark:placeholder-[#A6A1B5]/50 focus:outline-none focus:border-[#7C5CFC] dark:focus:border-[#C9B8FF] focus:ring-1 focus:ring-[#7C5CFC] dark:focus:ring-[#C9B8FF] transition-all"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-[11px] font-mono font-medium text-[#A6A1B5] uppercase tracking-wider mb-1.5">
+              <label className="block text-[11px] font-mono font-medium text-[#5C576C] dark:text-[#A6A1B5] uppercase tracking-wider mb-1.5">
                 Password
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#A6A1B5]">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#5C576C] dark:text-[#A6A1B5]">
                   <Lock className="w-4 h-4" />
                 </div>
                 <input
@@ -258,12 +258,12 @@ export default function AuthModal({ isOpen, initialMode = 'login', onClose }) {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full pl-9 pr-10 py-2 text-sm bg-[#100E17] border border-white/10 rounded-xl text-[#F8F6EF] placeholder-[#A6A1B5]/50 focus:outline-none focus:border-[#C9B8FF] focus:ring-1 focus:ring-[#C9B8FF] transition-all"
+                  className="w-full pl-9 pr-10 py-2 text-sm bg-[#F9F8FC] dark:bg-[#100E17] border border-[#E5E1EE] dark:border-white/10 rounded-xl text-[#14121C] dark:text-[#F8F6EF] placeholder-[#5C576C]/50 dark:placeholder-[#A6A1B5]/50 focus:outline-none focus:border-[#7C5CFC] dark:focus:border-[#C9B8FF] focus:ring-1 focus:ring-[#7C5CFC] dark:focus:ring-[#C9B8FF] transition-all"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-[#A6A1B5] hover:text-[#F8F6EF] focus:outline-none"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-[#5C576C] dark:text-[#A6A1B5] hover:text-[#14121C] dark:hover:text-[#F8F6EF] focus:outline-none"
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -274,7 +274,7 @@ export default function AuthModal({ isOpen, initialMode = 'login', onClose }) {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full mt-2 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-[#C9B8FF] hover:bg-[#ded2ff] text-[#0B0A0F] font-semibold text-sm transition-all duration-200 shadow-[0_0_20px_rgba(201,184,255,0.25)] hover:shadow-[0_0_30px_rgba(201,184,255,0.4)] disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C9B8FF]"
+              className="w-full mt-2 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-[#5935D6] hover:bg-[#4828b8] dark:bg-[#C9B8FF] dark:hover:bg-[#ded2ff] text-white dark:text-[#0B0A0F] font-semibold text-sm transition-all duration-200 shadow-[0_0_20px_rgba(89,53,214,0.25)] dark:shadow-[0_0_20px_rgba(201,184,255,0.25)] hover:shadow-[0_0_30px_rgba(89,53,214,0.4)] dark:hover:shadow-[0_0_30px_rgba(201,184,255,0.4)] disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C9B8FF]"
             >
               {isSubmitting ? (
                 <>
@@ -295,11 +295,11 @@ export default function AuthModal({ isOpen, initialMode = 'login', onClose }) {
         {mode === 'signup' && (
           <form className="space-y-3.5" onSubmit={handleSignupSubmit}>
             <div>
-              <label className="block text-[11px] font-mono font-medium text-[#A6A1B5] uppercase tracking-wider mb-1">
+              <label className="block text-[11px] font-mono font-medium text-[#5C576C] dark:text-[#A6A1B5] uppercase tracking-wider mb-1">
                 Full Name
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#A6A1B5]">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#5C576C] dark:text-[#A6A1B5]">
                   <User className="w-4 h-4" />
                 </div>
                 <input
@@ -308,17 +308,17 @@ export default function AuthModal({ isOpen, initialMode = 'login', onClose }) {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="e.g. Jordan Lee"
-                  className="w-full pl-9 pr-3 py-2 text-sm bg-[#100E17] border border-white/10 rounded-xl text-[#F8F6EF] placeholder-[#A6A1B5]/50 focus:outline-none focus:border-[#C9B8FF] focus:ring-1 focus:ring-[#C9B8FF] transition-all"
+                  className="w-full pl-9 pr-3 py-2 text-sm bg-[#F9F8FC] dark:bg-[#100E17] border border-[#E5E1EE] dark:border-white/10 rounded-xl text-[#14121C] dark:text-[#F8F6EF] placeholder-[#5C576C]/50 dark:placeholder-[#A6A1B5]/50 focus:outline-none focus:border-[#7C5CFC] dark:focus:border-[#C9B8FF] focus:ring-1 focus:ring-[#7C5CFC] dark:focus:ring-[#C9B8FF] transition-all"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-[11px] font-mono font-medium text-[#A6A1B5] uppercase tracking-wider mb-1">
+              <label className="block text-[11px] font-mono font-medium text-[#5C576C] dark:text-[#A6A1B5] uppercase tracking-wider mb-1">
                 Work Email
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#A6A1B5]">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#5C576C] dark:text-[#A6A1B5]">
                   <Mail className="w-4 h-4" />
                 </div>
                 <input
@@ -327,17 +327,17 @@ export default function AuthModal({ isOpen, initialMode = 'login', onClose }) {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="jordan@company.com"
-                  className="w-full pl-9 pr-3 py-2 text-sm bg-[#100E17] border border-white/10 rounded-xl text-[#F8F6EF] placeholder-[#A6A1B5]/50 focus:outline-none focus:border-[#C9B8FF] focus:ring-1 focus:ring-[#C9B8FF] transition-all"
+                  className="w-full pl-9 pr-3 py-2 text-sm bg-[#F9F8FC] dark:bg-[#100E17] border border-[#E5E1EE] dark:border-white/10 rounded-xl text-[#14121C] dark:text-[#F8F6EF] placeholder-[#5C576C]/50 dark:placeholder-[#A6A1B5]/50 focus:outline-none focus:border-[#7C5CFC] dark:focus:border-[#C9B8FF] focus:ring-1 focus:ring-[#7C5CFC] dark:focus:ring-[#C9B8FF] transition-all"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-[11px] font-mono font-medium text-[#A6A1B5] uppercase tracking-wider mb-1">
+              <label className="block text-[11px] font-mono font-medium text-[#5C576C] dark:text-[#A6A1B5] uppercase tracking-wider mb-1">
                 Password
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#A6A1B5]">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#5C576C] dark:text-[#A6A1B5]">
                   <Lock className="w-4 h-4" />
                 </div>
                 <input
@@ -346,12 +346,12 @@ export default function AuthModal({ isOpen, initialMode = 'login', onClose }) {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Min. 6 characters"
-                  className="w-full pl-9 pr-10 py-2 text-sm bg-[#100E17] border border-white/10 rounded-xl text-[#F8F6EF] placeholder-[#A6A1B5]/50 focus:outline-none focus:border-[#C9B8FF] focus:ring-1 focus:ring-[#C9B8FF] transition-all"
+                  className="w-full pl-9 pr-10 py-2 text-sm bg-[#F9F8FC] dark:bg-[#100E17] border border-[#E5E1EE] dark:border-white/10 rounded-xl text-[#14121C] dark:text-[#F8F6EF] placeholder-[#5C576C]/50 dark:placeholder-[#A6A1B5]/50 focus:outline-none focus:border-[#7C5CFC] dark:focus:border-[#C9B8FF] focus:ring-1 focus:ring-[#7C5CFC] dark:focus:ring-[#C9B8FF] transition-all"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-[#A6A1B5] hover:text-[#F8F6EF] focus:outline-none"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-[#5C576C] dark:text-[#A6A1B5] hover:text-[#14121C] dark:hover:text-[#F8F6EF] focus:outline-none"
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -360,11 +360,11 @@ export default function AuthModal({ isOpen, initialMode = 'login', onClose }) {
             </div>
 
             <div>
-              <label className="block text-[11px] font-mono font-medium text-[#A6A1B5] uppercase tracking-wider mb-1">
+              <label className="block text-[11px] font-mono font-medium text-[#5C576C] dark:text-[#A6A1B5] uppercase tracking-wider mb-1">
                 Confirm Password
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#A6A1B5]">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#5C576C] dark:text-[#A6A1B5]">
                   <Lock className="w-4 h-4" />
                 </div>
                 <input
@@ -373,14 +373,14 @@ export default function AuthModal({ isOpen, initialMode = 'login', onClose }) {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="Re-type password"
-                  className="w-full pl-9 pr-3 py-2 text-sm bg-[#100E17] border border-white/10 rounded-xl text-[#F8F6EF] placeholder-[#A6A1B5]/50 focus:outline-none focus:border-[#C9B8FF] focus:ring-1 focus:ring-[#C9B8FF] transition-all"
+                  className="w-full pl-9 pr-3 py-2 text-sm bg-[#F9F8FC] dark:bg-[#100E17] border border-[#E5E1EE] dark:border-white/10 rounded-xl text-[#14121C] dark:text-[#F8F6EF] placeholder-[#5C576C]/50 dark:placeholder-[#A6A1B5]/50 focus:outline-none focus:border-[#7C5CFC] dark:focus:border-[#C9B8FF] focus:ring-1 focus:ring-[#7C5CFC] dark:focus:ring-[#C9B8FF] transition-all"
                 />
               </div>
             </div>
 
             {/* Tenant Isolation Notice */}
-            <div className="p-2.5 rounded-lg bg-[#100E17] border border-[#C9B8FF]/15 text-[11px] text-[#A6A1B5] flex items-start gap-2">
-              <Shield className="w-4 h-4 text-[#C9B8FF] shrink-0 mt-0.5" />
+            <div className="p-2.5 rounded-lg bg-[#F4F2F8] dark:bg-[#100E17] border border-[#7C5CFC]/20 dark:border-[#C9B8FF]/15 text-[11px] text-[#5C576C] dark:text-[#A6A1B5] flex items-start gap-2">
+              <Shield className="w-4 h-4 text-[#5935D6] dark:text-[#C9B8FF] shrink-0 mt-0.5" />
               <span>
                 Your account will be provisioned with a private workspace isolated from all other organizations.
               </span>
@@ -389,7 +389,7 @@ export default function AuthModal({ isOpen, initialMode = 'login', onClose }) {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full mt-2 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-[#C9B8FF] hover:bg-[#ded2ff] text-[#0B0A0F] font-semibold text-sm transition-all duration-200 shadow-[0_0_20px_rgba(201,184,255,0.25)] hover:shadow-[0_0_30px_rgba(201,184,255,0.4)] disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C9B8FF]"
+              className="w-full mt-2 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-[#5935D6] hover:bg-[#4828b8] dark:bg-[#C9B8FF] dark:hover:bg-[#ded2ff] text-white dark:text-[#0B0A0F] font-semibold text-sm transition-all duration-200 shadow-[0_0_20px_rgba(89,53,214,0.25)] dark:shadow-[0_0_20px_rgba(201,184,255,0.25)] hover:shadow-[0_0_30px_rgba(89,53,214,0.4)] dark:hover:shadow-[0_0_30px_rgba(201,184,255,0.4)] disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C9B8FF]"
             >
               {isSubmitting ? (
                 <>
@@ -408,12 +408,12 @@ export default function AuthModal({ isOpen, initialMode = 'login', onClose }) {
 
         {/* Footer switch prompt */}
         <div className="mt-5 text-center">
-          <p className="text-xs text-[#A6A1B5]">
+          <p className="text-xs text-[#5C576C] dark:text-[#A6A1B5]">
             {mode === 'login' ? "Don't have an account yet? " : 'Already have a workspace? '}
             <button
               type="button"
               onClick={() => handleModeSwitch(mode === 'login' ? 'signup' : 'login')}
-              className="font-semibold text-[#C9B8FF] hover:text-[#ded2ff] hover:underline focus:outline-none"
+              className="font-semibold text-[#5935D6] hover:text-[#4828b8] dark:text-[#C9B8FF] dark:hover:text-[#ded2ff] hover:underline focus:outline-none"
             >
               {mode === 'login' ? 'Create new workspace' : 'Sign in to workspace'}
             </button>

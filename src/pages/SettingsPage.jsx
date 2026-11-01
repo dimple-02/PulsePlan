@@ -48,12 +48,12 @@ export default function SettingsPage() {
     <div className="space-y-6 max-w-4xl">
       {/* Header */}
       <div>
-        <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
-          <Settings className="w-5 h-5 text-indigo-600" />
+        <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-[#F8F6EF] tracking-tight flex items-center gap-2">
+          <Settings className="w-5 h-5 text-indigo-600 dark:text-[#C9B8FF]" />
           <span>Workspace Settings</span>
         </h1>
-        <p className="text-xs text-slate-500 mt-1">
-          Manage general settings and tenant metadata for <span className="font-semibold text-slate-700">{activeWorkspace.name}</span>
+        <p className="text-xs text-slate-500 dark:text-[#A6A1B5] mt-1">
+          Manage general settings and tenant metadata for <span className="font-semibold text-slate-700 dark:text-[#F8F6EF]">{activeWorkspace.name}</span>
         </p>
       </div>
 
@@ -82,23 +82,23 @@ export default function SettingsPage() {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+              <label className="block text-xs font-semibold text-slate-700 dark:text-[#F8F6EF] uppercase tracking-wider mb-1.5">
                 Description
               </label>
               <textarea
                 rows="3"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="w-full rounded-lg text-sm border border-slate-300 p-3 focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 bg-white"
+                className="w-full rounded-lg text-sm border border-slate-300 dark:border-white/15 p-3 focus:outline-none focus:ring-2 focus:ring-indigo-100 dark:focus:ring-[#C9B8FF]/20 focus:border-indigo-500 dark:focus:border-[#C9B8FF]/60 bg-white dark:bg-[#100E17] text-slate-900 dark:text-[#F8F6EF]"
               />
             </div>
 
-            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between">
+            <div className="p-3 bg-slate-50 dark:bg-white/5 rounded-xl border border-slate-200 dark:border-white/10 flex items-center justify-between">
               <div>
-                <span className="text-xs font-semibold text-slate-800 block">
+                <span className="text-xs font-semibold text-slate-800 dark:text-[#F8F6EF] block">
                   Tenant Plan
                 </span>
-                <span className="text-xs text-slate-500">
+                <span className="text-xs text-slate-500 dark:text-[#A6A1B5]">
                   Current subscription tier for this organization
                 </span>
               </div>

@@ -80,37 +80,37 @@ export default function TaskDetailsModal({ isOpen, onClose, task }) {
     >
       <div className="space-y-5">
         {/* Quick Status and Priority controls */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3.5 bg-slate-50 rounded-xl border border-slate-200">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3.5 bg-slate-50 dark:bg-white/5 rounded-xl border border-slate-200 dark:border-white/10">
           <div>
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 mb-1 block">
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-[#A6A1B5] mb-1 block">
               Kanban Column Status
             </span>
             <select
               value={currentStatus}
               onChange={handleStatusChange}
-              className="w-full text-xs font-semibold py-1.5 px-2.5 rounded-lg border border-slate-300 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+              className="w-full text-xs font-semibold py-1.5 px-2.5 rounded-lg border border-slate-300 dark:border-white/15 bg-white dark:bg-[#100E17] text-slate-800 dark:text-[#F8F6EF] focus:outline-none focus:ring-2 focus:ring-indigo-100 dark:focus:ring-[#C9B8FF]/20"
             >
-              <option value="backlog">Backlog</option>
-              <option value="todo">To Do</option>
-              <option value="in_progress">In Progress</option>
-              <option value="review">In Review</option>
-              <option value="done">Done</option>
+              <option value="backlog" className="bg-white dark:bg-[#1A1726] text-slate-900 dark:text-[#F8F6EF]">Backlog</option>
+              <option value="todo" className="bg-white dark:bg-[#1A1726] text-slate-900 dark:text-[#F8F6EF]">To Do</option>
+              <option value="in_progress" className="bg-white dark:bg-[#1A1726] text-slate-900 dark:text-[#F8F6EF]">In Progress</option>
+              <option value="review" className="bg-white dark:bg-[#1A1726] text-slate-900 dark:text-[#F8F6EF]">In Review</option>
+              <option value="done" className="bg-white dark:bg-[#1A1726] text-slate-900 dark:text-[#F8F6EF]">Done</option>
             </select>
           </div>
 
           <div>
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 mb-1 block">
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-[#A6A1B5] mb-1 block">
               Priority
             </span>
             <select
               value={currentPriority}
               onChange={handlePriorityChange}
-              className="w-full text-xs font-semibold py-1.5 px-2.5 rounded-lg border border-slate-300 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+              className="w-full text-xs font-semibold py-1.5 px-2.5 rounded-lg border border-slate-300 dark:border-white/15 bg-white dark:bg-[#100E17] text-slate-800 dark:text-[#F8F6EF] focus:outline-none focus:ring-2 focus:ring-indigo-100 dark:focus:ring-[#C9B8FF]/20"
             >
-              <option value="low">Low Priority</option>
-              <option value="medium">Medium Priority</option>
-              <option value="high">High Priority</option>
-              <option value="urgent">Urgent</option>
+              <option value="low" className="bg-white dark:bg-[#1A1726] text-slate-900 dark:text-[#F8F6EF]">Low Priority</option>
+              <option value="medium" className="bg-white dark:bg-[#1A1726] text-slate-900 dark:text-[#F8F6EF]">Medium Priority</option>
+              <option value="high" className="bg-white dark:bg-[#1A1726] text-slate-900 dark:text-[#F8F6EF]">High Priority</option>
+              <option value="urgent" className="bg-white dark:bg-[#1A1726] text-slate-900 dark:text-[#F8F6EF]">Urgent</option>
             </select>
           </div>
         </div>
@@ -118,41 +118,41 @@ export default function TaskDetailsModal({ isOpen, onClose, task }) {
         {/* Task Meta details */}
         <div className="grid grid-cols-2 gap-4 text-xs">
           <div>
-            <span className="text-slate-400 block mb-1">Assignee</span>
+            <span className="text-slate-400 dark:text-[#A6A1B5] block mb-1">Assignee</span>
             <div className="flex items-center gap-2">
               <Avatar
                 name={task.assignee?.name || 'Unassigned'}
                 initials={task.assignee?.avatar}
                 size="sm"
               />
-              <span className="font-medium text-slate-800">
+              <span className="font-medium text-slate-800 dark:text-[#F8F6EF]">
                 {task.assignee?.name || 'Unassigned'}
               </span>
             </div>
           </div>
 
           <div>
-            <span className="text-slate-400 block mb-1">Due Date</span>
-            <div className="flex items-center gap-1.5 font-medium text-slate-800">
-              <Calendar className="w-3.5 h-3.5 text-slate-400" />
+            <span className="text-slate-400 dark:text-[#A6A1B5] block mb-1">Due Date</span>
+            <div className="flex items-center gap-1.5 font-medium text-slate-800 dark:text-[#F8F6EF]">
+              <Calendar className="w-3.5 h-3.5 text-slate-400 dark:text-[#A6A1B5]" />
               <span>{task.dueDate || 'No due date'}</span>
             </div>
           </div>
 
           <div>
-            <span className="text-slate-400 block mb-1">Story Points</span>
-            <span className="inline-block px-2 py-0.5 font-semibold text-xs rounded bg-slate-100 text-slate-700">
+            <span className="text-slate-400 dark:text-[#A6A1B5] block mb-1">Story Points</span>
+            <span className="inline-block px-2 py-0.5 font-semibold text-xs rounded bg-slate-100 dark:bg-white/10 text-slate-700 dark:text-[#F8F6EF]">
               {task.storyPoints || 3} pts
             </span>
           </div>
 
           <div>
-            <span className="text-slate-400 block mb-1">Tags</span>
+            <span className="text-slate-400 dark:text-[#A6A1B5] block mb-1">Tags</span>
             <div className="flex flex-wrap gap-1">
               {(task.tags || []).map((tag, i) => (
                 <span
                   key={i}
-                  className="px-2 py-0.5 rounded text-[11px] font-medium bg-indigo-50 text-indigo-700 border border-indigo-100"
+                  className="px-2 py-0.5 rounded text-[11px] font-medium bg-indigo-50 dark:bg-[#C9B8FF]/15 text-indigo-700 dark:text-[#C9B8FF] border border-indigo-100 dark:border-[#C9B8FF]/30"
                 >
                   #{tag}
                 </span>
@@ -163,10 +163,10 @@ export default function TaskDetailsModal({ isOpen, onClose, task }) {
 
         {/* Description */}
         <div>
-          <span className="text-xs font-semibold text-slate-700 uppercase tracking-wider block mb-1.5">
+          <span className="text-xs font-semibold text-slate-700 dark:text-[#F8F6EF] uppercase tracking-wider block mb-1.5">
             Description
           </span>
-          <div className="p-3 bg-white border border-slate-200 rounded-xl text-xs text-slate-600 leading-relaxed min-h-[80px]">
+          <div className="p-3 bg-white dark:bg-[#100E17] border border-slate-200 dark:border-white/10 rounded-xl text-xs text-slate-600 dark:text-[#A6A1B5] leading-relaxed min-h-[80px]">
             {task.description || 'No description provided for this task.'}
           </div>
         </div>

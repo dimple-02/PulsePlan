@@ -44,7 +44,7 @@ export default function KanbanCard({ task, onClick }) {
   return (
     <div
       onClick={() => onClick(task)}
-      className="p-3.5 bg-white rounded-xl border border-slate-200/90 shadow-xs hover:shadow-md hover:border-slate-300 transition-all cursor-pointer group space-y-2.5"
+      className="p-3.5 bg-white dark:bg-[#1A1726] rounded-xl border border-slate-200/90 dark:border-white/10 shadow-xs hover:shadow-md hover:border-slate-300 dark:hover:border-white/20 transition-all cursor-pointer group space-y-2.5"
     >
       {/* Card Header: Priority & Story Points */}
       <div className="flex items-center justify-between gap-1">
@@ -55,13 +55,13 @@ export default function KanbanCard({ task, onClick }) {
           {priorityMap[task.priority]?.label || task.priority}
         </Badge>
 
-        <span className="text-[10px] font-mono font-medium text-slate-400 bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100">
+        <span className="text-[10px] font-mono font-medium text-slate-400 dark:text-[#A6A1B5] bg-slate-50 dark:bg-white/5 px-1.5 py-0.5 rounded border border-slate-100 dark:border-white/10">
           {task.storyPoints || 3} pts
         </span>
       </div>
 
       {/* Task Title */}
-      <h4 className="text-xs sm:text-sm font-semibold text-slate-900 group-hover:text-indigo-600 transition-colors leading-snug">
+      <h4 className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-[#F8F6EF] group-hover:text-indigo-600 dark:group-hover:text-[#C9B8FF] transition-colors leading-snug">
         {task.title}
       </h4>
 
@@ -71,7 +71,7 @@ export default function KanbanCard({ task, onClick }) {
           {task.tags.map((tag, idx) => (
             <span
               key={idx}
-              className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-slate-100 text-slate-600"
+              className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-[#A6A1B5]"
             >
               #{tag}
             </span>
@@ -80,7 +80,7 @@ export default function KanbanCard({ task, onClick }) {
       )}
 
       {/* Card Footer: Assignee, Date, and Column Move Controls */}
-      <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-xs">
+      <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-white/10 text-xs">
         <div className="flex items-center gap-2 min-w-0">
           <Avatar
             name={task.assignee?.name || 'User'}
@@ -88,7 +88,7 @@ export default function KanbanCard({ task, onClick }) {
             size="xs"
           />
           {task.dueDate && (
-            <span className="text-[11px] text-slate-400 flex items-center gap-1 truncate">
+            <span className="text-[11px] text-slate-400 dark:text-[#A6A1B5]/70 flex items-center gap-1 truncate">
               <Calendar className="w-3 h-3 shrink-0" />
               <span>{task.dueDate}</span>
             </span>
@@ -101,7 +101,7 @@ export default function KanbanCard({ task, onClick }) {
             <button
               type="button"
               onClick={handleMovePrevious}
-              className="p-1 rounded text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
+              className="p-1 rounded text-slate-400 dark:text-[#A6A1B5] hover:text-indigo-600 dark:hover:text-[#C9B8FF] hover:bg-indigo-50 dark:hover:bg-white/10 transition-colors"
               title="Move left"
             >
               <ChevronLeft className="w-3.5 h-3.5" />
@@ -111,7 +111,7 @@ export default function KanbanCard({ task, onClick }) {
             <button
               type="button"
               onClick={handleMoveNext}
-              className="p-1 rounded text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
+              className="p-1 rounded text-slate-400 dark:text-[#A6A1B5] hover:text-indigo-600 dark:hover:text-[#C9B8FF] hover:bg-indigo-50 dark:hover:bg-white/10 transition-colors"
               title="Move right"
             >
               <ChevronRight className="w-3.5 h-3.5" />

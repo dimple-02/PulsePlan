@@ -2,7 +2,107 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Custom scrollbars for Kanban columns and sidebar */
+/* ==========================================================================
+   Design Tokens & CSS Custom Properties
+   Provides unified, high-contrast theme variables for Dark Mode & Light Mode.
+   Preserves PulsePlan brand identity:
+   - Dark: #0B0A0F near-black, #14121C charcoal surface, #C9B8FF lavender, #FFD6E8 pink
+   - Light: #FAF9F6 warm off-white, #FFFFFF crisp surfaces, #14121C dark readable text
+   ========================================================================== */
+
+:root,
+[data-theme="light"],
+[data-bs-theme="light"] {
+  color-scheme: light;
+
+  /* Surfaces & Backgrounds */
+  --bg-page: #FAF9F6;
+  --bg-surface: #FFFFFF;
+  --bg-surface-elevated: #F4F2F8;
+  --bg-surface-hover: #ECE8F6;
+
+  /* Typography */
+  --text-primary: #14121C;
+  --text-secondary: #5C576C;
+  --text-muted: #8E889D;
+
+  /* Borders & Dividers */
+  --border-subtle: #E6E1F0;
+  --border-strong: #D4CCE5;
+
+  /* Accents */
+  --accent-lavender: #7C5CFC;
+  --accent-lavender-subtle: #ECE7FE;
+  --accent-lavender-hover: #6848E8;
+  --accent-pink: #D946EF;
+  --accent-pink-subtle: #FDF2F8;
+
+  /* Form Controls */
+  --input-bg: #FFFFFF;
+  --input-border: #D4CCE5;
+  --input-text: #14121C;
+  --input-placeholder: #8E889D;
+
+  /* Bootstrap 5 Framework Compatibility */
+  --bs-body-color: #14121C;
+  --bs-body-bg: #FAF9F6;
+  --bs-border-color: #E6E1F0;
+  --bs-card-bg: #FFFFFF;
+  --bs-card-color: #14121C;
+  --bs-table-color: #14121C;
+  --bs-table-bg: transparent;
+  --bs-table-border-color: #E6E1F0;
+  --bs-secondary-color: #5C576C;
+  --bs-tertiary-bg: #F4F2F8;
+}
+
+.dark,
+[data-theme="dark"],
+[data-bs-theme="dark"] {
+  color-scheme: dark;
+
+  /* Surfaces & Backgrounds */
+  --bg-page: #0B0A0F;
+  --bg-surface: #14121C;
+  --bg-surface-elevated: #1C1926;
+  --bg-surface-hover: #262234;
+
+  /* Typography */
+  --text-primary: #F8F6EF;
+  --text-secondary: #A6A1B5;
+  --text-muted: #736D85;
+
+  /* Borders & Dividers */
+  --border-subtle: rgba(201, 184, 255, 0.12);
+  --border-strong: rgba(201, 184, 255, 0.25);
+
+  /* Accents */
+  --accent-lavender: #C9B8FF;
+  --accent-lavender-subtle: rgba(201, 184, 255, 0.12);
+  --accent-lavender-hover: #D8C9FF;
+  --accent-pink: #FFD6E8;
+  --accent-pink-subtle: rgba(255, 214, 232, 0.12);
+
+  /* Form Controls */
+  --input-bg: #100E17;
+  --input-border: rgba(201, 184, 255, 0.15);
+  --input-text: #F8F6EF;
+  --input-placeholder: rgba(166, 161, 181, 0.5);
+
+  /* Bootstrap 5 Framework Compatibility */
+  --bs-body-color: #F8F6EF;
+  --bs-body-bg: #0B0A0F;
+  --bs-border-color: rgba(201, 184, 255, 0.12);
+  --bs-card-bg: #14121C;
+  --bs-card-color: #F8F6EF;
+  --bs-table-color: #F8F6EF;
+  --bs-table-bg: transparent;
+  --bs-table-border-color: rgba(201, 184, 255, 0.12);
+  --bs-secondary-color: #A6A1B5;
+  --bs-tertiary-bg: #1C1926;
+}
+
+/* Custom scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -17,23 +117,42 @@
   border-radius: 9999px;
 }
 
+.dark ::-webkit-scrollbar-thumb {
+  background: #2b263b;
+}
+
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
 
-/* Base typography and framework compatibility:
-   Allows Bootstrap components (.alert, .badge, .progress, .table) to be used alongside Tailwind CSS
-   while preserving Tailwind's clean modern SaaS styling. */
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #423b59;
+}
+
+/* Base typography and body reset */
 body {
   margin: 0;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-  background-color: #f8fafc;
-  color: #0f172a;
+  background-color: var(--bg-page);
+  color: var(--text-primary);
   scroll-behavior: smooth;
+  transition: background-color 0.15s ease, color 0.15s ease;
 }
 
 html {
   scroll-behavior: smooth;
+}
+
+/* Bootstrap 5 integration overrides ensuring full theme sync */
+.card {
+  background-color: var(--bg-surface);
+  color: var(--text-primary);
+  border-color: var(--border-subtle);
+}
+
+.table {
+  color: var(--text-primary);
+  border-color: var(--border-subtle);
 }
 
 /* 3D and Animation Utilities */

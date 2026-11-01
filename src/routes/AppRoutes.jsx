@@ -24,12 +24,12 @@ function RootRoute() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#0B0A0F] flex flex-col items-center justify-center p-4">
-        <div className="w-12 h-12 rounded-2xl bg-[#1C1926] border border-[#C9B8FF]/30 flex items-center justify-center text-[#C9B8FF] shadow-[0_0_25px_rgba(201,184,255,0.2)] mb-4 animate-bounce">
+      <div className="min-h-screen bg-[#FAF9F6] dark:bg-[#0B0A0F] flex flex-col items-center justify-center p-4 transition-colors">
+        <div className="w-12 h-12 rounded-2xl bg-[#EFEAFE] dark:bg-[#1C1926] border border-[#7C5CFC]/30 dark:border-[#C9B8FF]/30 flex items-center justify-center text-[#5935D6] dark:text-[#C9B8FF] shadow-[0_0_25px_rgba(89,53,214,0.2)] dark:shadow-[0_0_25px_rgba(201,184,255,0.2)] mb-4 animate-bounce">
           <Layers className="w-6 h-6" />
         </div>
-        <div className="flex items-center gap-2 text-[#A6A1B5] text-sm font-medium">
-          <Loader2 className="w-4 h-4 animate-spin text-[#C9B8FF]" />
+        <div className="flex items-center gap-2 text-[#5C576C] dark:text-[#A6A1B5] text-sm font-medium">
+          <Loader2 className="w-4 h-4 animate-spin text-[#5935D6] dark:text-[#C9B8FF]" />
           <span>Verifying session...</span>
         </div>
       </div>

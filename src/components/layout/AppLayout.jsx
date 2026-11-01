@@ -26,7 +26,7 @@ export default function AppLayout({ children }) {
   const { notification, apiError, reloadWorkspaces, isLoading } = useWorkspace();
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#0B0A0F] text-slate-900 dark:text-[#F8F6EF] flex flex-col transition-colors">
       {/* Backend API Connection Error Banner */}
       {apiError && (
         <div className="bg-rose-600 text-white px-4 py-2.5 text-xs font-medium flex items-center justify-between sticky top-0 z-50 shadow-md">
@@ -50,13 +50,13 @@ export default function AppLayout({ children }) {
 
       {/* Toast Notification Banner */}
       {notification && (
-        <div className="fixed bottom-5 right-5 z-50 flex items-center gap-2.5 px-4 py-3 rounded-xl bg-slate-900 text-white shadow-2xl border border-slate-700 animate-in slide-in-from-bottom duration-200">
+        <div className="fixed bottom-5 right-5 z-50 flex items-center gap-2.5 px-4 py-3 rounded-xl bg-slate-900 dark:bg-[#1C1829] text-white dark:text-[#F8F6EF] shadow-2xl border border-slate-700 dark:border-white/15 animate-in slide-in-from-bottom duration-200">
           {notification.type === 'success' ? (
             <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
           ) : notification.type === 'danger' ? (
             <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
           ) : (
-            <Info className="w-4 h-4 text-indigo-400 shrink-0" />
+            <Info className="w-4 h-4 text-indigo-400 dark:text-[#C9B8FF] shrink-0" />
           )}
           <span className="text-xs font-medium">{notification.message}</span>
         </div>

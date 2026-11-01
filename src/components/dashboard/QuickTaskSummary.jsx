@@ -31,7 +31,7 @@ export default function QuickTaskSummary({ tasks = [] }) {
         action={
           <Link
             to="/kanban"
-            className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 flex items-center gap-1"
+            className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 dark:text-[#C9B8FF] dark:hover:text-[#FFD6E8] flex items-center gap-1"
           >
             <span>Open Board</span>
             <ArrowRight className="w-3.5 h-3.5" />
@@ -47,15 +47,15 @@ export default function QuickTaskSummary({ tasks = [] }) {
           {columns.map((col) => (
             <div
               key={col.label}
-              className="p-3 rounded-xl bg-slate-50 border border-slate-100 flex flex-col justify-between"
+              className="p-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/10 flex flex-col justify-between"
             >
               <div className="flex items-center gap-1.5 mb-2">
                 <span className={`w-2 h-2 rounded-full ${col.color}`} />
-                <span className="text-xs font-medium text-slate-600 truncate">
+                <span className="text-xs font-medium text-slate-600 dark:text-[#A6A1B5] truncate">
                   {col.label}
                 </span>
               </div>
-              <span className={`text-xl font-bold ${col.textColor}`}>
+              <span className={`text-xl font-bold ${col.textColor} dark:text-[#F8F6EF]`}>
                 {col.count}
               </span>
             </div>

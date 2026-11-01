@@ -31,13 +31,19 @@ export default function LandingPage({ defaultAuthModal = null }) {
   const [authModalOpen, setAuthModalOpen] = useState(Boolean(defaultAuthModal));
   const [authModalMode, setAuthModalMode] = useState(defaultAuthModal || 'login');
 
-  // If defaultAuthModal prop is provided or changes (e.g., accessed via /login or /signup)
+  // If defaultAuthModal prop is provided or location state indicates opening login/signup
   useEffect(() => {
     if (defaultAuthModal) {
       setAuthModalMode(defaultAuthModal);
       setAuthModalOpen(true);
+    } else if (location.state?.openLogin) {
+      setAuthModalMode('login');
+      setAuthModalOpen(true);
+    } else if (location.state?.openSignup) {
+      setAuthModalMode('signup');
+      setAuthModalOpen(true);
     }
-  }, [defaultAuthModal]);
+  }, [defaultAuthModal, location.state]);
 
   const handleOpenLogin = () => {
     if (isAuthenticated) {
@@ -75,7 +81,7 @@ export default function LandingPage({ defaultAuthModal = null }) {
   };
 
   return (
-    <div className="min-h-screen bg-[#0B0A0F] text-[#F8F6EF] antialiased selection:bg-[#C9B8FF] selection:text-[#0B0A0F] overflow-x-hidden font-sans">
+    <div className="min-h-screen bg-[#FAF9F6] dark:bg-[#0B0A0F] text-[#14121C] dark:text-[#F8F6EF] antialiased selection:bg-[#C9B8FF] selection:text-[#0B0A0F] overflow-x-hidden font-sans transition-colors duration-150">
       {/* Sticky Navigation Bar */}
       <Navbar
         onOpenLogin={handleOpenLogin}

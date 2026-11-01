@@ -141,11 +141,11 @@ export default function CreateTaskModal({ isOpen, onClose, initialStatus = 'todo
       }
     >
       {!hasProjects ? (
-        <div className="p-4 bg-amber-50 rounded-xl border border-amber-200 text-amber-900 text-xs flex items-start gap-2.5">
-          <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+        <div className="p-4 bg-amber-50 dark:bg-amber-950/40 rounded-xl border border-amber-200 dark:border-amber-800/40 text-amber-900 dark:text-amber-200 text-xs flex items-start gap-2.5">
+          <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
           <div>
-            <p className="font-semibold text-amber-900">No project available</p>
-            <p className="mt-0.5 text-amber-700">
+            <p className="font-semibold text-amber-900 dark:text-amber-200">No project available</p>
+            <p className="mt-0.5 text-amber-700 dark:text-amber-300">
               Tasks belong to projects. Please close this and create a project first using the "+ Project" button.
             </p>
           </div>
@@ -153,19 +153,19 @@ export default function CreateTaskModal({ isOpen, onClose, initialStatus = 'todo
       ) : (
         <form onSubmit={handleSubmit} className="space-y-4">
           {activeWorkspace.projects.length > 1 && (
-            <div className="p-2.5 bg-slate-50 rounded-lg border border-slate-200">
-              <label className="block text-[11px] font-semibold text-slate-600 uppercase tracking-wider mb-1">
+            <div className="p-2.5 bg-slate-50 dark:bg-white/5 rounded-lg border border-slate-200 dark:border-white/10">
+              <label className="block text-[11px] font-semibold text-slate-600 dark:text-[#A6A1B5] uppercase tracking-wider mb-1">
                 Target Project
               </label>
               <select
                 value={activeProjectId || activeProject?._id || activeProject?.id}
                 onChange={(e) => setActiveProjectId(e.target.value)}
-                className="w-full text-xs font-semibold py-1.5 px-2 rounded border border-slate-300 bg-white"
+                className="w-full text-xs font-semibold py-1.5 px-2 rounded border border-slate-300 dark:border-white/15 bg-white dark:bg-[#100E17] text-slate-900 dark:text-[#F8F6EF]"
               >
                 {activeWorkspace.projects.map((p) => {
                   const projId = p._id || p.id;
                   return (
-                    <option key={projId} value={projId}>
+                    <option key={projId} value={projId} className="bg-white dark:bg-[#1A1726] text-slate-900 dark:text-[#F8F6EF]">
                       {p.name} ({p.key})
                     </option>
                   );
@@ -251,7 +251,7 @@ export default function CreateTaskModal({ isOpen, onClose, initialStatus = 'todo
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+            <label className="block text-xs font-semibold text-slate-700 dark:text-[#F8F6EF] uppercase tracking-wider mb-1.5">
               Task Description
             </label>
             <textarea
@@ -260,7 +260,7 @@ export default function CreateTaskModal({ isOpen, onClose, initialStatus = 'todo
               value={formData.description}
               onChange={handleChange}
               placeholder="Provide acceptance criteria, notes, or implementation details..."
-              className="w-full rounded-lg text-sm border border-slate-300 p-3 focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 bg-white"
+              className="w-full rounded-lg text-sm border border-slate-300 dark:border-white/15 p-3 focus:outline-none focus:ring-2 focus:ring-indigo-100 dark:focus:ring-[#C9B8FF]/20 focus:border-indigo-500 dark:focus:border-[#C9B8FF]/60 bg-white dark:bg-[#100E17] text-slate-900 dark:text-[#F8F6EF] placeholder-slate-400 dark:placeholder-[#A6A1B5]/50"
             />
           </div>
         </form>

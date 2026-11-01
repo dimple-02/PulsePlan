@@ -9,8 +9,28 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Prevent theme flash before DOM paints (Defaults to Dark Mode) -->
+    <script>
+      (function() {
+        try {
+          var saved = localStorage.getItem('pulseplan_theme');
+          var theme = (saved === 'light' || saved === 'dark') ? saved : 'dark';
+          var root = document.documentElement;
+          if (theme === 'dark') {
+            root.classList.add('dark');
+            root.classList.remove('light');
+          } else {
+            root.classList.add('light');
+            root.classList.remove('dark');
+          }
+          root.setAttribute('data-theme', theme);
+          root.setAttribute('data-bs-theme', theme);
+          root.style.colorScheme = theme;
+        } catch (e) {}
+      })();
+    </script>
   </head>
-  <body class="bg-slate-50 text-slate-900 antialiased font-sans selection:bg-brand-500 selection:text-white">
+  <body class="bg-[#FAF9F6] text-[#14121C] dark:bg-[#0B0A0F] dark:text-[#F8F6EF] antialiased font-sans selection:bg-[#C9B8FF] selection:text-[#0B0A0F] transition-colors duration-150">
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

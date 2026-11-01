@@ -41,10 +41,10 @@ export default function ProjectCard({ project, onSelect, onDelete }) {
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between w-full gap-2">
           <div className="min-w-0">
-            <span className="text-[10px] font-mono font-semibold text-indigo-600 bg-indigo-50 border border-indigo-100 px-1.5 py-0.5 rounded uppercase">
+            <span className="text-[10px] font-mono font-semibold text-indigo-600 dark:text-[#C9B8FF] bg-indigo-50 dark:bg-[#C9B8FF]/15 border border-indigo-100 dark:border-[#C9B8FF]/30 px-1.5 py-0.5 rounded uppercase">
               {project.key}
             </span>
-            <h3 className="text-sm font-semibold text-slate-900 mt-1 truncate">
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-[#F8F6EF] mt-1 truncate">
               {project.name}
             </h3>
           </div>
@@ -55,32 +55,32 @@ export default function ProjectCard({ project, onSelect, onDelete }) {
       </CardHeader>
 
       <CardBody className="py-2 flex-1">
-        <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed mb-4">
+        <p className="text-xs text-slate-500 dark:text-[#A6A1B5] line-clamp-2 leading-relaxed mb-4">
           {project.description}
         </p>
 
         {/* Progress Bar */}
         <div className="mb-4">
-          <div className="flex justify-between text-[11px] font-medium text-slate-500 mb-1">
+          <div className="flex justify-between text-[11px] font-medium text-slate-500 dark:text-[#A6A1B5] mb-1">
             <span>
               Completion{' '}
               {project.totalTasksCount > 0 ? (
-                <span className="text-slate-400 font-normal">
+                <span className="text-slate-400 dark:text-[#A6A1B5]/70 font-normal">
                   ({project.doneTasksCount}/{project.totalTasksCount} done)
                 </span>
               ) : (
-                <span className="text-slate-400 font-normal">(0 tasks)</span>
+                <span className="text-slate-400 dark:text-[#A6A1B5]/70 font-normal">(0 tasks)</span>
               )}
             </span>
-            <span className="font-semibold text-slate-700">{project.progress}%</span>
+            <span className="font-semibold text-slate-700 dark:text-[#F8F6EF]">{project.progress}%</span>
           </div>
-          <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+          <div className="w-full bg-slate-100 dark:bg-white/10 rounded-full h-2 overflow-hidden">
             <div
               className={`h-full rounded-full transition-all duration-300 ${
                 project.progress === 100
                   ? 'bg-emerald-500'
                   : project.progress > 50
-                  ? 'bg-indigo-600'
+                  ? 'bg-indigo-600 dark:bg-[#C9B8FF]'
                   : 'bg-amber-500'
               }`}
               style={{ width: `${project.progress}%` }}
@@ -89,14 +89,14 @@ export default function ProjectCard({ project, onSelect, onDelete }) {
         </div>
 
         {/* Meta details */}
-        <div className="grid grid-cols-2 gap-2 text-[11px] text-slate-500 pt-2 border-t border-slate-100">
+        <div className="grid grid-cols-2 gap-2 text-[11px] text-slate-500 dark:text-[#A6A1B5] pt-2 border-t border-slate-100 dark:border-white/10">
           <div className="flex items-center gap-1.5 truncate">
-            <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+            <Calendar className="w-3.5 h-3.5 text-slate-400 dark:text-[#A6A1B5] shrink-0" />
             <span className="truncate">{project.deadline}</span>
           </div>
           <div className="flex items-center gap-1.5 truncate justify-end">
-            <DollarSign className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-            <span className="font-medium text-slate-700">{project.budget}</span>
+            <DollarSign className="w-3.5 h-3.5 text-slate-400 dark:text-[#A6A1B5] shrink-0" />
+            <span className="font-medium text-slate-700 dark:text-[#F8F6EF]">{project.budget}</span>
           </div>
         </div>
       </CardBody>
@@ -113,7 +113,7 @@ export default function ProjectCard({ project, onSelect, onDelete }) {
                   e.stopPropagation();
                   onDelete(project._id || project.id);
                 }}
-                className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition-colors"
+                className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/30 dark:hover:text-rose-400 transition-colors"
                 title="Delete project"
               >
                 <Trash2 className="w-3.5 h-3.5" />

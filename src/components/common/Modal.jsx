@@ -56,28 +56,28 @@ export default function Modal({
     >
       {/* Dark backdrop overlay with click-to-close */}
       <div
-        className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"
+        className="fixed inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-sm transition-opacity"
         onClick={onClose}
         aria-hidden="true"
       />
 
       {/* Modal Dialog Content Container */}
       <div
-        className={`relative w-full ${sizeWidths[size] || sizeWidths.md} bg-white rounded-2xl shadow-2xl border border-slate-200 z-10 overflow-hidden transform transition-all my-8`}
+        className={`relative w-full ${sizeWidths[size] || sizeWidths.md} bg-white dark:bg-[#14121C] rounded-2xl shadow-2xl border border-slate-200 dark:border-white/10 z-10 overflow-hidden transform transition-all my-8`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
-        <div className="px-6 py-5 border-b border-slate-100 flex items-start justify-between bg-white">
+        <div className="px-6 py-5 border-b border-slate-100 dark:border-white/10 flex items-start justify-between bg-white dark:bg-[#14121C]">
           <div>
-            <h3 className="text-lg font-semibold text-slate-900">{title}</h3>
+            <h3 className="text-lg font-semibold text-slate-900 dark:text-[#F8F6EF]">{title}</h3>
             {description && (
-              <p className="text-xs text-slate-500 mt-1">{description}</p>
+              <p className="text-xs text-slate-500 dark:text-[#A6A1B5] mt-1">{description}</p>
             )}
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 hover:bg-slate-100 p-1.5 rounded-lg transition-colors"
+            className="text-slate-400 dark:text-[#A6A1B5] hover:text-slate-600 dark:hover:text-[#F8F6EF] hover:bg-slate-100 dark:hover:bg-white/10 p-1.5 rounded-lg transition-colors"
             aria-label="Close dialog"
           >
             <X className="w-5 h-5" />
@@ -85,13 +85,13 @@ export default function Modal({
         </div>
 
         {/* Modal Body */}
-        <div className="px-6 py-5 max-h-[calc(85vh-140px)] overflow-y-auto">
+        <div className="px-6 py-5 max-h-[calc(85vh-140px)] overflow-y-auto text-slate-800 dark:text-[#F8F6EF]">
           {children}
         </div>
 
         {/* Modal Footer */}
         {footer && (
-          <div className="px-6 py-4 bg-slate-50/80 border-t border-slate-100 flex items-center justify-end gap-3">
+          <div className="px-6 py-4 bg-slate-50/80 dark:bg-[#100E17]/80 border-t border-slate-100 dark:border-white/10 flex items-center justify-end gap-3">
             {footer}
           </div>
         )}

@@ -32,17 +32,17 @@ export default function ArchitectureSection() {
   ];
 
   return (
-    <section id="architecture" className="relative py-20 sm:py-28 bg-[#0B0A0F] border-t border-white/[0.06] overflow-hidden">
+    <section id="architecture" className="relative py-20 sm:py-28 bg-[#FAF9F6] dark:bg-[#0B0A0F] border-t border-[#E5E1EE] dark:border-white/[0.06] overflow-hidden transition-colors duration-150">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="max-w-3xl mb-12 sm:mb-16">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#14121C] border border-[#C9B8FF]/20 text-[#C9B8FF] text-[11px] font-mono uppercase tracking-wider mb-4">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white dark:bg-[#14121C] border border-[#7C5CFC]/30 dark:border-[#C9B8FF]/20 text-[#5935D6] dark:text-[#C9B8FF] text-[11px] font-mono uppercase tracking-wider mb-4 shadow-sm">
             <Cpu className="w-3 h-3" />
             <span>Under The Hood</span>
           </div>
-          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-[#F8F6EF] font-sans leading-tight mb-4">
+          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-[#14121C] dark:text-[#F8F6EF] font-sans leading-tight mb-4">
             Multi-tenant architecture by default.
           </h2>
-          <p className="text-base text-[#A6A1B5] leading-relaxed">
+          <p className="text-base text-[#5C576C] dark:text-[#A6A1B5] leading-relaxed">
             PulsePlan was conceived from the ground up for teams that require strict data segregation without
             sacrificing responsiveness or developer experience.
           </p>
@@ -54,15 +54,15 @@ export default function ArchitectureSection() {
             return (
               <div
                 key={spec.title}
-                className="bg-[#14121C]/80 border border-white/[0.06] hover:border-[#C9B8FF]/30 rounded-xl p-5 transition-all group"
+                className="bg-white dark:bg-[#14121C]/80 border border-[#E5E1EE] dark:border-white/[0.06] hover:border-[#7C5CFC]/40 dark:hover:border-[#C9B8FF]/30 rounded-xl p-5 transition-all shadow-xs group"
               >
-                <div className="w-9 h-9 rounded-lg bg-[#1C1926] border border-[#C9B8FF]/20 flex items-center justify-center text-[#C9B8FF] mb-4 group-hover:border-[#C9B8FF]/40 transition-all">
+                <div className="w-9 h-9 rounded-lg bg-[#EFEAFE] dark:bg-[#1C1926] border border-[#7C5CFC]/30 dark:border-[#C9B8FF]/20 flex items-center justify-center text-[#5935D6] dark:text-[#C9B8FF] mb-4 group-hover:border-[#7C5CFC]/50 dark:group-hover:border-[#C9B8FF]/40 transition-all">
                   <Icon className="w-4 h-4" />
                 </div>
-                <h3 className="text-sm font-semibold text-[#F8F6EF] mb-2">
+                <h3 className="text-sm font-semibold text-[#14121C] dark:text-[#F8F6EF] mb-2">
                   {spec.title}
                 </h3>
-                <p className="text-xs text-[#A6A1B5] leading-relaxed">
+                <p className="text-xs text-[#5C576C] dark:text-[#A6A1B5] leading-relaxed">
                   {spec.desc}
                 </p>
               </div>

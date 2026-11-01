@@ -34,11 +34,11 @@ export default function Button({
   };
 
   const variantStyles = {
-    primary: 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm focus:ring-indigo-500 border border-transparent',
-    secondary: 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 shadow-sm focus:ring-slate-400',
-    outline: 'bg-transparent hover:bg-indigo-50 text-indigo-600 border border-indigo-200 focus:ring-indigo-500',
-    danger: 'bg-rose-600 hover:bg-rose-700 text-white shadow-sm focus:ring-rose-500 border border-transparent',
-    ghost: 'bg-transparent hover:bg-slate-100 text-slate-600 hover:text-slate-900 border border-transparent',
+    primary: 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm focus:ring-indigo-500 border border-transparent dark:bg-gradient-to-r dark:from-[#C9B8FF] dark:to-[#FFD6E8] dark:hover:from-[#D8C9FF] dark:hover:to-[#FFE3F0] dark:text-[#0B0A0F] dark:font-semibold',
+    secondary: 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 shadow-sm focus:ring-slate-400 dark:bg-white/5 dark:hover:bg-white/10 dark:text-[#F8F6EF] dark:border-white/15',
+    outline: 'bg-transparent hover:bg-indigo-50 text-indigo-600 border border-indigo-200 focus:ring-indigo-500 dark:hover:bg-white/5 dark:text-[#C9B8FF] dark:border-[#C9B8FF]/30',
+    danger: 'bg-rose-600 hover:bg-rose-700 text-white shadow-sm focus:ring-rose-500 border border-transparent dark:bg-rose-600/80 dark:hover:bg-rose-600',
+    ghost: 'bg-transparent hover:bg-slate-100 text-slate-600 hover:text-slate-900 border border-transparent dark:text-[#A6A1B5] dark:hover:text-[#F8F6EF] dark:hover:bg-white/5',
   };
 
   return (

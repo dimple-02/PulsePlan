@@ -34,10 +34,10 @@ export default function BootstrapSyllabusShowcase() {
   };
 
   return (
-    <Card className="border-indigo-100 bg-white">
+    <Card className="border-slate-200 dark:border-white/10 bg-white dark:bg-[#14121C]">
       <CardHeader>
-        <CardTitle className="text-slate-900 flex items-center gap-2">
-          <Layers className="w-5 h-5 text-indigo-600" />
+        <CardTitle className="text-slate-900 dark:text-[#F8F6EF] flex items-center gap-2">
+          <Layers className="w-5 h-5 text-indigo-600 dark:text-[#C9B8FF]" />
           <span>Syllabus Integration & Tech Stack Verification</span>
         </CardTitle>
         <CardDescription>
@@ -58,15 +58,15 @@ export default function BootstrapSyllabusShowcase() {
         <div className="row g-3">
           {/* Card 1: Styling Framework Status */}
           <div className="col-12 col-sm-6">
-            <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200">
+            <div className="p-3 rounded-2xl bg-slate-50 dark:bg-[#1C1926] border border-slate-200 dark:border-white/10">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-semibold text-slate-800 flex items-center gap-1.5">
-                  <Globe className="w-3.5 h-3.5 text-indigo-600" />
+                <span className="text-xs font-semibold text-slate-800 dark:text-[#F8F6EF] flex items-center gap-1.5">
+                  <Globe className="w-3.5 h-3.5 text-indigo-600 dark:text-[#C9B8FF]" />
                   CSS Frameworks
                 </span>
                 <span className="badge bg-primary">Active</span>
               </div>
-              <p className="text-xs text-slate-500 mb-2.5">
+              <p className="text-xs text-slate-500 dark:text-[#A6A1B5] mb-2.5">
                 Tailwind CSS v3 (Utility-first) + Bootstrap v5 (Components)
               </p>
               {/* Bootstrap Badges (.badge) */}
@@ -81,16 +81,16 @@ export default function BootstrapSyllabusShowcase() {
 
           {/* Card 2: JS Promises & Async/Await */}
           <div className="col-12 col-sm-6">
-            <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200">
+            <div className="p-3 rounded-2xl bg-slate-50 dark:bg-[#1C1926] border border-slate-200 dark:border-white/10">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-semibold text-slate-800 flex items-center gap-1.5">
-                  <Cpu className="w-3.5 h-3.5 text-emerald-600" />
+                <span className="text-xs font-semibold text-slate-800 dark:text-[#F8F6EF] flex items-center gap-1.5">
+                  <Cpu className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                   JS Promises & Async/Await
                 </span>
                 <span className="badge bg-success">Verified</span>
               </div>
-              <p className="text-xs text-slate-500 mb-2">
-                Evaluate custom <code className="font-mono text-indigo-600">new Promise()</code> resolution and latency.
+              <p className="text-xs text-slate-500 dark:text-[#A6A1B5] mb-2">
+                Evaluate custom <code className="font-mono text-indigo-600 dark:text-[#C9B8FF]">new Promise()</code> resolution and latency.
               </p>
               <button
                 type="button"
@@ -107,14 +107,14 @@ export default function BootstrapSyllabusShowcase() {
 
         {/* Live Promise Execution Result */}
         {promiseResult && (
-          <div className="p-3 rounded-xl bg-emerald-50/70 border border-emerald-200 text-xs text-emerald-900 flex items-center justify-between">
+          <div className="p-3 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/40 text-xs text-emerald-900 dark:text-emerald-300 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
               <span>
                 <strong>Promise Resolved:</strong> {promiseResult.result?.status} (Time: {promiseResult.result?.timestamp})
               </span>
             </div>
-            <span className="font-mono font-semibold text-emerald-700 bg-white px-2 py-0.5 rounded border border-emerald-200">
+            <span className="font-mono font-semibold text-emerald-700 dark:text-emerald-300 bg-white dark:bg-[#14121C] px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800/40">
               {promiseResult.durationMs}ms
             </span>
           </div>
@@ -122,9 +122,9 @@ export default function BootstrapSyllabusShowcase() {
 
         {/* Bootstrap Progress Bar (.progress, .progress-bar) */}
         <div>
-          <div className="flex items-center justify-between text-[11px] font-medium text-slate-500 mb-1">
+          <div className="flex items-center justify-between text-[11px] font-medium text-slate-500 dark:text-[#A6A1B5] mb-1">
             <span>Syllabus Verification Progress</span>
-            <span className="font-semibold text-emerald-600">100% Completed</span>
+            <span className="font-semibold text-emerald-600 dark:text-emerald-400">100% Completed</span>
           </div>
           <div className="progress" style={{ height: '7px' }}>
             <div

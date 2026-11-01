@@ -10,8 +10,8 @@ export function Card({ children, className = '', hoverEffect = false, onClick })
   return (
     <div
       onClick={onClick}
-      className={`bg-white rounded-xl border border-slate-200 shadow-sm transition-all duration-200 ${
-        hoverEffect ? 'hover:shadow-md hover:border-slate-300 cursor-pointer' : ''
+      className={`bg-white dark:bg-[#14121C] rounded-xl border border-slate-200 dark:border-white/10 shadow-sm transition-all duration-200 ${
+        hoverEffect ? 'hover:shadow-md hover:border-slate-300 dark:hover:border-white/20 cursor-pointer' : ''
       } ${className}`}
     >
       {children}
@@ -21,7 +21,7 @@ export function Card({ children, className = '', hoverEffect = false, onClick })
 
 export function CardHeader({ children, className = '', action = null }) {
   return (
-    <div className={`px-5 py-4 border-b border-slate-100 flex items-center justify-between ${className}`}>
+    <div className={`px-5 py-4 border-b border-slate-100 dark:border-white/10 flex items-center justify-between ${className}`}>
       <div>{children}</div>
       {action && <div>{action}</div>}
     </div>
@@ -30,7 +30,7 @@ export function CardHeader({ children, className = '', action = null }) {
 
 export function CardTitle({ children, className = '' }) {
   return (
-    <h3 className={`text-base font-semibold text-slate-900 leading-snug ${className}`}>
+    <h3 className={`text-base font-semibold text-slate-900 dark:text-[#F8F6EF] leading-snug ${className}`}>
       {children}
     </h3>
   );
@@ -38,7 +38,7 @@ export function CardTitle({ children, className = '' }) {
 
 export function CardDescription({ children, className = '' }) {
   return (
-    <p className={`text-xs text-slate-500 mt-0.5 ${className}`}>
+    <p className={`text-xs text-slate-500 dark:text-[#A6A1B5] mt-0.5 ${className}`}>
       {children}
     </p>
   );
@@ -54,7 +54,7 @@ export function CardBody({ children, className = '' }) {
 
 export function CardFooter({ children, className = '' }) {
   return (
-    <div className={`px-5 py-3.5 bg-slate-50/50 border-t border-slate-100 rounded-b-xl flex items-center justify-between ${className}`}>
+    <div className={`px-5 py-3.5 bg-slate-50/50 dark:bg-[#100E17]/60 border-t border-slate-100 dark:border-white/10 rounded-b-xl flex items-center justify-between ${className}`}>
       {children}
     </div>
   );

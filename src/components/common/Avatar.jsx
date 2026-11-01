@@ -48,7 +48,7 @@ export function Avatar({
 
       {status && (
         <span
-          className={`absolute bottom-0 right-0 block w-2 h-2 rounded-full ring-2 ring-white ${
+          className={`absolute bottom-0 right-0 block w-2 h-2 rounded-full ring-2 ring-white dark:ring-[#14121C] ${
             status === 'online'
               ? 'bg-emerald-500'
               : status === 'busy'
@@ -76,13 +76,13 @@ export function AvatarGroup({ users = [], max = 3, size = 'sm' }) {
             name={name}
             initials={initials}
             size={size}
-            className="ring-2 ring-white rounded-full"
+            className="ring-2 ring-white dark:ring-[#14121C] rounded-full"
           />
         );
       })}
       {remainingCount > 0 && (
         <div
-          className={`rounded-full bg-slate-200 text-slate-700 font-semibold flex items-center justify-center ring-2 ring-white text-[10px] w-7 h-7`}
+          className={`rounded-full bg-slate-200 dark:bg-white/15 text-slate-700 dark:text-[#F8F6EF] font-semibold flex items-center justify-center ring-2 ring-white dark:ring-[#14121C] text-[10px] w-7 h-7`}
           title={`${remainingCount} more members`}
         >
           +{remainingCount}

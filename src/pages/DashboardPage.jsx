@@ -48,15 +48,15 @@ export default function DashboardPage() {
   if (isLoading) {
     return (
       <div className="py-20 flex flex-col items-center justify-center text-center">
-        <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mb-3" />
-        <p className="text-sm text-slate-500 font-medium">Loading workspace data...</p>
+        <div className="w-8 h-8 border-4 border-indigo-600 dark:border-[#C9B8FF] border-t-transparent rounded-full animate-spin mb-3" />
+        <p className="text-sm text-slate-500 dark:text-[#A6A1B5] font-medium">Loading workspace data...</p>
       </div>
     );
   }
 
   if (!activeWorkspace) {
     return (
-      <div className="py-12 text-center text-slate-500">
+      <div className="py-12 text-center text-slate-500 dark:text-[#A6A1B5]">
         No active workspace selected. Please pick a workspace from the sidebar.
       </div>
     );
@@ -65,32 +65,33 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       {/* Welcome & Tenant Scope Banner */}
-      <div className="bg-gradient-to-r from-indigo-900 via-indigo-800 to-slate-900 rounded-2xl p-6 text-white shadow-md relative overflow-hidden">
+      <div className="bg-[#1E1B4B] bg-gradient-to-r from-indigo-900 via-indigo-800 to-slate-900 dark:bg-[#14121C] dark:from-[#191528] dark:via-[#14121C] dark:to-[#0B0A0F] border border-transparent dark:border-white/10 rounded-2xl p-6 text-white dark:text-[#F8F6EF] shadow-md relative overflow-hidden">
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-indigo-500/30 text-indigo-200 border border-indigo-400/30 flex items-center gap-1">
-                <Sparkles className="w-3 h-3 text-indigo-300" />
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-indigo-500/30 dark:bg-[#C9B8FF]/20 text-indigo-200 dark:text-[#C9B8FF] border border-indigo-400/30 dark:border-[#C9B8FF]/30 flex items-center gap-1">
+                <Sparkles className="w-3 h-3 text-indigo-300 dark:text-[#C9B8FF]" />
                 <span>Multi-Tenant Architecture</span>
               </span>
-              <span className="text-xs text-indigo-200">
-                Tenant ID: <code className="bg-indigo-950/60 px-1.5 py-0.5 rounded font-mono text-[11px]">{activeWorkspace.id}</code>
+              <span className="text-xs text-indigo-200 dark:text-[#A6A1B5]">
+                Tenant ID: <code className="bg-indigo-950/60 dark:bg-white/10 px-1.5 py-0.5 rounded font-mono text-[11px] dark:text-[#C9B8FF]">{activeWorkspace.id}</code>
               </span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white dark:text-[#F8F6EF]">
               {activeWorkspace.name}
             </h1>
-            <p className="text-xs sm:text-sm text-indigo-100/80 mt-1 max-w-2xl leading-relaxed">
+            <p className="text-xs sm:text-sm text-indigo-100/90 dark:text-[#A6A1B5] mt-1 max-w-2xl leading-relaxed">
               {activeWorkspace.description}
             </p>
           </div>
 
           <div className="flex items-center gap-3 shrink-0">
-            <Link to="/kanban">
-              <Button variant="primary" size="md" className="bg-white text-indigo-900 hover:bg-slate-100 border-none font-semibold shadow-md">
-                <span>View Kanban Board</span>
-                <ArrowRight className="w-4 h-4 ml-1" />
-              </Button>
+            <Link
+              to="/kanban"
+              className="inline-flex items-center justify-center font-semibold rounded-lg text-sm px-4 py-2.5 gap-2 bg-white text-indigo-950 hover:bg-slate-100 dark:bg-gradient-to-r dark:from-[#C9B8FF] dark:to-[#FFD6E8] dark:text-[#0B0A0F] dark:hover:opacity-90 shadow-md transition-all select-none"
+            >
+              <span>View Kanban Board</span>
+              <ArrowRight className="w-4 h-4 ml-1" />
             </Link>
           </div>
         </div>

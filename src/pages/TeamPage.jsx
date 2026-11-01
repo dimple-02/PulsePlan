@@ -92,12 +92,12 @@ export default function TeamPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
-            <Users className="w-5 h-5 text-indigo-600" />
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-[#F8F6EF] tracking-tight flex items-center gap-2">
+            <Users className="w-5 h-5 text-indigo-600 dark:text-[#C9B8FF]" />
             <span>Team & Access Control</span>
           </h1>
-          <p className="text-xs text-slate-500 mt-1">
-            Managing members, collaboration, and permissions for <span className="font-semibold text-slate-700">{activeWorkspace?.name}</span>
+          <p className="text-xs text-slate-500 dark:text-[#A6A1B5] mt-1">
+            Managing members, collaboration, and permissions for <span className="font-semibold text-slate-700 dark:text-[#F8F6EF]">{activeWorkspace?.name}</span>
           </p>
         </div>
 
@@ -124,7 +124,7 @@ export default function TeamPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-slate-50/80 border-b border-slate-100 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+                <tr className="bg-slate-50/80 dark:bg-[#100E17]/80 border-b border-slate-100 dark:border-white/10 text-[11px] font-semibold text-slate-500 dark:text-[#A6A1B5] uppercase tracking-wider">
                   <th className="py-3 px-5">Member</th>
                   <th className="py-3 px-5">Email</th>
                   <th className="py-3 px-5">Role</th>
@@ -132,9 +132,9 @@ export default function TeamPage() {
                   <th className="py-3 px-5 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-slate-100 dark:divide-white/5">
                 {members.map((member) => (
-                  <tr key={member._id || member.id || member.email} className="hover:bg-slate-50 transition-colors">
+                  <tr key={member._id || member.id || member.email} className="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
                     <td className="py-3.5 px-5">
                       <div className="flex items-center gap-3">
                         <Avatar
@@ -143,12 +143,12 @@ export default function TeamPage() {
                           status={member.status === 'Active' ? 'online' : 'offline'}
                           size="sm"
                         />
-                        <span className="text-xs sm:text-sm font-semibold text-slate-900">
+                        <span className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-[#F8F6EF]">
                           {member.name}
                         </span>
                       </div>
                     </td>
-                    <td className="py-3.5 px-5 text-xs text-slate-500 font-mono">
+                    <td className="py-3.5 px-5 text-xs text-slate-500 dark:text-[#A6A1B5] font-mono">
                       {member.email}
                     </td>
                     <td className="py-3.5 px-5">
@@ -157,7 +157,7 @@ export default function TeamPage() {
                       </Badge>
                     </td>
                     <td className="py-3.5 px-5">
-                      <span className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-600">
+                      <span className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-600 dark:text-[#A6A1B5]">
                         <span
                           className={`w-1.5 h-1.5 rounded-full ${
                             member.status === 'Active' ? 'bg-emerald-500' : 'bg-slate-300'
@@ -172,7 +172,7 @@ export default function TeamPage() {
                         <button
                           type="button"
                           onClick={() => setChatMember(member)}
-                          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors cursor-pointer"
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-indigo-600 dark:text-[#C9B8FF] bg-indigo-50 dark:bg-[#C9B8FF]/15 hover:bg-indigo-100 dark:hover:bg-[#C9B8FF]/25 rounded-lg transition-colors cursor-pointer"
                           title={`Chat with ${member.name}`}
                         >
                           <MessageSquare className="w-3.5 h-3.5" />
@@ -184,7 +184,7 @@ export default function TeamPage() {
                           <button
                             type="button"
                             onClick={() => setMemberToDelete(member)}
-                            className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                            className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 dark:hover:text-rose-400 rounded-lg transition-colors cursor-pointer"
                             title={`Remove ${member.name} from workspace`}
                           >
                             <Trash2 className="w-4 h-4" />
@@ -206,32 +206,32 @@ export default function TeamPage() {
 
       {/* RBAC Architecture Explanation Card for Viva */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="p-4 bg-white rounded-xl border border-slate-200 shadow-xs">
-          <div className="flex items-center gap-2 mb-2 text-indigo-700 font-semibold text-xs">
+        <div className="p-4 bg-white dark:bg-[#14121C] rounded-xl border border-slate-200 dark:border-white/10 shadow-xs">
+          <div className="flex items-center gap-2 mb-2 text-indigo-700 dark:text-[#C9B8FF] font-semibold text-xs">
             <Shield className="w-4 h-4" />
             <span>Workspace Owner</span>
           </div>
-          <p className="text-xs text-slate-500 leading-relaxed">
+          <p className="text-xs text-slate-500 dark:text-[#A6A1B5] leading-relaxed">
             Full billing ownership, tenant configuration, member de-provisioning, and workspace deletion rights.
           </p>
         </div>
 
-        <div className="p-4 bg-white rounded-xl border border-slate-200 shadow-xs">
-          <div className="flex items-center gap-2 mb-2 text-indigo-700 font-semibold text-xs">
+        <div className="p-4 bg-white dark:bg-[#14121C] rounded-xl border border-slate-200 dark:border-white/10 shadow-xs">
+          <div className="flex items-center gap-2 mb-2 text-indigo-700 dark:text-[#C9B8FF] font-semibold text-xs">
             <Shield className="w-4 h-4" />
             <span>Workspace Admin</span>
           </div>
-          <p className="text-xs text-slate-500 leading-relaxed">
+          <p className="text-xs text-slate-500 dark:text-[#A6A1B5] leading-relaxed">
             Can create and manage all projects, invite new members, configure integrations, and manage Kanban workflows.
           </p>
         </div>
 
-        <div className="p-4 bg-white rounded-xl border border-slate-200 shadow-xs">
-          <div className="flex items-center gap-2 mb-2 text-slate-700 font-semibold text-xs">
+        <div className="p-4 bg-white dark:bg-[#14121C] rounded-xl border border-slate-200 dark:border-white/10 shadow-xs">
+          <div className="flex items-center gap-2 mb-2 text-slate-700 dark:text-[#F8F6EF] font-semibold text-xs">
             <Shield className="w-4 h-4" />
             <span>Workspace Member</span>
           </div>
-          <p className="text-xs text-slate-500 leading-relaxed">
+          <p className="text-xs text-slate-500 dark:text-[#A6A1B5] leading-relaxed">
             Can view assigned projects, create tasks, direct message teammates, and update card statuses on boards.
           </p>
         </div>

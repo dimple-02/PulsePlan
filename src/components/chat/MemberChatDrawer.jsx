@@ -133,14 +133,14 @@ export default function MemberChatDrawer({ isOpen, onClose, member }) {
     <>
       {/* Backdrop overlay */}
       <div
-        className="fixed inset-0 bg-slate-900/30 backdrop-blur-xs z-50 transition-opacity"
+        className="fixed inset-0 bg-slate-900/30 dark:bg-black/50 backdrop-blur-xs z-50 transition-opacity"
         onClick={onClose}
       />
 
       {/* Slide-over panel */}
-      <aside className="fixed top-0 bottom-0 right-0 z-50 w-full sm:w-96 bg-white shadow-2xl border-l border-slate-200 flex flex-col animate-in slide-in-from-right duration-250">
+      <aside className="fixed top-0 bottom-0 right-0 z-50 w-full sm:w-96 bg-white dark:bg-[#14121C] shadow-2xl border-l border-slate-200 dark:border-white/10 flex flex-col animate-in slide-in-from-right duration-250">
         {/* Header */}
-        <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
+        <div className="p-4 border-b border-slate-100 dark:border-white/10 flex items-center justify-between bg-slate-50/70 dark:bg-[#100E17]/60">
           <div className="flex items-center gap-3 min-w-0">
             <Avatar
               name={member.name}
@@ -150,14 +150,14 @@ export default function MemberChatDrawer({ isOpen, onClose, member }) {
             />
             <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <h3 className="text-sm font-semibold text-slate-900 truncate">
+                <h3 className="text-sm font-semibold text-slate-900 dark:text-[#F8F6EF] truncate">
                   {member.name}
                 </h3>
                 <Badge variant={member.role === 'Owner' ? 'purple' : member.role === 'Admin' ? 'primary' : 'neutral'} size="xs">
                   {member.role}
                 </Badge>
               </div>
-              <p className="text-[11px] text-slate-500 font-mono truncate">
+              <p className="text-[11px] text-slate-500 dark:text-[#A6A1B5] font-mono truncate">
                 {member.email}
               </p>
             </div>
@@ -166,7 +166,7 @@ export default function MemberChatDrawer({ isOpen, onClose, member }) {
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-200/60 transition-colors"
+            className="p-1.5 text-slate-400 dark:text-[#A6A1B5] hover:text-slate-600 dark:hover:text-[#F8F6EF] rounded-lg hover:bg-slate-200/60 dark:hover:bg-white/10 transition-colors"
             title="Close chat"
           >
             <X className="w-5 h-5" />
@@ -174,21 +174,21 @@ export default function MemberChatDrawer({ isOpen, onClose, member }) {
         </div>
 
         {/* Message Thread Body */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-3.5 bg-slate-50/30">
+        <div className="flex-1 overflow-y-auto p-4 space-y-3.5 bg-slate-50/30 dark:bg-[#0B0A0F]">
           {isLoading ? (
             <div className="py-20 flex flex-col items-center justify-center text-slate-400">
-              <Loader2 className="w-6 h-6 animate-spin mb-2 text-indigo-600" />
+              <Loader2 className="w-6 h-6 animate-spin mb-2 text-indigo-600 dark:text-[#C9B8FF]" />
               <p className="text-xs">Loading message history...</p>
             </div>
           ) : messages.length === 0 ? (
             <div className="py-16 text-center flex flex-col items-center justify-center px-4">
-              <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-3">
+              <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-[#C9B8FF]/15 text-indigo-600 dark:text-[#C9B8FF] flex items-center justify-center mb-3">
                 <MessageSquare className="w-6 h-6" />
               </div>
-              <h4 className="text-sm font-semibold text-slate-800">
+              <h4 className="text-sm font-semibold text-slate-800 dark:text-[#F8F6EF]">
                 Direct Message with {member.name}
               </h4>
-              <p className="text-xs text-slate-500 mt-1 max-w-xs">
+              <p className="text-xs text-slate-500 dark:text-[#A6A1B5] mt-1 max-w-xs">
                 No messages yet. Send a greeting to start collaborating on {activeWorkspace?.name || 'this workspace'}.
               </p>
             </div>
@@ -221,7 +221,7 @@ export default function MemberChatDrawer({ isOpen, onClose, member }) {
                     className={`max-w-[75%] rounded-2xl px-3.5 py-2.5 shadow-2xs text-xs leading-relaxed ${
                       isMine
                         ? 'bg-indigo-600 text-white rounded-br-xs'
-                        : 'bg-white text-slate-800 border border-slate-200/80 rounded-bl-xs'
+                        : 'bg-white dark:bg-[#1A1726] text-slate-800 dark:text-[#F8F6EF] border border-slate-200/80 dark:border-white/10 rounded-bl-xs'
                     }`}
                   >
                     <p className="whitespace-pre-wrap break-words">{msg.content}</p>
@@ -244,7 +244,7 @@ export default function MemberChatDrawer({ isOpen, onClose, member }) {
         {/* Input Footer */}
         <form
           onSubmit={handleSendMessage}
-          className="p-3 border-t border-slate-200 bg-white flex items-center gap-2"
+          className="p-3 border-t border-slate-200 dark:border-white/10 bg-white dark:bg-[#14121C] flex items-center gap-2"
         >
           <input
             ref={inputRef}
@@ -252,7 +252,7 @@ export default function MemberChatDrawer({ isOpen, onClose, member }) {
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
             placeholder={`Message ${member.name.split(' ')[0]}...`}
-            className="flex-1 px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all text-slate-800 placeholder:text-slate-400"
+            className="flex-1 px-3.5 py-2.5 text-xs bg-slate-50 dark:bg-[#0B0A0F] border border-slate-200 dark:border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-[#C9B8FF]/20 focus:bg-white dark:focus:bg-[#100E17] transition-all text-slate-800 dark:text-[#F8F6EF] placeholder:text-slate-400 dark:placeholder:text-[#A6A1B5]/50"
             maxLength={2000}
             disabled={isSending}
           />
