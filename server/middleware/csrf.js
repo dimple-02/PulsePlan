@@ -21,8 +21,16 @@ export function csrfProtection(req, res, next) {
     return next();
   }
 
-  // Exempt public signup and login endpoints (no cookie session exists yet)
-  if (req.path === '/api/auth/signup' || req.path === '/api/auth/login') {
+  // Exempt public auth endpoints (no session required)
+  if (
+    req.path === '/api/auth/signup' ||
+    req.path === '/api/auth/login' ||
+    req.path === '/api/auth/verify-email' ||
+    req.path === '/api/auth/resend-verification' ||
+    req.path === '/api/auth/forgot-password' ||
+    req.path === '/api/auth/verify-reset-otp' ||
+    req.path === '/api/auth/reset-password'
+  ) {
     return next();
   }
 

@@ -161,9 +161,20 @@ async function runSecurityAudit() {
     const userAWsId = userA?.workspaces?.[0]?.workspaceId;
     if (userAWsId) cleanupWorkspaceIds.push(userAWsId);
 
-    // Save the issued token in a test-only variable
-    const savedToken = signupRes.body?.data?.token;
-    const cookieHeader = signupRes.headers['set-cookie']?.[0]?.split(';')[0];
+    // Verify email and login to obtain active session
+    await User.updateOne({ email: testUserEmail }, { $set: { isEmailVerified: true } });
+    const loginAuditRes = await request(
+      {
+        hostname: 'localhost',
+        port: PORT,
+        path: '/api/auth/login',
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      },
+      { email: testUserEmail, password: 'StrongPassword123!' }
+    );
+    const savedToken = loginAuditRes.body?.data?.token;
+    const cookieHeader = loginAuditRes.headers['set-cookie']?.[0]?.split(';')[0];
     assert(Boolean(savedToken), '2.2 Issued JWT token captured in savedToken variable');
 
     // Verify token works before logout
@@ -271,7 +282,18 @@ async function runSecurityAudit() {
       },
       { name: 'Tenant A Owner', email: emailA, password: 'password123' }
     );
-    const tokenA = userARes.body?.data?.token;
+    await User.updateOne({ email: emailA }, { $set: { isEmailVerified: true } });
+    const loginARes = await request(
+      {
+        hostname: 'localhost',
+        port: PORT,
+        path: '/api/auth/login',
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      },
+      { email: emailA, password: 'password123' }
+    );
+    const tokenA = loginARes.body?.data?.token;
     const wsAId = userARes.body?.data?.user?.workspaces?.[0]?.workspaceId;
     cleanupUserIds.push(userARes.body?.data?.user?.id);
     if (wsAId) cleanupWorkspaceIds.push(wsAId);
@@ -288,7 +310,18 @@ async function runSecurityAudit() {
       },
       { name: 'Tenant B Owner', email: emailB, password: 'password123' }
     );
-    const tokenB = userBRes.body?.data?.token;
+    await User.updateOne({ email: emailB }, { $set: { isEmailVerified: true } });
+    const loginBRes = await request(
+      {
+        hostname: 'localhost',
+        port: PORT,
+        path: '/api/auth/login',
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      },
+      { email: emailB, password: 'password123' }
+    );
+    const tokenB = loginBRes.body?.data?.token;
     const wsBId = userBRes.body?.data?.user?.workspaces?.[0]?.workspaceId;
     cleanupUserIds.push(userBRes.body?.data?.user?.id);
     if (wsBId) cleanupWorkspaceIds.push(wsBId);
@@ -589,7 +622,18 @@ async function runSecurityAudit() {
       },
       { name: 'Member C', email: emailC, password: 'password123' }
     );
-    const tokenC = userCRes.body?.data?.token;
+    await User.updateOne({ email: emailC }, { $set: { isEmailVerified: true } });
+    const loginCRes = await request(
+      {
+        hostname: 'localhost',
+        port: PORT,
+        path: '/api/auth/login',
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      },
+      { email: emailC, password: 'password123' }
+    );
+    const tokenC = loginCRes.body?.data?.token;
     const userCId = userCRes.body?.data?.user?.id;
     cleanupUserIds.push(userCId);
     if (userCRes.body?.data?.user?.workspaces?.[0]?.workspaceId) {
@@ -655,7 +699,18 @@ async function runSecurityAudit() {
       },
       { name: 'Viewer D', email: emailD, password: 'password123' }
     );
-    const tokenD = userDRes.body?.data?.token;
+    await User.updateOne({ email: emailD }, { $set: { isEmailVerified: true } });
+    const loginDRes = await request(
+      {
+        hostname: 'localhost',
+        port: PORT,
+        path: '/api/auth/login',
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      },
+      { email: emailD, password: 'password123' }
+    );
+    const tokenD = loginDRes.body?.data?.token;
     const userDId = userDRes.body?.data?.user?.id;
     cleanupUserIds.push(userDId);
     if (userDRes.body?.data?.user?.workspaces?.[0]?.workspaceId) {
@@ -719,7 +774,7 @@ async function runSecurityAudit() {
         path: '/api/workspaces',
         method: 'POST',
         headers: {
-          Cookie: userARes.headers['set-cookie']?.[0]?.split(';')[0],
+          Cookie: loginARes.headers['set-cookie']?.[0]?.split(';')[0],
           'Content-Type': 'application/json',
           'Sec-Fetch-Site': 'cross-site',
         },
@@ -739,7 +794,7 @@ async function runSecurityAudit() {
         path: '/api/workspaces',
         method: 'POST',
         headers: {
-          Cookie: userARes.headers['set-cookie']?.[0]?.split(';')[0],
+          Cookie: loginARes.headers['set-cookie']?.[0]?.split(';')[0],
           'Content-Type': 'application/json',
           Origin: 'http://attacker-phishing.com',
         },
@@ -758,7 +813,7 @@ async function runSecurityAudit() {
       path: '/api/auth/logout',
       method: 'POST',
       headers: {
-        Cookie: userARes.headers['set-cookie']?.[0]?.split(';')[0],
+        Cookie: loginARes.headers['set-cookie']?.[0]?.split(';')[0],
         'Sec-Fetch-Site': 'cross-site',
       },
     });
@@ -774,7 +829,7 @@ async function runSecurityAudit() {
       path: '/api/auth/logout',
       method: 'POST',
       headers: {
-        Cookie: userARes.headers['set-cookie']?.[0]?.split(';')[0],
+        Cookie: loginARes.headers['set-cookie']?.[0]?.split(';')[0],
         Origin: 'http://malicious-phishing.com',
       },
     });
@@ -791,7 +846,7 @@ async function runSecurityAudit() {
         path: '/api/tasks',
         method: 'POST',
         headers: {
-          Cookie: userARes.headers['set-cookie']?.[0]?.split(';')[0],
+          Cookie: loginARes.headers['set-cookie']?.[0]?.split(';')[0],
           'x-workspace-id': wsAId,
           'Content-Type': 'application/json',
           Origin: 'http://malicious-phishing.com',

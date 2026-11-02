@@ -10,6 +10,14 @@ import {
   updateProject,
   deleteProject,
 } from '../controllers/projectController.js';
+import {
+  createProjectInvitation,
+  getProjectInvitations,
+  resendInvitation,
+  revokeInvitation,
+  getProjectCollaborators,
+  removeProjectCollaborator,
+} from '../controllers/invitationController.js';
 
 const router = express.Router();
 
@@ -70,6 +78,68 @@ router.delete(
   '/:id',
   [param('id').isMongoId().withMessage('Invalid project ID format'), validate],
   deleteProject
+);
+
+/**
+ * Project Collaborators & Invitations Routes
+ * Scoped to active tenant workspace
+ */
+router.get(
+  '/:projectId/collaborators',
+  [param('projectId').isMongoId().withMessage('Invalid project ID'), validate],
+  getProjectCollaborators
+);
+
+router.delete(
+  '/:projectId/collaborators/:userIdOrEmail',
+  [param('projectId').isMongoId().withMessage('Invalid project ID'), validate],
+  removeProjectCollaborator
+);
+
+router.get(
+  '/:projectId/invitations',
+  [param('projectId').isMongoId().withMessage('Invalid project ID'), validate],
+  getProjectInvitations
+);
+
+router.post(
+  '/:projectId/invitations',
+  [
+    param('projectId').isMongoId().withMessage('Invalid project ID'),
+    body('email')
+      .trim()
+      .notEmpty()
+      .withMessage('Collaborator email is required')
+      .isEmail()
+      .withMessage('Please enter a valid email address')
+      .normalizeEmail(),
+    body('role')
+      .optional()
+      .isIn(['Admin', 'Member', 'Viewer'])
+      .withMessage('Role must be Admin, Member, or Viewer'),
+    validate,
+  ],
+  createProjectInvitation
+);
+
+router.post(
+  '/:projectId/invitations/:invitationId/resend',
+  [
+    param('projectId').isMongoId().withMessage('Invalid project ID'),
+    param('invitationId').isMongoId().withMessage('Invalid invitation ID'),
+    validate,
+  ],
+  resendInvitation
+);
+
+router.post(
+  '/:projectId/invitations/:invitationId/revoke',
+  [
+    param('projectId').isMongoId().withMessage('Invalid project ID'),
+    param('invitationId').isMongoId().withMessage('Invalid invitation ID'),
+    validate,
+  ],
+  revokeInvitation
 );
 
 export default router;

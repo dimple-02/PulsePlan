@@ -77,8 +77,9 @@ export const ENV = {
   SMTP_PORT: Number(process.env.SMTP_PORT || 587),
   SMTP_USER: process.env.SMTP_USER || '',
   SMTP_PASS: process.env.SMTP_PASS || '',
-  SMTP_SECURE: process.env.SMTP_SECURE === 'true',
+  SMTP_SECURE: process.env.SMTP_SECURE === 'true' || Number(process.env.SMTP_PORT) === 465,
   EMAIL_FROM: process.env.EMAIL_FROM || 'PulsePlan <no-reply@pulseplan.io>',
+  OTP_SALT: process.env.OTP_SALT || process.env.JWT_SECRET || DEFAULT_DEV_JWT_SECRET,
 
   // Cloudinary Configuration for Attachments
   CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME || '',

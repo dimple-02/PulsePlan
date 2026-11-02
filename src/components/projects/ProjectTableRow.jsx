@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Badge from '../common/Badge';
 import { AvatarGroup } from '../common/Avatar';
 import Button from '../common/Button';
-import { Kanban, Trash2, ArrowRight } from 'lucide-react';
+import { Kanban, Trash2, ArrowRight, Users } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useWorkspace } from '../../hooks/useWorkspace';
+import ProjectMembersModal from './ProjectMembersModal';
 
 /**
  * ProjectTableRow Component
@@ -14,6 +15,7 @@ import { useWorkspace } from '../../hooks/useWorkspace';
 export default function ProjectTableRow({ project, onSelect, onDelete }) {
   const navigate = useNavigate();
   const { setActiveProjectId } = useWorkspace();
+  const [isMembersModalOpen, setIsMembersModalOpen] = useState(false);
 
   const statusMap = {
     'In Progress': 'primary',
@@ -95,6 +97,15 @@ export default function ProjectTableRow({ project, onSelect, onDelete }) {
           <Button
             variant="ghost"
             size="sm"
+            onClick={() => setIsMembersModalOpen(true)}
+            icon={Users}
+            title="Collaborators & Invitations"
+          >
+            Members
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={handleOpenBoard}
             icon={Kanban}
           >
@@ -104,13 +115,20 @@ export default function ProjectTableRow({ project, onSelect, onDelete }) {
             <button
               type="button"
               onClick={() => onDelete(project._id || project.id)}
-              className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/30 dark:hover:text-rose-400 transition-colors"
+              className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/30 dark:hover:text-rose-400 transition-colors cursor-pointer"
               title="Delete project"
             >
               <Trash2 className="w-3.5 h-3.5" />
             </button>
           )}
         </div>
+
+        {/* Project Collaborators & Invitations Modal */}
+        <ProjectMembersModal
+          isOpen={isMembersModalOpen}
+          onClose={() => setIsMembersModalOpen(false)}
+          project={project}
+        />
       </td>
     </tr>
   );

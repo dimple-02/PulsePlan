@@ -73,6 +73,36 @@ const projectSchema = new mongoose.Schema(
       type: [String],
       default: ['WM'],
     },
+    collaborators: [
+      {
+        userId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'User',
+        },
+        email: {
+          type: String,
+          trim: true,
+          lowercase: true,
+        },
+        name: {
+          type: String,
+          trim: true,
+        },
+        role: {
+          type: String,
+          enum: ['Admin', 'Member', 'Viewer'],
+          default: 'Member',
+        },
+        avatar: {
+          type: String,
+          default: 'U',
+        },
+        joinedAt: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
     category: {
       type: String,
       enum: [

@@ -42,11 +42,43 @@ export function AuthProvider({ children }) {
   const signup = useCallback(async ({ name, email, password }) => {
     setAuthError(null);
     try {
-      const newUser = await api.signupUser({ name, email, password });
-      setUser(newUser);
-      return newUser;
+      const result = await api.signupUser({ name, email, password });
+      // When email verification is mandatory, unverified user has no session cookie yet
+      if (result?.requiresVerification) {
+        setUser(null);
+        return result;
+      }
+      if (result?.user) {
+        setUser(result.user);
+      }
+      return result;
     } catch (err) {
       setAuthError(err.message || 'Failed to sign up');
+      throw err;
+    }
+  }, []);
+
+  // Verify email OTP action
+  const verifyEmailOtp = useCallback(async ({ email, otp }) => {
+    setAuthError(null);
+    try {
+      const verifiedUser = await api.verifyEmail({ email, otp });
+      setUser(verifiedUser);
+      return verifiedUser;
+    } catch (err) {
+      setAuthError(err.message || 'Email verification failed');
+      throw err;
+    }
+  }, []);
+
+  // Resend verification OTP action
+  const resendVerificationOtp = useCallback(async (email) => {
+    setAuthError(null);
+    try {
+      const res = await api.resendVerification(email);
+      return res;
+    } catch (err) {
+      setAuthError(err.message || 'Failed to resend verification code');
       throw err;
     }
   }, []);
@@ -83,6 +115,8 @@ export function AuthProvider({ children }) {
     authError,
     setAuthError,
     signup,
+    verifyEmailOtp,
+    resendVerificationOtp,
     login,
     logout,
     checkSession,

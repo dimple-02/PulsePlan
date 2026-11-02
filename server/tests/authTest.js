@@ -15,6 +15,9 @@
  */
 
 import http from 'http';
+import mongoose from 'mongoose';
+import { connectDB } from '../config/db.js';
+import { User } from '../models/User.js';
 
 function request(options, body) {
   return new Promise((resolve, reject) => {
@@ -50,6 +53,8 @@ async function runTests() {
   console.log(' PulsePlan SaaS - Auth & Multi-Tenancy Test Suite   ');
   console.log('====================================================\n');
 
+  await connectDB();
+
   // Test 1
   console.log('Test 1: Unauthenticated Endpoint Protection');
   const t1 = await request({
@@ -74,7 +79,18 @@ async function runTests() {
     { name: 'Alice Morgan', email: userAEmail, password: 'password123' }
   );
   assert(t2.status === 201, 'User A signup returns HTTP 201 Created');
-  const userACookie = t2.headers['set-cookie']?.[0]?.split(';')[0];
+  await User.updateOne({ email: userAEmail }, { $set: { isEmailVerified: true } });
+  const loginA = await request(
+    {
+      hostname: 'localhost',
+      port: 5000,
+      path: '/api/auth/login',
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    },
+    { email: userAEmail, password: 'password123' }
+  );
+  const userACookie = loginA.headers['set-cookie']?.[0]?.split(';')[0];
   assert(Boolean(userACookie && userACookie.startsWith('token=')), 'HTTP-only session cookie returned in Set-Cookie header');
   const userAWsId = t2.body?.data?.user?.workspaces?.[0]?.workspaceId;
   assert(Boolean(userAWsId), 'User A automatically provisioned with a private personal workspace');
@@ -147,7 +163,18 @@ async function runTests() {
     { name: 'Bob Smith', email: userBEmail, password: 'password123' }
   );
   assert(t7.status === 201, 'User B signup returns HTTP 201');
-  const userBCookie = t7.headers['set-cookie']?.[0]?.split(';')[0];
+  await User.updateOne({ email: userBEmail }, { $set: { isEmailVerified: true } });
+  const loginB = await request(
+    {
+      hostname: 'localhost',
+      port: 5000,
+      path: '/api/auth/login',
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    },
+    { email: userBEmail, password: 'password123' }
+  );
+  const userBCookie = loginB.headers['set-cookie']?.[0]?.split(';')[0];
 
   // Test 8
   console.log('\nTest 8: Cross-Tenant Isolation (User B -> User A Workspace)');
@@ -193,6 +220,10 @@ async function runTests() {
   console.log('\n====================================================');
   console.log(' All 10 Authentication & Isolation Tests Verified!  ');
   console.log('====================================================');
+
+  if (mongoose.connection.readyState !== 0) {
+    await mongoose.connection.close();
+  }
 }
 
 runTests().catch((err) => {

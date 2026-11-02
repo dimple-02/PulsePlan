@@ -7,8 +7,12 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
-    "test": "node tests/authTest.js",
-    "test:mail": "node tests/mailServiceTest.js"
+    "test": "node tests/signupEmailVerificationTest.js",
+    "test:auth": "node tests/signupEmailVerificationTest.js",
+    "test:verification": "node tests/signupEmailVerificationTest.js",
+    "test:collaboration": "node tests/collaborationAndOtpTest.js",
+    "test:mail": "node tests/mailServiceTest.js",
+    "test:all": "node tests/signupEmailVerificationTest.js && node tests/collaborationAndOtpTest.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

@@ -14,7 +14,7 @@ let isEthereal = false;
 async function initializeTransporter() {
   // 1. Production / Custom SMTP configured
   if (ENV.SMTP_HOST && ENV.SMTP_USER) {
-    console.log(`[MailService] Configuring custom SMTP transport (${ENV.SMTP_HOST}:${ENV.SMTP_PORT})...`);
+    console.log(`[MailService] Configuring custom SMTP transport (${ENV.SMTP_HOST}:${ENV.SMTP_PORT}, secure=${ENV.SMTP_SECURE})...`);
     return nodemailer.createTransport({
       host: ENV.SMTP_HOST,
       port: ENV.SMTP_PORT,
@@ -22,6 +22,9 @@ async function initializeTransporter() {
       auth: {
         user: ENV.SMTP_USER,
         pass: ENV.SMTP_PASS,
+      },
+      tls: {
+        rejectUnauthorized: process.env.NODE_ENV === 'production' && process.env.SMTP_IGNORE_TLS !== 'true',
       },
     });
   }

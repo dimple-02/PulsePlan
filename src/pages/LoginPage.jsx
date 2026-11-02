@@ -24,6 +24,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [isUnverified, setIsUnverified] = useState(false);
 
   // If already authenticated and not loading, redirect to target or home
   if (!authLoading && isAuthenticated) {
@@ -34,6 +35,7 @@ export default function LoginPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMessage('');
+    setIsUnverified(false);
 
     if (!email.trim() || !password) {
       setErrorMessage('Please fill in both email and password.');
@@ -46,6 +48,9 @@ export default function LoginPage() {
       const destination = location.state?.from?.pathname || '/';
       navigate(destination, { replace: true });
     } catch (err) {
+      if (err.details?.code === 'EMAIL_NOT_VERIFIED' || err.code === 'EMAIL_NOT_VERIFIED') {
+        setIsUnverified(true);
+      }
       setErrorMessage(err.message || 'Login failed. Please verify your credentials.');
     } finally {
       setIsSubmitting(false);
@@ -78,7 +83,20 @@ export default function LoginPage() {
           {errorMessage && (
             <div className="mb-5 p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/60 flex items-start gap-2.5 text-xs text-rose-700 dark:text-rose-300 animate-in fade-in duration-200">
               <AlertCircle className="w-4 h-4 text-rose-500 dark:text-rose-400 shrink-0 mt-0.5" />
-              <div className="flex-1 font-medium">{errorMessage}</div>
+              <div className="flex-1">
+                <div className="font-medium">{errorMessage}</div>
+                {isUnverified && (
+                  <div className="mt-2">
+                    <Link
+                      to="/verify-email"
+                      state={{ email: email.trim(), from: location.state?.from }}
+                      className="inline-flex items-center gap-1 font-semibold text-indigo-600 dark:text-[#C9B8FF] underline hover:no-underline"
+                    >
+                      <span>Enter verification code now &rarr;</span>
+                    </Link>
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
@@ -105,9 +123,17 @@ export default function LoginPage() {
 
             {/* Password Field */}
             <div>
-              <label className="block text-xs font-semibold text-slate-700 dark:text-[#F8F6EF] uppercase tracking-wider mb-1.5">
-                Password
-              </label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-[#F8F6EF] uppercase tracking-wider">
+                  Password
+                </label>
+                <Link
+                  to="/forgot-password"
+                  className="text-xs font-medium text-indigo-600 dark:text-[#C9B8FF] hover:underline"
+                >
+                  Forgot password?
+                </Link>
+              </div>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 dark:text-[#A6A1B5]">
                   <Lock className="w-4 h-4" />

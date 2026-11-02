@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 import { User } from '../models/User.js';
 import { ENV } from '../config/env.js';
-import { getCookieOptions } from '../controllers/authController.js';
+import { getCookieOptions, getClearCookieOptions } from '../controllers/authController.js';
 
 /**
  * Authentication Middleware
@@ -41,7 +41,7 @@ export async function requireAuth(req, res, next) {
 
     // Validate required claims
     if (!decoded || !decoded.id) {
-      res.clearCookie('token', getCookieOptions());
+      res.clearCookie('token', getClearCookieOptions());
       return res.status(401).json({
         success: false,
         message: 'Invalid session token claims.',
@@ -51,7 +51,7 @@ export async function requireAuth(req, res, next) {
     // Fetch user from DB
     const user = await User.findById(decoded.id);
     if (!user) {
-      res.clearCookie('token', getCookieOptions());
+      res.clearCookie('token', getClearCookieOptions());
       return res.status(401).json({
         success: false,
         message: 'The user account associated with this session no longer exists.',
@@ -62,10 +62,20 @@ export async function requireAuth(req, res, next) {
     // If the user has logged out or invalidated sessions, tokenVersion will not match
     const userTokenVersion = user.tokenVersion || 0;
     if (decoded.tokenVersion === undefined || decoded.tokenVersion !== userTokenVersion) {
-      res.clearCookie('token', getCookieOptions());
+      res.clearCookie('token', getClearCookieOptions());
       return res.status(401).json({
         success: false,
         message: 'Session has been invalidated. Please log in again.',
+      });
+    }
+
+    // Enforce Mandatory Email Verification (Requirement 4 & 7)
+    // Direct API access to protected resources is forbidden for unverified accounts
+    if (user.isEmailVerified === false) {
+      return res.status(403).json({
+        success: false,
+        code: 'EMAIL_NOT_VERIFIED',
+        message: 'Please verify your email address to access workspace resources.',
       });
     }
 
@@ -77,7 +87,7 @@ export async function requireAuth(req, res, next) {
       error.name === 'TokenExpiredError' ||
       error.name === 'NotBeforeError'
     ) {
-      res.clearCookie('token', getCookieOptions());
+      res.clearCookie('token', getClearCookieOptions());
       return res.status(401).json({
         success: false,
         message: 'Session has expired or is invalid. Please log in again.',

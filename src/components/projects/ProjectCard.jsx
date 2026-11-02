@@ -1,11 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardHeader, CardBody, CardFooter } from '../common/Card';
 import Badge from '../common/Badge';
 import { AvatarGroup } from '../common/Avatar';
 import Button from '../common/Button';
-import { Calendar, DollarSign, Kanban, ArrowRight, Trash2 } from 'lucide-react';
+import { Calendar, DollarSign, Kanban, ArrowRight, Trash2, Users, UserPlus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useWorkspace } from '../../hooks/useWorkspace';
+import ProjectMembersModal from './ProjectMembersModal';
 
 /**
  * ProjectCard Component
@@ -15,6 +16,7 @@ import { useWorkspace } from '../../hooks/useWorkspace';
 export default function ProjectCard({ project, onSelect, onDelete }) {
   const navigate = useNavigate();
   const { setActiveProjectId } = useWorkspace();
+  const [isMembersModalOpen, setIsMembersModalOpen] = useState(false);
 
   const statusMap = {
     'In Progress': 'primary',
@@ -103,9 +105,34 @@ export default function ProjectCard({ project, onSelect, onDelete }) {
 
       <CardFooter className="pt-3">
         <div className="flex items-center justify-between w-full">
-          <AvatarGroup users={project.members || ['AM']} max={3} size="xs" />
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsMembersModalOpen(true);
+            }}
+            className="flex items-center gap-1.5 p-1 -ml-1 rounded-lg hover:bg-slate-100 dark:hover:bg-white/5 transition-colors cursor-pointer group"
+            title="Manage project collaborators & email invitations"
+          >
+            <AvatarGroup users={project.members || ['AM']} max={3} size="xs" />
+            <span className="p-1 rounded-md bg-indigo-50 dark:bg-[#C9B8FF]/15 text-indigo-600 dark:text-[#C9B8FF] opacity-80 group-hover:opacity-100 transition-opacity">
+              <UserPlus className="w-3 h-3" />
+            </span>
+          </button>
 
           <div className="flex items-center gap-1">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsMembersModalOpen(true);
+              }}
+              icon={Users}
+              className="text-xs"
+            >
+              Members
+            </Button>
             {onDelete && (
               <button
                 type="button"
@@ -113,7 +140,7 @@ export default function ProjectCard({ project, onSelect, onDelete }) {
                   e.stopPropagation();
                   onDelete(project._id || project.id);
                 }}
-                className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/30 dark:hover:text-rose-400 transition-colors"
+                className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/30 dark:hover:text-rose-400 transition-colors cursor-pointer"
                 title="Delete project"
               >
                 <Trash2 className="w-3.5 h-3.5" />
@@ -130,6 +157,13 @@ export default function ProjectCard({ project, onSelect, onDelete }) {
           </div>
         </div>
       </CardFooter>
+
+      {/* Project Collaborators & Invitations Modal */}
+      <ProjectMembersModal
+        isOpen={isMembersModalOpen}
+        onClose={() => setIsMembersModalOpen(false)}
+        project={project}
+      />
     </Card>
   );
 }

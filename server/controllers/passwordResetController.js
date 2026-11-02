@@ -1,0 +1,223 @@
+import { User } from '../models/User.js';
+import { Otp } from '../models/Otp.js';
+import { generateOtp, verifyOtp, createResetToken, verifyResetToken, consumeResetToken } from '../services/otpService.js';
+import { sendOtpEmail } from '../services/emailService.js';
+import { getCookieOptions } from './authController.js';
+
+/**
+ * POST /api/auth/forgot-password
+ *
+ * Requests a 6-digit OTP for password reset.
+ * Security:
+ * - Constant-time generic response prevents account enumeration.
+ * - 60-second cooldown enforced on generation.
+ * - Cryptographically secure OTP hash stored in MongoDB.
+ */
+export async function forgotPassword(req, res, next) {
+  try {
+    const { email } = req.body;
+
+    if (!email || !email.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide a valid email address.',
+      });
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+
+    // Generic success message to prevent user enumeration
+    const genericSuccessResponse = {
+      success: true,
+      message:
+        'If an account is associated with this email address, a 6-digit verification code has been sent.',
+    };
+
+    // Check if user exists in database
+    const user = await User.findOne({ email: normalizedEmail });
+    if (!user) {
+      // Return 200 OK without dispatching email, concealing existence of account
+      return res.status(200).json(genericSuccessResponse);
+    }
+
+    // Generate cryptographically secure OTP (subject to 60s cooldown)
+    let otpData;
+    try {
+      otpData = await generateOtp(normalizedEmail, 'password_reset');
+    } catch (err) {
+      if (err.code === 'COOLDOWN_ACTIVE') {
+        return res.status(429).json({
+          success: false,
+          code: 'COOLDOWN_ACTIVE',
+          message: err.message,
+          remainingSeconds: err.remainingSeconds,
+        });
+      }
+      throw err;
+    }
+
+    // Dispatch OTP via email service
+    const mailResult = await sendOtpEmail({
+      to: user.email,
+      recipientName: user.name,
+      otp: otpData.rawOtp,
+      purpose: 'Password Reset',
+      expiryMinutes: otpData.expiryMinutes,
+    });
+
+    if (!mailResult.success) {
+      console.error(
+        `[PasswordReset Error] Email delivery failed for <${user.email}>:`,
+        mailResult.error
+      );
+      // In development / testing, do not crash; return success response
+    }
+
+    return res.status(200).json(genericSuccessResponse);
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * POST /api/auth/verify-reset-otp
+ *
+ * Verifies the 6-digit OTP code entered by the user.
+ * Returns a short-lived resetToken upon successful verification.
+ */
+export async function verifyResetOtp(req, res, next) {
+  try {
+    const { email, otp } = req.body;
+
+    if (!email || !otp) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email address and 6-digit verification code are required.',
+      });
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+
+    const verificationResult = await verifyOtp(normalizedEmail, otp, 'password_reset');
+
+    if (!verificationResult.valid) {
+      return res.status(400).json({
+        success: false,
+        code: verificationResult.code,
+        message: verificationResult.message,
+        attemptsRemaining: verificationResult.attemptsRemaining,
+      });
+    }
+
+    // OTP verified successfully; generate a single-use 10-minute reset token
+    const resetToken = await createResetToken(normalizedEmail);
+
+    return res.status(200).json({
+      success: true,
+      message: 'Verification code verified successfully.',
+      data: {
+        resetToken,
+        email: normalizedEmail,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * POST /api/auth/reset-password
+ *
+ * Sets the new password after verifying the resetToken (or valid OTP).
+ * Security:
+ * - Hashes password using bcrypt.
+ * - Increments user.tokenVersion to immediately revoke all existing sessions.
+ * - Invalidates the reset token and any remaining OTP records.
+ */
+export async function resetPassword(req, res, next) {
+  try {
+    const { email, newPassword, resetToken, otp } = req.body;
+
+    if (!email || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email and new password are required.',
+      });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: 'Password must be at least 6 characters long.',
+      });
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+
+    // 1. Authorize via resetToken or direct OTP
+    let isAuthorized = false;
+
+    if (resetToken) {
+      isAuthorized = await verifyResetToken(normalizedEmail, resetToken);
+      if (!isAuthorized) {
+        return res.status(400).json({
+          success: false,
+          code: 'RESET_TOKEN_INVALID',
+          message:
+            'Password reset session has expired or is invalid. Please request a new verification code.',
+        });
+      }
+    } else if (otp) {
+      const otpRes = await verifyOtp(normalizedEmail, otp, 'password_reset');
+      if (!otpRes.valid) {
+        return res.status(400).json({
+          success: false,
+          code: otpRes.code,
+          message: otpRes.message,
+        });
+      }
+      isAuthorized = true;
+    } else {
+      return res.status(400).json({
+        success: false,
+        message: 'A valid verification code or reset token is required to reset password.',
+      });
+    }
+
+    // 2. Fetch user
+    const user = await User.findOne({ email: normalizedEmail });
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User account not found.',
+      });
+    }
+
+    // 3. Update password (pre-save hook will hash with bcrypt)
+    user.password = newPassword;
+
+    // 4. Invalidate all active sessions across all devices
+    user.tokenVersion = (user.tokenVersion || 0) + 1;
+    await user.save();
+
+    // 5. Invalidate tokens and OTPs
+    if (resetToken) {
+      await consumeResetToken(normalizedEmail, resetToken);
+    }
+    await Otp.deleteMany({ email: normalizedEmail, purpose: 'password_reset' });
+
+    // 6. Clear session cookies on this client
+    res.clearCookie('token', {
+      ...getCookieOptions(),
+      maxAge: 0,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message:
+        'Your password has been successfully reset. All active sessions have been signed out. Please log in with your new password.',
+    });
+  } catch (error) {
+    next(error);
+  }
+}

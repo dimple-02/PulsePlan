@@ -14,6 +14,8 @@ import {
   X,
   CheckCircle2,
   Shield,
+  KeyRound,
+  RotateCcw,
 } from 'lucide-react';
 
 /**
@@ -30,11 +32,11 @@ import {
  * - Smooth toggle between Login and Signup modes
  */
 export default function AuthModal({ isOpen, initialMode = 'login', onClose }) {
-  const { login, signup } = useAuth();
+  const { login, signup, verifyEmailOtp, resendVerificationOtp } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [mode, setMode] = useState(initialMode); // 'login' | 'signup'
+  const [mode, setMode] = useState(initialMode); // 'login' | 'signup' | 'verify-email'
 
   // Form states
   const [name, setName] = useState('');
@@ -42,16 +44,32 @@ export default function AuthModal({ isOpen, initialMode = 'login', onClose }) {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [otp, setOtp] = useState('');
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const [attemptsRemaining, setAttemptsRemaining] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
 
   // Sync mode when initialMode changes
   useEffect(() => {
     if (initialMode) {
       setMode(initialMode);
       setErrorMessage('');
+      setSuccessMessage('');
     }
   }, [initialMode, isOpen]);
+
+  // Resend cooldown timer
+  useEffect(() => {
+    let timer;
+    if (resendCooldown > 0) {
+      timer = setInterval(() => {
+        setResendCooldown((prev) => (prev > 0 ? prev - 1 : 0));
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [resendCooldown]);
 
   // Handle ESC key and scroll lock
   useEffect(() => {
@@ -79,11 +97,14 @@ export default function AuthModal({ isOpen, initialMode = 'login', onClose }) {
   const handleModeSwitch = (newMode) => {
     setMode(newMode);
     setErrorMessage('');
+    setSuccessMessage('');
+    setAttemptsRemaining(null);
   };
 
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
     setErrorMessage('');
+    setSuccessMessage('');
 
     if (!email.trim() || !password) {
       setErrorMessage('Please fill in both email and password.');
@@ -97,7 +118,13 @@ export default function AuthModal({ isOpen, initialMode = 'login', onClose }) {
       const destination = location.state?.from?.pathname || '/';
       navigate(destination, { replace: true });
     } catch (err) {
-      setErrorMessage(err.message || 'Login failed. Please verify your credentials.');
+      if (err.details?.code === 'EMAIL_NOT_VERIFIED' || err.code === 'EMAIL_NOT_VERIFIED') {
+        setSuccessMessage('Your email is not verified yet. A verification code is required.');
+        setResendCooldown(60);
+        setMode('verify-email');
+      } else {
+        setErrorMessage(err.message || 'Login failed. Please verify your credentials.');
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -106,6 +133,7 @@ export default function AuthModal({ isOpen, initialMode = 'login', onClose }) {
   const handleSignupSubmit = async (e) => {
     e.preventDefault();
     setErrorMessage('');
+    setSuccessMessage('');
 
     if (!name.trim()) {
       setErrorMessage('Please enter your full name.');
@@ -134,11 +162,68 @@ export default function AuthModal({ isOpen, initialMode = 'login', onClose }) {
         email: email.trim(),
         password,
       });
-      onClose();
-      const destination = location.state?.from?.pathname || '/';
-      navigate(destination, { replace: true });
+      // After signup, user must verify their email with 6-digit OTP
+      setSuccessMessage('Account created! A 6-digit verification code was sent to your email.');
+      setResendCooldown(60);
+      setMode('verify-email');
     } catch (err) {
       setErrorMessage(err.message || 'Failed to create account. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleVerifyOtpSubmit = async (e) => {
+    e.preventDefault();
+    setErrorMessage('');
+    setSuccessMessage('');
+
+    const cleanOtp = otp.trim();
+    if (!cleanOtp || cleanOtp.length !== 6 || !/^\d{6}$/.test(cleanOtp)) {
+      setErrorMessage('Please enter the 6-digit verification code.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await verifyEmailOtp({ email: email.trim().toLowerCase(), otp: cleanOtp });
+      setSuccessMessage('Email verified successfully! Opening your workspace...');
+      setTimeout(() => {
+        onClose();
+        const destination = location.state?.from?.pathname || location.state?.from || '/';
+        navigate(destination, { replace: true });
+      }, 900);
+    } catch (err) {
+      const details = err.details || {};
+      if (details.attemptsRemaining !== undefined) {
+        setAttemptsRemaining(details.attemptsRemaining);
+      }
+      setErrorMessage(
+        err.message || 'Verification failed. Please check the code and try again.'
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    if (resendCooldown > 0) return;
+    setErrorMessage('');
+    setSuccessMessage('');
+    setAttemptsRemaining(null);
+    setIsSubmitting(true);
+    try {
+      const res = await resendVerificationOtp(email.trim().toLowerCase());
+      setSuccessMessage(res?.message || 'A new verification code has been dispatched.');
+      setResendCooldown(60);
+      setOtp('');
+    } catch (err) {
+      if (err.details?.code === 'COOLDOWN_ACTIVE' && err.details?.remainingSeconds) {
+        setResendCooldown(err.details.remainingSeconds);
+        setErrorMessage(err.message);
+      } else {
+        setErrorMessage(err.message || 'Failed to resend verification code.');
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -179,46 +264,69 @@ export default function AuthModal({ isOpen, initialMode = 'login', onClose }) {
             id="auth-modal-title"
             className="text-xl sm:text-2xl font-bold tracking-tight text-[#14121C] dark:text-[#F8F6EF]"
           >
-            {mode === 'login' ? 'Sign in to PulsePlan' : 'Create your workspace'}
+            {mode === 'login'
+              ? 'Sign in to PulsePlan'
+              : mode === 'signup'
+              ? 'Create your workspace'
+              : 'Verify your email'}
           </h2>
           <p className="mt-1 text-xs text-[#5C576C] dark:text-[#A6A1B5]">
             {mode === 'login'
               ? 'Multi-Tenant Workspace & Project Management'
-              : 'Launch your dedicated, isolated team environment'}
+              : mode === 'signup'
+              ? 'Launch your dedicated, isolated team environment'
+              : 'Enter the 6-digit verification code sent to your email'}
           </p>
         </div>
 
-        {/* Segmented Mode Toggle Tabs */}
-        <div className="grid grid-cols-2 p-1 rounded-xl bg-[#F4F2F8] dark:bg-[#100E17] border border-[#E5E1EE] dark:border-white/5 mb-5">
-          <button
-            type="button"
-            onClick={() => handleModeSwitch('login')}
-            className={`py-1.5 text-xs font-semibold rounded-lg transition-all ${
-              mode === 'login'
-                ? 'bg-white dark:bg-[#1C1829] text-[#5935D6] dark:text-[#C9B8FF] shadow-sm border border-[#E5E1EE] dark:border-[#C9B8FF]/20'
-                : 'text-[#5C576C] dark:text-[#A6A1B5] hover:text-[#14121C] dark:hover:text-[#F8F6EF]'
-            }`}
-          >
-            Sign In
-          </button>
-          <button
-            type="button"
-            onClick={() => handleModeSwitch('signup')}
-            className={`py-1.5 text-xs font-semibold rounded-lg transition-all ${
-              mode === 'signup'
-                ? 'bg-white dark:bg-[#1C1829] text-[#5935D6] dark:text-[#C9B8FF] shadow-sm border border-[#E5E1EE] dark:border-[#C9B8FF]/20'
-                : 'text-[#5C576C] dark:text-[#A6A1B5] hover:text-[#14121C] dark:hover:text-[#F8F6EF]'
-            }`}
-          >
-            Create Account
-          </button>
-        </div>
+        {/* Segmented Mode Toggle Tabs (Hidden during verification step) */}
+        {mode !== 'verify-email' && (
+          <div className="grid grid-cols-2 p-1 rounded-xl bg-[#F4F2F8] dark:bg-[#100E17] border border-[#E5E1EE] dark:border-white/5 mb-5">
+            <button
+              type="button"
+              onClick={() => handleModeSwitch('login')}
+              className={`py-1.5 text-xs font-semibold rounded-lg transition-all ${
+                mode === 'login'
+                  ? 'bg-white dark:bg-[#1C1829] text-[#5935D6] dark:text-[#C9B8FF] shadow-sm border border-[#E5E1EE] dark:border-[#C9B8FF]/20'
+                  : 'text-[#5C576C] dark:text-[#A6A1B5] hover:text-[#14121C] dark:hover:text-[#F8F6EF]'
+              }`}
+            >
+              Sign In
+            </button>
+            <button
+              type="button"
+              onClick={() => handleModeSwitch('signup')}
+              className={`py-1.5 text-xs font-semibold rounded-lg transition-all ${
+                mode === 'signup'
+                  ? 'bg-white dark:bg-[#1C1829] text-[#5935D6] dark:text-[#C9B8FF] shadow-sm border border-[#E5E1EE] dark:border-[#C9B8FF]/20'
+                  : 'text-[#5C576C] dark:text-[#A6A1B5] hover:text-[#14121C] dark:hover:text-[#F8F6EF]'
+              }`}
+            >
+              Create Account
+            </button>
+          </div>
+        )}
+
+        {/* Success Banner */}
+        {successMessage && (
+          <div className="mb-4 p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 flex items-start gap-2.5 text-xs text-emerald-800 dark:text-emerald-300 animate-in fade-in duration-150">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+            <div className="flex-1 font-medium">{successMessage}</div>
+          </div>
+        )}
 
         {/* Error Banner */}
         {errorMessage && (
           <div className="mb-4 p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/60 flex items-start gap-2.5 text-xs text-rose-700 dark:text-rose-300 animate-in fade-in duration-150">
             <AlertCircle className="w-4 h-4 text-rose-500 dark:text-rose-400 shrink-0 mt-0.5" />
-            <div className="flex-1 font-medium">{errorMessage}</div>
+            <div className="flex-1">
+              <div className="font-medium">{errorMessage}</div>
+              {attemptsRemaining !== null && attemptsRemaining > 0 && (
+                <p className="mt-1 font-bold text-rose-800 dark:text-rose-200">
+                  {attemptsRemaining} attempt{attemptsRemaining === 1 ? '' : 's'} remaining.
+                </p>
+              )}
+            </div>
           </div>
         )}
 
@@ -245,9 +353,21 @@ export default function AuthModal({ isOpen, initialMode = 'login', onClose }) {
             </div>
 
             <div>
-              <label className="block text-[11px] font-mono font-medium text-[#5C576C] dark:text-[#A6A1B5] uppercase tracking-wider mb-1.5">
-                Password
-              </label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-[11px] font-mono font-medium text-[#5C576C] dark:text-[#A6A1B5] uppercase tracking-wider">
+                  Password
+                </label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onClose();
+                    navigate('/forgot-password');
+                  }}
+                  className="text-xs text-[#5935D6] dark:text-[#C9B8FF] hover:underline font-medium"
+                >
+                  Forgot password?
+                </button>
+              </div>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#5C576C] dark:text-[#A6A1B5]">
                   <Lock className="w-4 h-4" />
@@ -406,18 +526,123 @@ export default function AuthModal({ isOpen, initialMode = 'login', onClose }) {
           </form>
         )}
 
+        {/* VERIFY EMAIL FORM */}
+        {mode === 'verify-email' && (
+          <form className="space-y-4" onSubmit={handleVerifyOtpSubmit}>
+            <div>
+              <label className="block text-[11px] font-mono font-medium text-[#5C576C] dark:text-[#A6A1B5] uppercase tracking-wider mb-1.5">
+                Target Email Address
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#5C576C] dark:text-[#A6A1B5]">
+                  <Mail className="w-4 h-4" />
+                </div>
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="name@company.com"
+                  className="w-full pl-9 pr-3 py-2 text-base sm:text-sm bg-[#F9F8FC] dark:bg-[#100E17] border border-[#E5E1EE] dark:border-white/10 rounded-xl text-[#14121C] dark:text-[#F8F6EF] placeholder-[#5C576C]/50 dark:placeholder-[#A6A1B5]/50 focus:outline-none focus:border-[#7C5CFC] dark:focus:border-[#C9B8FF] transition-all"
+                />
+              </div>
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-[11px] font-mono font-medium text-[#5C576C] dark:text-[#A6A1B5] uppercase tracking-wider">
+                  6-Digit Security Code
+                </label>
+                <span className="text-[10px] text-[#5C576C] dark:text-[#A6A1B5]">
+                  Valid for 5 mins
+                </span>
+              </div>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#5C576C] dark:text-[#A6A1B5]">
+                  <KeyRound className="w-4 h-4" />
+                </div>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  maxLength={6}
+                  autoFocus
+                  required
+                  value={otp}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/\D/g, '').slice(0, 6);
+                    setOtp(val);
+                  }}
+                  placeholder="123456"
+                  className="w-full pl-9 pr-3 py-2 text-center font-mono text-xl tracking-[0.4em] font-bold bg-[#F9F8FC] dark:bg-[#100E17] border border-[#E5E1EE] dark:border-white/10 rounded-xl text-[#14121C] dark:text-[#F8F6EF] placeholder-[#5C576C]/30 focus:outline-none focus:border-[#7C5CFC] dark:focus:border-[#C9B8FF] transition-all"
+                />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={isSubmitting || otp.length !== 6}
+              className="w-full mt-2 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-[#5935D6] hover:bg-[#4828b8] dark:bg-[#C9B8FF] dark:hover:bg-[#ded2ff] text-white dark:text-[#0B0A0F] font-semibold text-sm transition-all duration-200 shadow-[0_0_20px_rgba(89,53,214,0.25)] dark:shadow-[0_0_20px_rgba(201,184,255,0.25)] hover:shadow-[0_0_30px_rgba(89,53,214,0.4)] disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none cursor-pointer"
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Verifying Code...</span>
+                </>
+              ) : (
+                <>
+                  <span>Verify & Activate Account</span>
+                  <ArrowRight className="w-4 h-4" />
+                </>
+              )}
+            </button>
+
+            <div className="pt-2 border-t border-slate-100 dark:border-white/5 flex items-center justify-between text-xs">
+              <span className="text-[#5C576C] dark:text-[#A6A1B5]">Didn't get the code?</span>
+              {resendCooldown > 0 ? (
+                <span className="font-mono text-[#5935D6] dark:text-[#C9B8FF] font-semibold">
+                  Resend in {resendCooldown}s
+                </span>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleResendOtp}
+                  disabled={isSubmitting}
+                  className="inline-flex items-center gap-1 font-semibold text-[#5935D6] dark:text-[#C9B8FF] hover:underline disabled:opacity-50 cursor-pointer"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  <span>Resend Code</span>
+                </button>
+              )}
+            </div>
+          </form>
+        )}
+
         {/* Footer switch prompt */}
         <div className="mt-5 text-center">
-          <p className="text-xs text-[#5C576C] dark:text-[#A6A1B5]">
-            {mode === 'login' ? "Don't have an account yet? " : 'Already have a workspace? '}
-            <button
-              type="button"
-              onClick={() => handleModeSwitch(mode === 'login' ? 'signup' : 'login')}
-              className="font-semibold text-[#5935D6] hover:text-[#4828b8] dark:text-[#C9B8FF] dark:hover:text-[#ded2ff] hover:underline focus:outline-none"
-            >
-              {mode === 'login' ? 'Create new workspace' : 'Sign in to workspace'}
-            </button>
-          </p>
+          {mode === 'verify-email' ? (
+            <p className="text-xs text-[#5C576C] dark:text-[#A6A1B5]">
+              Want to use another email?{' '}
+              <button
+                type="button"
+                onClick={() => handleModeSwitch('signup')}
+                className="font-semibold text-[#5935D6] hover:text-[#4828b8] dark:text-[#C9B8FF] dark:hover:text-[#ded2ff] hover:underline focus:outline-none"
+              >
+                Back to Sign Up
+              </button>
+            </p>
+          ) : (
+            <p className="text-xs text-[#5C576C] dark:text-[#A6A1B5]">
+              {mode === 'login' ? "Don't have an account yet? " : 'Already have a workspace? '}
+              <button
+                type="button"
+                onClick={() => handleModeSwitch(mode === 'login' ? 'signup' : 'login')}
+                className="font-semibold text-[#5935D6] hover:text-[#4828b8] dark:text-[#C9B8FF] dark:hover:text-[#ded2ff] hover:underline focus:outline-none"
+              >
+                {mode === 'login' ? 'Create new workspace' : 'Sign in to workspace'}
+              </button>
+            </p>
+          )}
         </div>
       </div>
     </div>

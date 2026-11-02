@@ -9,6 +9,9 @@ import SettingsPage from '../pages/SettingsPage';
 import WorkspacePage from '../pages/WorkspacePage';
 import NotFoundPage from '../pages/NotFoundPage';
 import LandingPage from '../pages/LandingPage';
+import ForgotPasswordPage from '../pages/ForgotPasswordPage';
+import VerifyEmailPage from '../pages/VerifyEmailPage';
+import AcceptInvitationPage from '../pages/AcceptInvitationPage';
 import ProtectedRoute from '../components/auth/ProtectedRoute';
 import { useAuth } from '../context/AuthContext';
 import { Layers, Loader2 } from 'lucide-react';
@@ -85,6 +88,10 @@ export default function AppRoutes() {
       {/* Public Auth Routes: Landing Page with Login or Signup modal open */}
       <Route path="/login" element={<PublicAuthRoute defaultMode="login" />} />
       <Route path="/signup" element={<PublicAuthRoute defaultMode="signup" />} />
+      <Route path="/verify-email" element={<VerifyEmailPage />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/invitations/:token" element={<AcceptInvitationPage />} />
+      <Route path="/invite/:token" element={<AcceptInvitationPage />} />
       <Route path="/landing" element={<LandingPage />} />
 
       {/* Protected SaaS Application Routes */}

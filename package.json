@@ -9,6 +9,9 @@
     "server:watch": "node --watch server/server.js",
     "build": "vite build",
     "preview": "vite preview",
+    "test": "node server/tests/signupEmailVerificationTest.js",
+    "test:verification": "node server/tests/signupEmailVerificationTest.js",
+    "test:collaboration": "node server/tests/collaborationAndOtpTest.js",
     "test:auth": "node server/tests/authTest.js",
     "test:security": "node server/tests/securityAuditTest.js",
     "test:hardening": "node server/tests/securityHardeningTest.js"

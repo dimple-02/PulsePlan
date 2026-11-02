@@ -69,7 +69,22 @@ export async function signupUser({ name, email, password }) {
     method: 'POST',
     body: JSON.stringify({ name, email, password }),
   });
+  return result.data;
+}
+
+export async function verifyEmail({ email, otp }) {
+  const result = await apiRequest('/auth/verify-email', {
+    method: 'POST',
+    body: JSON.stringify({ email, otp }),
+  });
   return result.data?.user;
+}
+
+export async function resendVerification(email) {
+  return await apiRequest('/auth/resend-verification', {
+    method: 'POST',
+    body: JSON.stringify({ email }),
+  });
 }
 
 export async function loginUser({ email, password }) {
@@ -91,6 +106,27 @@ export async function getCurrentUser() {
     method: 'GET',
   });
   return result.data?.user;
+}
+
+export async function forgotPassword(email) {
+  return await apiRequest('/auth/forgot-password', {
+    method: 'POST',
+    body: JSON.stringify({ email }),
+  });
+}
+
+export async function verifyResetOtp({ email, otp }) {
+  return await apiRequest('/auth/verify-reset-otp', {
+    method: 'POST',
+    body: JSON.stringify({ email, otp }),
+  });
+}
+
+export async function resetPassword({ email, newPassword, resetToken, otp }) {
+  return await apiRequest('/auth/reset-password', {
+    method: 'POST',
+    body: JSON.stringify({ email, newPassword, resetToken, otp }),
+  });
 }
 
 // -------------------------------------------------------------
@@ -268,4 +304,83 @@ export async function sendWorkspaceMessage(workspaceId, messageData) {
     body: JSON.stringify(messageData),
   }, workspaceId);
   return result.data;
+}
+
+// -------------------------------------------------------------
+// Project Collaborators & Invitations API Calls
+// -------------------------------------------------------------
+export async function getProjectCollaborators(workspaceId, projectId) {
+  const result = await apiRequest(
+    `/projects/${projectId}/collaborators`,
+    { method: 'GET' },
+    workspaceId
+  );
+  return result.data;
+}
+
+export async function removeProjectCollaborator(workspaceId, projectId, userIdOrEmail) {
+  return await apiRequest(
+    `/projects/${projectId}/collaborators/${encodeURIComponent(userIdOrEmail)}`,
+    { method: 'DELETE' },
+    workspaceId
+  );
+}
+
+export async function getProjectInvitations(workspaceId, projectId) {
+  const result = await apiRequest(
+    `/projects/${projectId}/invitations`,
+    { method: 'GET' },
+    workspaceId
+  );
+  return result.data || [];
+}
+
+export async function createProjectInvitation(workspaceId, projectId, { email, role }) {
+  const result = await apiRequest(
+    `/projects/${projectId}/invitations`,
+    {
+      method: 'POST',
+      body: JSON.stringify({ email, role }),
+    },
+    workspaceId
+  );
+  return result.data;
+}
+
+export async function resendProjectInvitation(workspaceId, projectId, invitationId) {
+  const result = await apiRequest(
+    `/projects/${projectId}/invitations/${invitationId}/resend`,
+    { method: 'POST' },
+    workspaceId
+  );
+  return result.data;
+}
+
+export async function revokeProjectInvitation(workspaceId, projectId, invitationId) {
+  return await apiRequest(
+    `/projects/${projectId}/invitations/${invitationId}/revoke`,
+    { method: 'POST' },
+    workspaceId
+  );
+}
+
+// -------------------------------------------------------------
+// Public & Recipient Invitation Actions (By Token)
+// -------------------------------------------------------------
+export async function getInvitationByToken(token) {
+  return await apiRequest(`/invitations/token/${encodeURIComponent(token)}`, {
+    method: 'GET',
+  });
+}
+
+export async function acceptProjectInvitation(token) {
+  return await apiRequest(`/invitations/token/${encodeURIComponent(token)}/accept`, {
+    method: 'POST',
+  });
+}
+
+export async function rejectProjectInvitation(token) {
+  return await apiRequest(`/invitations/token/${encodeURIComponent(token)}/reject`, {
+    method: 'POST',
+  });
 }

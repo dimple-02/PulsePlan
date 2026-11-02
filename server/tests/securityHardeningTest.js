@@ -1,4 +1,7 @@
 import dotenv from 'dotenv';
+import mongoose from 'mongoose';
+import { connectDB } from '../config/db.js';
+import { User } from '../models/User.js';
 dotenv.config();
 
 const BASE_URL = 'http://localhost:5000/api';
@@ -32,6 +35,8 @@ async function runTests() {
   const userB_email = `attacker_${timestamp}@pulseplan.test`;
   const password = 'StrongPassword123!';
 
+  await connectDB();
+
   // User A Signup
   const resA = await fetch(`${BASE_URL}/auth/signup`, {
     method: 'POST',
@@ -39,9 +44,15 @@ async function runTests() {
     body: JSON.stringify({ name: 'Victim Owner', email: userA_email, password }),
   });
   const dataA = await resA.json();
-  const cookieA = resA.headers.get('set-cookie');
   const workspaceA_id = dataA.data.user.activeWorkspaceId;
   assert(workspaceA_id, 'User A registered and activeWorkspaceId created');
+  await User.updateOne({ email: userA_email }, { $set: { isEmailVerified: true } });
+  const loginResA = await fetch(`${BASE_URL}/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: userA_email, password }),
+  });
+  const cookieA = loginResA.headers.get('set-cookie');
 
   // User B Signup
   const resB = await fetch(`${BASE_URL}/auth/signup`, {
@@ -50,7 +61,13 @@ async function runTests() {
     body: JSON.stringify({ name: 'Attacker User', email: userB_email, password }),
   });
   const dataB = await resB.json();
-  const cookieB = resB.headers.get('set-cookie');
+  await User.updateOne({ email: userB_email }, { $set: { isEmailVerified: true } });
+  const loginResB = await fetch(`${BASE_URL}/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: userB_email, password }),
+  });
+  const cookieB = loginResB.headers.get('set-cookie');
   assert(cookieB, 'User B registered with session cookie');
 
   // 3. IDOR Protection on Chat Messages
@@ -102,6 +119,9 @@ async function runTests() {
   console.log('\n================================================================');
   console.log(' All Security Hardening Assertions Passed Successfully! ');
   console.log('================================================================\n');
+  if (mongoose.connection.readyState !== 0) {
+    await mongoose.connection.close();
+  }
   process.exit(0);
 }
 
