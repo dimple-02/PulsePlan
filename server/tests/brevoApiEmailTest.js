@@ -14,7 +14,7 @@
  */
 
 import { ENV } from '../config/env.js';
-import { sendEmail, sendBrevoApiEmail, parseSender, parseRecipients } from '../config/mailer.js';
+import { sendEmail, sendBrevoApiEmail, parseSender, parseRecipients, maskRecipient } from '../config/mailer.js';
 import { sendOtpEmail, sendProjectInviteEmail } from '../services/emailService.js';
 
 let passCount = 0;
@@ -240,8 +240,25 @@ async function runBrevoApiTests() {
       'Email subject contains the 6-digit reset OTP'
     );
     assert(
+      capturedWorkflowPayload.subject.toLowerCase().includes('password reset'),
+      'Email subject clearly indicates password reset'
+    );
+    assert(
       capturedWorkflowPayload.htmlContent.includes('Password Reset'),
       'Email HTML specifies "Password Reset" purpose'
+    );
+    assert(
+      Array.isArray(capturedWorkflowPayload.tags) && capturedWorkflowPayload.tags.includes('password-reset'),
+      'Email payload includes Brevo "password-reset" transactional tag'
+    );
+    assert(
+      capturedWorkflowPayload.to[0]?.email === 'existinguser@pulseplan.test' &&
+        capturedWorkflowPayload.to[0]?.name === 'Bruce Wayne',
+      'Email payload includes recipient email and parsed recipient name'
+    );
+    assert(
+      capturedWorkflowPayload.replyTo?.email === 'noreply@pulseplan.io',
+      'Email payload aligns replyTo with verified sender'
     );
 
     // -------------------------------------------------------------------------
@@ -286,6 +303,10 @@ async function runBrevoApiTests() {
     // -------------------------------------------------------------------------
     console.log('\n--- TEST 8: Development Transport Fallback when BREVO_API_KEY is Unset ---');
     ENV.BREVO_API_KEY = ''; // Simulate local dev without Brevo key
+    process.env.BREVO_API_KEY = '';
+    const prevEnvMode = process.env.NODE_ENV;
+    process.env.NODE_ENV = 'development';
+    ENV.IS_PRODUCTION = false;
 
     let brevoApiCalled = false;
     globalThis.fetch = async () => {
@@ -306,6 +327,154 @@ async function runBrevoApiTests() {
     assert(
       devResult.success === true,
       'sendEmail falls back cleanly to development transport with success: true'
+    );
+
+    // -------------------------------------------------------------------------
+    // TEST 9: Production Mode Blocks Silent Simulated Transport Fallback
+    // -------------------------------------------------------------------------
+    console.log('\n--- TEST 9: Production Mode Rejects Simulated Transport if BREVO_API_KEY Missing ---');
+    process.env.NODE_ENV = 'production';
+    ENV.IS_PRODUCTION = true;
+    ENV.BREVO_API_KEY = '';
+    process.env.BREVO_API_KEY = '';
+
+    const prodMissingKeyResult = await sendEmail({
+      to: 'user@pulseplan.test',
+      subject: 'Production Alert',
+      html: '<p>Alert</p>',
+    });
+
+    assert(
+      prodMissingKeyResult.success === false,
+      'sendEmail fails gracefully when BREVO_API_KEY is missing in production'
+    );
+    assert(
+      prodMissingKeyResult.error.includes('BREVO_API_KEY is not configured in production'),
+      'Returns descriptive error preventing silent simulated email queueing'
+    );
+
+    // Restore environment mode
+    process.env.NODE_ENV = prevEnvMode;
+    ENV.IS_PRODUCTION = prevEnvMode === 'production';
+
+    // -------------------------------------------------------------------------
+    // TEST 10: Server Logging Strictly Redacts Raw OTPs and Secrets
+    // -------------------------------------------------------------------------
+    console.log('\n--- TEST 10: Server Logging Strictly Redacts Raw OTPs and Secrets ---');
+    ENV.BREVO_API_KEY = 'xkeysib-live-key-123456';
+    process.env.BREVO_API_KEY = 'xkeysib-live-key-123456';
+
+    const testOtpToRedact = '891024';
+    const capturedLogs = [];
+    const originalConsoleLog = console.log;
+    const originalConsoleError = console.error;
+
+    console.log = (...args) => capturedLogs.push(args.join(' '));
+    console.error = (...args) => capturedLogs.push(args.join(' '));
+
+    try {
+      globalThis.fetch = async () => ({
+        ok: true,
+        status: 201,
+        json: async () => ({ messageId: '<brevo-redaction-test>' }),
+      });
+
+      // Dispatch OTP email
+      await sendOtpEmail({
+        to: 'security@pulseplan.test',
+        recipientName: 'Security Officer',
+        otp: testOtpToRedact,
+        purpose: 'Password Reset',
+        expiryMinutes: 5,
+      });
+
+      const combinedLogOutput = capturedLogs.join('\n');
+
+      // Test failure logging redaction
+      capturedLogs.length = 0;
+      globalThis.fetch = async () => ({
+        ok: false,
+        status: 400,
+        statusText: 'Bad Request',
+        json: async () => ({
+          message: `Failed to deliver OTP ${testOtpToRedact} with key xkeysib-sensitive-secret-999`,
+        }),
+      });
+
+      const failedSend = await sendEmail({
+        to: 'fail@pulseplan.test',
+        subject: `[PulsePlan] ${testOtpToRedact} verification`,
+        html: '<p>fail</p>',
+      });
+
+      const failedLogOutput = capturedLogs.join('\n');
+
+      // Restore console before running asserts
+      console.log = originalConsoleLog;
+      console.error = originalConsoleError;
+
+      assert(
+        !combinedLogOutput.includes(testOtpToRedact),
+        'Server logs DO NOT contain the raw 6-digit OTP code'
+      );
+      assert(
+        !combinedLogOutput.includes('security@pulseplan.test'),
+        'Server logs DO NOT expose raw recipient email addresses (masked recipient)'
+      );
+      assert(
+        combinedLogOutput.includes('s***y@pulseplan.test'),
+        'Server logs contain masked recipient format (s***y@pulseplan.test)'
+      );
+      assert(
+        failedSend.success === false,
+        'sendEmail reports failure on API rejection'
+      );
+      assert(
+        !failedLogOutput.includes(testOtpToRedact),
+        'Error logs DO NOT expose raw OTP even on API delivery failure'
+      );
+      assert(
+        !failedLogOutput.includes('xkeysib-sensitive-secret-999'),
+        'Error logs DO NOT expose Brevo API keys'
+      );
+    } finally {
+      console.log = originalConsoleLog;
+      console.error = originalConsoleError;
+    }
+
+    // -------------------------------------------------------------------------
+    // TEST 11: Fail Closed on Email Delivery Failure (No False Success)
+    // -------------------------------------------------------------------------
+    console.log('\n--- TEST 11: Fail Closed on Email Delivery Failure ---');
+    ENV.BREVO_API_KEY = 'xkeysib-active-key-test';
+    process.env.BREVO_API_KEY = 'xkeysib-active-key-test';
+
+    // Mock network failure / provider drop
+    globalThis.fetch = async () => ({
+      ok: false,
+      status: 500,
+      statusText: 'Internal Server Error',
+      json: async () => ({ message: 'Brevo internal MTA failure' }),
+    });
+
+    const failedOtpResult = await sendOtpEmail({
+      to: 'failtest@pulseplan.test',
+      recipientName: 'Fail Test',
+      otp: '999111',
+      purpose: 'Password Reset',
+    });
+
+    assert(
+      failedOtpResult.success === false,
+      'sendOtpEmail returns success: false when email provider rejects dispatch'
+    );
+    assert(
+      typeof failedOtpResult.error === 'string' && failedOtpResult.error.length > 0,
+      'sendOtpEmail returns descriptive error string when dispatch fails'
+    );
+    assert(
+      !failedOtpResult.error.includes('999111'),
+      'Returned error payload does NOT expose the OTP code'
     );
 
     console.log('\n================================================================');

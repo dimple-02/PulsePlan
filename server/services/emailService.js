@@ -287,18 +287,26 @@ export async function sendOtpEmail({
   purpose = 'Password Reset',
   expiryMinutes = 5,
 }) {
-  const subject = `[PulsePlan] ${otp} is your verification code`;
+  const isPasswordReset = purpose === 'Password Reset';
+  const subject = isPasswordReset
+    ? `[PulsePlan] ${otp} is your password reset code`
+    : `[PulsePlan] ${otp} is your verification code`;
+
+  const title = isPasswordReset ? 'Reset Your Password' : 'Verify Your Identity';
+  const badgeText = isPasswordReset ? 'PASSWORD RESET' : 'SECURITY CODE';
+
+  const introText = isPasswordReset
+    ? `We received a request to reset your password for your PulsePlan account (<span style="color: #C9B8FF; font-weight: 500;">${to}</span>).`
+    : `We received a request for <strong>${purpose}</strong> associated with your PulsePlan account (<span style="color: #C9B8FF; font-weight: 500;">${to}</span>).`;
 
   const contentHtml = `
-    <h1>Verify Your Identity</h1>
+    <h1>${title}</h1>
     <p>Hi ${recipientName || 'there'},</p>
-    <p>
-      We received a request for <strong>${purpose}</strong> associated with your PulsePlan account (<span style="color: #C9B8FF; font-weight: 500;">${to}</span>).
-    </p>
+    <p>${introText}</p>
 
     <div class="otp-container">
       <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: #A6A1B5; font-weight: 600;">
-        One-Time Verification Code
+        One-Time ${isPasswordReset ? 'Password Reset' : 'Verification'} Code
       </div>
       <div class="otp-code">${otp}</div>
       <div class="otp-meta">
@@ -311,22 +319,27 @@ export async function sendOtpEmail({
     </div>
 
     <p style="font-size: 13px; color: #A6A1B5;">
-      If you did not request this verification code, someone may have entered your email by mistake. Your account remains completely secure and no action is required.
+      If you did not request this ${isPasswordReset ? 'password reset' : 'verification code'}, someone may have entered your email by mistake. Your account remains completely secure and no action is required.
     </p>
   `;
 
+  const recipientTarget = recipientName && recipientName.trim()
+    ? `${recipientName.trim()} <${to}>`
+    : to;
+
   return sendEmail({
-    to,
+    to: recipientTarget,
     subject,
     html: createBrandedEmailLayout({
       title: subject,
-      previewText: `Your PulsePlan verification code is ${otp} (expires in ${expiryMinutes} minutes)`,
-      badgeText: 'SECURITY CODE',
+      previewText: `Your PulsePlan ${isPasswordReset ? 'password reset' : 'verification'} code is ${otp} (expires in ${expiryMinutes} minutes)`,
+      badgeText,
       badgeColor: '#FFD6E8',
       badgeBg: 'rgba(255, 214, 232, 0.12)',
       contentHtml,
     }),
     text: `Hi ${recipientName || 'there'},\n\nYour PulsePlan verification code for ${purpose} is: ${otp}\n\nThis code expires in ${expiryMinutes} minutes. Never share this code with anyone.\n\nIf you did not request this code, you can safely ignore this email.\n\nPulsePlan - Plan clearly. Move faster. Ship together.`,
+    tags: [isPasswordReset ? 'password-reset' : 'email-verification'],
   });
 }
 
@@ -382,8 +395,12 @@ export async function sendProjectInviteEmail({
     </p>
   `;
 
+  const recipientTarget = recipientName && recipientName.trim()
+    ? `${recipientName.trim()} <${to}>`
+    : to;
+
   return sendEmail({
-    to,
+    to: recipientTarget,
     subject,
     html: createBrandedEmailLayout({
       title: subject,
@@ -396,6 +413,7 @@ export async function sendProjectInviteEmail({
       ctaUrl: targetUrl,
     }),
     text: `Hi ${recipientName || 'there'},\n\n${inviterName} has invited you to collaborate on "${projectName}" in workspace "${workspaceName}" as a ${role} on PulsePlan.\n\nAccept your invitation here:\n${targetUrl}\n\nThis invitation expires in ${expiryDays} days.\n\nPulsePlan - Plan clearly. Move faster. Ship together.`,
+    tags: ['invitation'],
   });
 }
 
