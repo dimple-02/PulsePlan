@@ -72,7 +72,10 @@ export const ENV = {
   JWT_SECRET: process.env.JWT_SECRET || DEFAULT_DEV_JWT_SECRET,
   CLIENT_URL: process.env.CLIENT_URL || 'http://localhost:5173',
 
-  // Mail / SMTP Configuration
+  // Brevo Transactional Email HTTPS API (Production on Render Free - Port 443)
+  BREVO_API_KEY: process.env.BREVO_API_KEY || '',
+
+  // Mail / SMTP Configuration (Local development fallback)
   SMTP_HOST: process.env.SMTP_HOST || '',
   SMTP_PORT: Number(process.env.SMTP_PORT || 587),
   SMTP_USER: process.env.SMTP_USER || '',

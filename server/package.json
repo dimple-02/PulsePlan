@@ -11,6 +11,7 @@
     "test:auth": "node tests/signupEmailVerificationTest.js",
     "test:verification": "node tests/signupEmailVerificationTest.js",
     "test:collaboration": "node tests/collaborationAndOtpTest.js",
+    "test:brevo": "node tests/brevoApiEmailTest.js",
     "test:mail": "node tests/mailServiceTest.js",
     "test:all": "node tests/signupEmailVerificationTest.js && node tests/collaborationAndOtpTest.js"
   },
