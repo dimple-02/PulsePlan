@@ -8,6 +8,7 @@ import { sendWorkspaceInviteEmail } from '../services/mailService.js';
 import { hashToken } from '../services/otpService.js';
 import { ENV } from '../config/env.js';
 import { areEmailsEqual, getEmailRegex } from '../utils/emailUtils.js';
+import { linkPreexistingWorkspaces } from './authController.js';
 
 /**
  * Helper to dynamically compute currentUserRole for a specific user
@@ -40,6 +41,9 @@ export async function getWorkspaces(req, res, next) {
     // Multi-tenant isolation: If user is authenticated, return ONLY workspaces
     // where user is explicitly in user.workspaces or workspace.members
     if (req.user) {
+      // Synchronize pre-existing memberships and activate online status for logged in member
+      await linkPreexistingWorkspaces(req.user);
+
       const userWorkspaceIds = (req.user.workspaces || []).map((w) => w.workspaceId);
       const emailRegex = getEmailRegex(req.user.email);
       query = {

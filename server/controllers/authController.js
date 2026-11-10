@@ -586,6 +586,9 @@ export async function getMe(req, res, next) {
       });
     }
 
+    // Automatically link any pre-existing workspaces/invitations and mark member as Active
+    await linkPreexistingWorkspaces(req.user);
+
     // Populate active workspace or workspace count if helpful
     const userJson = req.user.toJSON();
 

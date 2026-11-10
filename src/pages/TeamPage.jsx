@@ -103,6 +103,16 @@ export default function TeamPage() {
     }
   }, [activeWorkspace, loadInvitations]);
 
+  // Auto-refresh team members and invitations periodically (every 5s) so live presence updates in real time
+  useEffect(() => {
+    if (!activeWorkspace) return;
+    const interval = setInterval(() => {
+      if (reloadWorkspaces) reloadWorkspaces();
+      loadInvitations();
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [activeWorkspace, reloadWorkspaces, loadInvitations]);
+
   const handleOpenModal = () => {
     setFormData({ name: '', email: '', role: 'Member' });
     setError('');
