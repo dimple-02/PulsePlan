@@ -62,7 +62,12 @@ function PublicAuthRoute({ defaultMode }) {
   const location = useLocation();
 
   if (!isLoading && isAuthenticated) {
-    const destination = location.state?.from?.pathname || '/';
+    const searchParams = new URLSearchParams(location.search);
+    const redirectParam = searchParams.get('redirect');
+    const fromPath = location.state?.from?.pathname
+      ? `${location.state.from.pathname}${location.state.from.search || ''}`
+      : (typeof location.state?.from === 'string' ? location.state.from : null);
+    const destination = fromPath || redirectParam || '/';
     return <Navigate to={destination} replace />;
   }
 

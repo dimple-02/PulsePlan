@@ -18,6 +18,31 @@ import { Workspace } from '../models/Workspace.js';
 import mongoose from 'mongoose';
 import { sendTaskAssignmentEmail } from '../services/mailService.js';
 
+// Helper: Check whether user can access a project within their authorized workspace
+function canUserAccessProject(user, workspaceRole, project) {
+  if (!user || !project) return false;
+  if (workspaceRole === 'Owner' || workspaceRole === 'Admin') return true;
+  if (project.lead === user.name) return true;
+  const isCollab = project.collaborators?.some(
+    (c) =>
+      (c.userId && c.userId.toString() === user._id.toString()) ||
+      (c.email && c.email.toLowerCase() === user.email?.toLowerCase())
+  );
+  if (isCollab) return true;
+  return !project.collaborators || project.collaborators.length === 0;
+}
+
+// Helper: Retrieve project-specific role for a user
+function getUserProjectRole(user, project) {
+  if (!user || !project) return null;
+  const collab = project.collaborators?.find(
+    (c) =>
+      (c.userId && c.userId.toString() === user._id.toString()) ||
+      (c.email && c.email.toLowerCase() === user.email?.toLowerCase())
+  );
+  return collab?.role || null;
+}
+
 /**
  * Task Controller
  * 
@@ -52,6 +77,13 @@ export async function getTasks(req, res, next) {
         });
       }
 
+      if (req.user && !canUserAccessProject(req.user, req.workspaceRole, projectExists)) {
+        return res.status(403).json({
+          success: false,
+          message: 'Access denied: You do not have permission to view tasks in this project.',
+        });
+      }
+
       filter.projectId = req.query.projectId;
     }
 
@@ -76,7 +108,20 @@ export async function getTasks(req, res, next) {
       ];
     }
 
-    const tasks = await Task.find(filter).sort({ createdAt: -1 });
+    let tasks = await Task.find(filter).sort({ createdAt: -1 });
+
+    // If no specific projectId filter was requested, filter out tasks from restricted projects
+    const isWorkspaceAdminOrOwner =
+      req.workspaceRole === 'Owner' || req.workspaceRole === 'Admin';
+    if (req.user && !isWorkspaceAdminOrOwner && !req.query.projectId) {
+      const allowedProjects = await Project.find({ workspaceId: req.workspaceId });
+      const accessibleProjectIds = new Set(
+        allowedProjects
+          .filter((p) => canUserAccessProject(req.user, req.workspaceRole, p))
+          .map((p) => p._id.toString())
+      );
+      tasks = tasks.filter((t) => accessibleProjectIds.has(t.projectId?.toString()));
+    }
 
     res.status(200).json({
       success: true,
@@ -91,16 +136,27 @@ export async function getTasks(req, res, next) {
 // GET /api/tasks/:id
 export async function getTaskById(req, res, next) {
   try {
+    const { id } = req.params;
     // Syllabus Demonstration: Mongoose Relationships & References (.populate)
     // Resolves the foreign key reference task.projectId -> Project document
     const task = await Task.findOne({ _id: id, workspaceId: req.workspaceId })
-      .populate('projectId', 'name key category');
+      .populate('projectId', 'name key category lead collaborators');
 
     if (!task) {
       return res.status(404).json({
         success: false,
         message: `Task with ID '${id}' was not found in active workspace scope.`,
       });
+    }
+
+    if (task.projectId && req.user) {
+      const hasAccess = canUserAccessProject(req.user, req.workspaceRole, task.projectId);
+      if (!hasAccess) {
+        return res.status(403).json({
+          success: false,
+          message: 'Access denied: You do not have permission to view this task.',
+        });
+      }
     }
 
     res.status(200).json({
@@ -145,6 +201,31 @@ export async function createTask(req, res, next) {
         success: false,
         message: `Project '${projectId}' does not exist or does not belong to the active workspace. Cross-workspace assignment is strictly prohibited.`,
       });
+    }
+
+    // RBAC: Check project role
+    if (req.user) {
+      const isWorkspaceAdminOrOwner =
+        req.workspaceRole === 'Owner' || req.workspaceRole === 'Admin';
+      const collab = project.collaborators?.find(
+        (c) =>
+          (c.userId && c.userId.toString() === req.user._id.toString()) ||
+          (c.email && c.email.toLowerCase() === req.user.email.toLowerCase())
+      );
+      if (collab?.role === 'Viewer') {
+        return res.status(403).json({
+          success: false,
+          message: 'Access denied: Project viewers have read-only access and cannot create tasks.',
+        });
+      }
+      const isLead = project.lead === req.user.name;
+      const isOpen = !project.collaborators || project.collaborators.length === 0;
+      if (!isWorkspaceAdminOrOwner && !isLead && !collab && !isOpen) {
+        return res.status(403).json({
+          success: false,
+          message: 'Access denied: You must be a project member to create tasks in this project.',
+        });
+      }
     }
 
     const task = await Task.create({
@@ -225,7 +306,28 @@ export async function updateTask(req, res, next) {
       });
     }
 
-    // If projectId is being updated, verify target project also belongs to same workspace
+    // RBAC: Check project role & permissions
+    if (req.user) {
+      const taskProject = await Project.findById(existingTask.projectId);
+      if (taskProject) {
+        const hasAccess = canUserAccessProject(req.user, req.workspaceRole, taskProject);
+        if (!hasAccess) {
+          return res.status(403).json({
+            success: false,
+            message: 'Access denied: You do not have permission to modify tasks in this project.',
+          });
+        }
+        const collabRole = getUserProjectRole(req.user, taskProject);
+        if (collabRole === 'Viewer') {
+          return res.status(403).json({
+            success: false,
+            message: 'Access denied: Project viewers have read-only access and cannot modify tasks.',
+          });
+        }
+      }
+    }
+
+    // If projectId is being updated, verify target project also belongs to same workspace and user has permission
     if (req.body.projectId && req.body.projectId !== existingTask.projectId.toString()) {
       if (!mongoose.Types.ObjectId.isValid(req.body.projectId)) {
         return res.status(400).json({
@@ -244,6 +346,24 @@ export async function updateTask(req, res, next) {
           success: false,
           message: 'Target project does not belong to the active workspace.',
         });
+      }
+
+      // Check user permission on target project
+      if (req.user) {
+        const hasTargetAccess = canUserAccessProject(req.user, req.workspaceRole, targetProject);
+        if (!hasTargetAccess) {
+          return res.status(403).json({
+            success: false,
+            message: 'Access denied: You do not have permission to move tasks into the target project.',
+          });
+        }
+        const targetCollabRole = getUserProjectRole(req.user, targetProject);
+        if (targetCollabRole === 'Viewer') {
+          return res.status(403).json({
+            success: false,
+            message: 'Access denied: Project viewers have read-only access and cannot add or move tasks into the target project.',
+          });
+        }
       }
     }
 
@@ -274,6 +394,9 @@ export async function updateTask(req, res, next) {
     );
 
     await recalculateProjectProgress(updatedTask.projectId, req.workspaceId);
+    if (existingTask.projectId.toString() !== updatedTask.projectId.toString()) {
+      await recalculateProjectProgress(existingTask.projectId, req.workspaceId);
+    }
 
     // If status changed, record activity in workspace
     if (updates.status && updates.status !== oldStatus) {
@@ -311,7 +434,7 @@ export async function deleteTask(req, res, next) {
   try {
     const { id } = req.params;
 
-    const task = await Task.findOneAndDelete({
+    const task = await Task.findOne({
       _id: id,
       workspaceId: req.workspaceId,
     });
@@ -322,6 +445,29 @@ export async function deleteTask(req, res, next) {
         message: `Task with ID '${id}' was not found in active workspace scope.`,
       });
     }
+
+    // RBAC: Check project role & permissions
+    if (req.user) {
+      const taskProject = await Project.findById(task.projectId);
+      if (taskProject) {
+        const hasAccess = canUserAccessProject(req.user, req.workspaceRole, taskProject);
+        if (!hasAccess) {
+          return res.status(403).json({
+            success: false,
+            message: 'Access denied: You do not have permission to delete tasks in this project.',
+          });
+        }
+        const collabRole = getUserProjectRole(req.user, taskProject);
+        if (collabRole === 'Viewer') {
+          return res.status(403).json({
+            success: false,
+            message: 'Access denied: Project viewers have read-only access and cannot delete tasks.',
+          });
+        }
+      }
+    }
+
+    await Task.findByIdAndDelete(task._id);
 
     await recalculateProjectProgress(task.projectId, req.workspaceId);
 

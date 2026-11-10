@@ -63,13 +63,18 @@ export default function VerifyEmailPage() {
   // If already authenticated and not loading, redirect to target
   useEffect(() => {
     if (!authLoading && isAuthenticated && isVerified) {
-      const destination = location.state?.from?.pathname || location.state?.from || '/';
+      const searchParams = new URLSearchParams(location.search);
+      const redirectParam = searchParams.get('redirect');
+      const fromPath = location.state?.from?.pathname
+        ? `${location.state.from.pathname}${location.state.from.search || ''}`
+        : (typeof location.state?.from === 'string' ? location.state.from : null);
+      const destination = fromPath || redirectParam || '/';
       const timeout = setTimeout(() => {
         navigate(destination, { replace: true });
       }, 1200);
       return () => clearTimeout(timeout);
     }
-  }, [authLoading, isAuthenticated, isVerified, location.state, navigate]);
+  }, [authLoading, isAuthenticated, isVerified, location.state, location.search, navigate]);
 
   // Handle OTP verification submission
   const handleVerify = async (e) => {
@@ -96,7 +101,12 @@ export default function VerifyEmailPage() {
       setIsVerified(true);
       setSuccessInfo('Email successfully verified! Signing you in...');
 
-      const destination = location.state?.from?.pathname || location.state?.from || '/';
+      const searchParams = new URLSearchParams(location.search);
+      const redirectParam = searchParams.get('redirect');
+      const fromPath = location.state?.from?.pathname
+        ? `${location.state.from.pathname}${location.state.from.search || ''}`
+        : (typeof location.state?.from === 'string' ? location.state.from : null);
+      const destination = fromPath || redirectParam || '/';
       setTimeout(() => {
         navigate(destination, { replace: true });
       }, 1000);

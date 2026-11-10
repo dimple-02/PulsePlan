@@ -147,18 +147,18 @@ export function WorkspaceProvider({ children }) {
   }, [activeWorkspace, activeProjectId]);
 
   // Switch active workspace
-  const switchWorkspace = useCallback((wsId) => {
+  const switchWorkspace = useCallback((wsId, targetProjId = null) => {
     setActiveWorkspaceId(wsId);
     try {
       localStorage.setItem(STORAGE_KEY_WS, String(wsId));
     } catch {}
 
     const targetWs = workspaces.find((w) => String(w._id || w.id) === String(wsId));
-    if (targetWs && targetWs.projects && targetWs.projects.length > 0) {
-      const defaultProjId = targetWs.projects[0]._id || targetWs.projects[0].id;
-      setActiveProjectId(defaultProjId);
+    const chosenProjId = targetProjId || (targetWs?.projects?.[0] ? (targetWs.projects[0]._id || targetWs.projects[0].id) : null);
+    if (chosenProjId) {
+      setActiveProjectId(chosenProjId);
       try {
-        localStorage.setItem(STORAGE_KEY_PROJ, String(defaultProjId));
+        localStorage.setItem(STORAGE_KEY_PROJ, String(chosenProjId));
       } catch {}
     } else {
       setActiveProjectId(null);

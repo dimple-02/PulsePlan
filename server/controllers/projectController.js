@@ -31,7 +31,26 @@ export async function getProjects(req, res, next) {
       ];
     }
 
-    const projects = await Project.find(filter).sort({ createdAt: -1 });
+    let projects = await Project.find(filter).sort({ createdAt: -1 });
+
+    // RBAC: If user is not workspace Owner or Admin, they should only see projects
+    // they are lead on, or collaborator on, or projects with open/no collaborators
+    const isWorkspaceAdminOrOwner =
+      req.workspaceRole === 'Owner' || req.workspaceRole === 'Admin';
+    if (req.user && !isWorkspaceAdminOrOwner) {
+      const userEmail = req.user.email?.toLowerCase();
+      const userIdStr = req.user._id?.toString();
+      projects = projects.filter((p) => {
+        if (p.lead === req.user.name) return true;
+        const isCollab = p.collaborators?.some(
+          (c) =>
+            (c.userId && c.userId.toString() === userIdStr) ||
+            (c.email && c.email.toLowerCase() === userEmail)
+        );
+        if (isCollab) return true;
+        return !p.collaborators || p.collaborators.length === 0;
+      });
+    }
 
     res.status(200).json({
       success: true,
@@ -54,6 +73,27 @@ export async function getProjectById(req, res, next) {
         success: false,
         message: `Project with ID '${id}' was not found in active workspace scope.`,
       });
+    }
+
+    // RBAC check
+    const isWorkspaceAdminOrOwner =
+      req.workspaceRole === 'Owner' || req.workspaceRole === 'Admin';
+    if (req.user && !isWorkspaceAdminOrOwner) {
+      const userEmail = req.user.email?.toLowerCase();
+      const userIdStr = req.user._id?.toString();
+      const isLead = project.lead === req.user.name;
+      const isCollab = project.collaborators?.some(
+        (c) =>
+          (c.userId && c.userId.toString() === userIdStr) ||
+          (c.email && c.email.toLowerCase() === userEmail)
+      );
+      const isOpen = !project.collaborators || project.collaborators.length === 0;
+      if (!isLead && !isCollab && !isOpen) {
+        return res.status(403).json({
+          success: false,
+          message: 'Access denied: You are not authorized to view this project.',
+        });
+      }
     }
 
     res.status(200).json({
@@ -103,6 +143,19 @@ export async function createProject(req, res, next) {
       });
     }
 
+    const initialCollaborators = req.user
+      ? [
+          {
+            userId: req.user._id,
+            email: req.user.email,
+            name: req.user.name,
+            role: 'Admin',
+            avatar: req.user.avatar || 'U',
+            joinedAt: new Date(),
+          },
+        ]
+      : [];
+
     const project = await Project.create({
       workspaceId: req.workspaceId,
       name,
@@ -117,6 +170,7 @@ export async function createProject(req, res, next) {
       deadline: deadline || '',
       lead: lead || req.user?.name || 'Workspace Member',
       members: members || [req.user?.avatar || 'U'],
+      collaborators: initialCollaborators,
       category: category || 'General',
     });
 
@@ -153,6 +207,38 @@ export async function updateProject(req, res, next) {
   try {
     const { id } = req.params;
 
+    const existingProject = await Project.findOne({
+      _id: id,
+      workspaceId: req.workspaceId,
+    });
+
+    if (!existingProject) {
+      return res.status(404).json({
+        success: false,
+        message: `Project with ID '${id}' was not found in active workspace scope.`,
+      });
+    }
+
+    // RBAC: Workspace Owner/Admin, Project Lead, or Project Collaborator with Admin role
+    const isWorkspaceAdminOrOwner =
+      req.workspaceRole === 'Owner' || req.workspaceRole === 'Admin';
+    const isLead = req.user && existingProject.lead === req.user.name;
+    const isCollabAdmin =
+      req.user &&
+      existingProject.collaborators?.some(
+        (c) =>
+          ((c.userId && c.userId.toString() === req.user._id.toString()) ||
+            (c.email && c.email.toLowerCase() === req.user.email.toLowerCase())) &&
+          c.role === 'Admin'
+      );
+
+    if (!isWorkspaceAdminOrOwner && !isLead && !isCollabAdmin) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied: You do not have permission to update this project.',
+      });
+    }
+
     const allowedUpdates = [
       'name',
       'description',
@@ -180,13 +266,6 @@ export async function updateProject(req, res, next) {
       { new: true, runValidators: true }
     );
 
-    if (!project) {
-      return res.status(404).json({
-        success: false,
-        message: `Project with ID '${id}' was not found in active workspace scope.`,
-      });
-    }
-
     res.status(200).json({
       success: true,
       message: 'Project updated successfully.',
@@ -202,7 +281,7 @@ export async function deleteProject(req, res, next) {
   try {
     const { id } = req.params;
 
-    const project = await Project.findOneAndDelete({
+    const project = await Project.findOne({
       _id: id,
       workspaceId: req.workspaceId,
     });
@@ -214,6 +293,20 @@ export async function deleteProject(req, res, next) {
       });
     }
 
+    // RBAC: Only Workspace Owner/Admin or Project Lead can delete a project
+    const isWorkspaceAdminOrOwner =
+      req.workspaceRole === 'Owner' || req.workspaceRole === 'Admin';
+    const isLead = req.user && project.lead === req.user.name;
+
+    if (!isWorkspaceAdminOrOwner && !isLead) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied: Only workspace administrators or the project lead can delete this project.',
+      });
+    }
+
+    await Project.findByIdAndDelete(project._id);
+
     // Cascade delete: remove all tasks referencing this project
     await Task.deleteMany({ projectId: project._id, workspaceId: req.workspaceId });
 
@@ -223,7 +316,7 @@ export async function deleteProject(req, res, next) {
         activities: {
           $each: [
             {
-              user: 'You',
+              user: req.user?.name || 'You',
               action: 'removed project',
               target: project.name,
               timestamp: 'Just now',

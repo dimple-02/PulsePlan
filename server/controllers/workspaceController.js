@@ -1,8 +1,29 @@
+import crypto from 'node:crypto';
 import { Workspace } from '../models/Workspace.js';
 import { Project } from '../models/Project.js';
 import { Task } from '../models/Task.js';
 import { User } from '../models/User.js';
+import { Invitation } from '../models/Invitation.js';
 import { sendWorkspaceInviteEmail } from '../services/mailService.js';
+import { hashToken } from '../services/otpService.js';
+import { ENV } from '../config/env.js';
+
+/**
+ * Helper to dynamically compute currentUserRole for a specific user
+ */
+function resolveCurrentUserRole(workspace, user) {
+  if (!user) return 'Member';
+  const member = workspace.members?.find(
+    (m) =>
+      (m.userId && m.userId.toString() === user._id.toString()) ||
+      (m.email && m.email.toLowerCase() === user.email.toLowerCase())
+  );
+  if (member?.role) return member.role;
+  const userWs = user.workspaces?.find(
+    (w) => w.workspaceId.toString() === workspace._id.toString()
+  );
+  return userWs?.role || 'Member';
+}
 
 /**
  * Workspace Controller
@@ -48,6 +69,7 @@ export async function getWorkspaces(req, res, next) {
         });
 
         const wsObj = ws.toJSON();
+        wsObj.currentUserRole = resolveCurrentUserRole(ws, req.user);
         wsObj.projects = enhancedProjects;
         wsObj.tasks = tasks;
         return wsObj;
@@ -110,6 +132,7 @@ export async function getWorkspaceById(req, res, next) {
     });
 
     const result = workspace.toJSON();
+    result.currentUserRole = resolveCurrentUserRole(workspace, req.user);
     result.projects = enhancedProjects;
     result.tasks = tasks;
 
@@ -251,7 +274,7 @@ export async function updateWorkspace(req, res, next) {
       }
     }
 
-    const allowedUpdates = ['name', 'plan', 'color', 'badgeColor', 'description', 'currentUserRole'];
+    const allowedUpdates = ['name', 'plan', 'color', 'badgeColor', 'description'];
     const updates = {};
 
     for (const key of allowedUpdates) {
@@ -428,19 +451,62 @@ export async function addWorkspaceMember(req, res, next) {
 
     await workspace.save();
 
-    // If user account exists, link this workspace to their account profile
+    // If user account exists, link this workspace to their account profile atomically
     if (registeredUser) {
-      const alreadyLinked = registeredUser.workspaces?.some(
-        (w) => w.workspaceId.toString() === workspace._id.toString()
+      await User.updateOne(
+        {
+          _id: registeredUser._id,
+          'workspaces.workspaceId': { $ne: workspace._id },
+        },
+        {
+          $push: {
+            workspaces: {
+              workspaceId: workspace._id,
+              role: newMember.role,
+            },
+          },
+        }
       );
-      if (!alreadyLinked) {
-        registeredUser.workspaces.push({
-          workspaceId: workspace._id,
-          role: newMember.role,
-        });
-        await registeredUser.save();
+
+      // Upgrade role if newMember.role is higher (Owner > Admin > Member) without downgrading
+      if (newMember.role === 'Owner') {
+        await User.updateOne(
+          { _id: registeredUser._id, 'workspaces.workspaceId': workspace._id },
+          { $set: { 'workspaces.$.role': 'Owner' } }
+        );
+      } else if (newMember.role === 'Admin') {
+        await User.updateOne(
+          { _id: registeredUser._id, workspaces: { $elemMatch: { workspaceId: workspace._id, role: 'Member' } } },
+          { $set: { 'workspaces.$.role': 'Admin' } }
+        );
       }
     }
+
+    // Generate secure invitation token
+    const rawToken = crypto.randomBytes(32).toString('hex');
+    const tokenHash = hashToken(rawToken);
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
+    await Invitation.deleteMany({
+      workspaceId: workspace._id,
+      projectId: null,
+      email: normalizedEmail,
+      status: { $in: ['expired', 'revoked', 'rejected'] },
+    });
+
+    await Invitation.create({
+      type: 'workspace',
+      email: normalizedEmail,
+      workspaceId: workspace._id,
+      projectId: null,
+      inviterId: req.user ? req.user._id : workspace.members[0]?.userId,
+      role: newMember.role,
+      tokenHash,
+      status: 'pending',
+      expiresAt,
+    });
+
+    const joinUrl = `${ENV.CLIENT_URL}/invitations/${rawToken}`;
 
     // Send member invitation email in background
     sendWorkspaceInviteEmail({
@@ -449,6 +515,7 @@ export async function addWorkspaceMember(req, res, next) {
       inviterName: req.user ? req.user.name : 'Team Administrator',
       workspaceName: workspace.name,
       role: newMember.role,
+      joinUrl,
     }).catch((err) => {
       console.error('[MailService Error]: Failed to dispatch member invitation:', err.message);
     });

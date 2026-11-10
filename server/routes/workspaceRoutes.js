@@ -2,6 +2,7 @@ import express from 'express';
 import { body, param } from 'express-validator';
 import { validate } from '../middleware/validate.js';
 import { requireAuth } from '../middleware/auth.js';
+import { tenantScope } from '../middleware/tenantScope.js';
 import {
   getWorkspaces,
   getWorkspaceById,
@@ -11,6 +12,12 @@ import {
   addWorkspaceMember,
   removeWorkspaceMember,
 } from '../controllers/workspaceController.js';
+import {
+  createWorkspaceInvitation,
+  getWorkspaceInvitations,
+  resendInvitation,
+  revokeInvitation,
+} from '../controllers/invitationController.js';
 import { getMessages, sendMessage } from '../controllers/messageController.js';
 
 const router = express.Router();
@@ -45,6 +52,81 @@ router.delete(
     validate,
   ],
   removeWorkspaceMember
+);
+
+// 2b. Workspace Email Invitations
+router.get(
+  ['/:workspaceId/invitations', '/:id/invitations'],
+  requireAuth,
+  (req, res, next) => {
+    if (!req.params.workspaceId && req.params.id) req.params.workspaceId = req.params.id;
+    next();
+  },
+  tenantScope,
+  [
+    param('workspaceId').optional().isMongoId().withMessage('Invalid workspace ID format'),
+    param('id').optional().isMongoId().withMessage('Invalid workspace ID format'),
+    validate,
+  ],
+  getWorkspaceInvitations
+);
+
+router.post(
+  ['/:workspaceId/invitations', '/:id/invitations'],
+  requireAuth,
+  (req, res, next) => {
+    if (!req.params.workspaceId && req.params.id) req.params.workspaceId = req.params.id;
+    next();
+  },
+  tenantScope,
+  [
+    param('workspaceId').optional().isMongoId().withMessage('Invalid workspace ID format'),
+    param('id').optional().isMongoId().withMessage('Invalid workspace ID format'),
+    body('email')
+      .trim()
+      .notEmpty()
+      .withMessage('Member email is required')
+      .isEmail()
+      .withMessage('Please enter a valid email address')
+      .normalizeEmail(),
+    body('role').optional().isIn(['Owner', 'Admin', 'Member']).withMessage('Invalid role'),
+    validate,
+  ],
+  createWorkspaceInvitation
+);
+
+router.post(
+  ['/:workspaceId/invitations/:invitationId/resend', '/:id/invitations/:invitationId/resend'],
+  requireAuth,
+  (req, res, next) => {
+    if (!req.params.workspaceId && req.params.id) req.params.workspaceId = req.params.id;
+    next();
+  },
+  tenantScope,
+  [
+    param('workspaceId').optional().isMongoId().withMessage('Invalid workspace ID format'),
+    param('id').optional().isMongoId().withMessage('Invalid workspace ID format'),
+    param('invitationId').isMongoId().withMessage('Invalid invitation ID format'),
+    validate,
+  ],
+  resendInvitation
+);
+
+router.post(
+  ['/:workspaceId/invitations/:invitationId/revoke', '/:id/invitations/:invitationId/revoke'],
+  requireAuth,
+  (req, res, next) => {
+    if (!req.params.workspaceId && req.params.id) req.params.workspaceId = req.params.id;
+    next();
+  },
+  tenantScope,
+  [
+    param('workspaceId').optional().isMongoId().withMessage('Invalid workspace ID format'),
+    param('id').optional().isMongoId().withMessage('Invalid workspace ID format'),
+    param('invitationId').isMongoId().withMessage('Invalid invitation ID format'),
+    validate,
+  ],
+  revokeInvitation
 );
 
 // 3. Workspace Messages & Team/Direct Chat

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useWorkspace } from '../hooks/useWorkspace';
 import {
   getInvitationByToken,
   acceptProjectInvitation,
@@ -21,6 +22,7 @@ import {
   UserPlus,
   LogOut,
   Sparkles,
+  Building2,
 } from 'lucide-react';
 import ThemeToggle from '../components/common/ThemeToggle';
 import Badge from '../components/common/Badge';
@@ -29,12 +31,14 @@ import Badge from '../components/common/Badge';
  * AcceptInvitationPage Component
  *
  * Handles public invitation links: /invitations/:token and /invite/:token
+ * Supports both Project Collaboration and Workspace Collaboration invitations.
  * Validates expiration, enforces recipient identity match, and executes atomic acceptance.
  */
 export default function AcceptInvitationPage() {
   const { token } = useParams();
   const navigate = useNavigate();
   const { user, isAuthenticated, logout } = useAuth();
+  const { switchWorkspace, reloadWorkspaces } = useWorkspace();
 
   const [invitationData, setInvitationData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -80,7 +84,26 @@ export default function AcceptInvitationPage() {
     setErrorMessage('');
     try {
       const res = await acceptProjectInvitation(token);
-      setAcceptedSuccess(res.data || true);
+      const acceptData = res.data || {};
+      setAcceptedSuccess(acceptData);
+
+      // Persist chosen workspace & project in localStorage for instant routing
+      if (acceptData.workspaceId) {
+        try {
+          localStorage.setItem('pulseplan_active_workspace_id', String(acceptData.workspaceId));
+          if (acceptData.projectId) {
+            localStorage.setItem('pulseplan_active_project_id', String(acceptData.projectId));
+          }
+        } catch {}
+      }
+
+      // Synchronize in-memory workspace context
+      if (reloadWorkspaces) {
+        await reloadWorkspaces();
+      }
+      if (switchWorkspace && acceptData.workspaceId) {
+        switchWorkspace(acceptData.workspaceId, acceptData.projectId);
+      }
     } catch (err) {
       setErrorMessage(err.message || 'Failed to accept invitation.');
     } finally {
@@ -103,12 +126,15 @@ export default function AcceptInvitationPage() {
 
   const handleSwitchAccount = async () => {
     await logout();
-    navigate('/login', { state: { from: { pathname: `/invitations/${token}` } } });
+    navigate(`/login?redirect=${encodeURIComponent(`/invitations/${token}`)}`, {
+      state: { from: { pathname: `/invitations/${token}` } },
+    });
   };
 
   const invitedEmail = invitationData?.invitedEmail?.toLowerCase();
   const currentEmail = user?.email?.toLowerCase();
   const isEmailMatching = isAuthenticated && currentEmail === invitedEmail;
+  const isProjectInvitation = Boolean(invitationData?.project || invitationData?.projectName);
 
   return (
     <div className="min-h-screen bg-[#FAF9F6] dark:bg-[#0B0A0F] text-[#14121C] dark:text-[#F8F6EF] flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8 relative transition-colors duration-150">
@@ -123,7 +149,7 @@ export default function AcceptInvitationPage() {
           <Layers className="w-6 h-6" />
         </div>
         <h1 className="text-2xl font-bold tracking-tight text-[#14121C] dark:text-[#F8F6EF] sm:text-3xl">
-          Project Collaboration
+          {isProjectInvitation ? 'Project Collaboration' : 'Workspace Collaboration'}
         </h1>
         <p className="mt-2 text-xs sm:text-sm text-[#5C576C] dark:text-[#A6A1B5]">
           You have been invited to collaborate on PulsePlan
@@ -179,14 +205,22 @@ export default function AcceptInvitationPage() {
                 Invitation Accepted!
               </h2>
               <p className="text-xs text-slate-500 dark:text-[#A6A1B5] leading-relaxed">
-                You have been added to <strong className="text-slate-800 dark:text-[#F8F6EF]">{invitationData?.project?.name}</strong> as an authorized collaborator.
+                {acceptedSuccess.type === 'project' || acceptedSuccess.projectName ? (
+                  <>
+                    You have been added to <strong className="text-slate-800 dark:text-[#F8F6EF]">{acceptedSuccess.projectName || invitationData?.project?.name}</strong> as an authorized collaborator.
+                  </>
+                ) : (
+                  <>
+                    You have joined <strong className="text-slate-800 dark:text-[#F8F6EF]">{acceptedSuccess.workspaceName || invitationData?.workspace?.name}</strong> as an authorized workspace member.
+                  </>
+                )}
               </p>
               <button
                 type="button"
-                onClick={() => navigate('/projects')}
+                onClick={() => navigate(acceptedSuccess.type === 'project' ? '/projects' : `/workspaces/${acceptedSuccess.workspaceId}`)}
                 className="w-full mt-4 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg bg-[#5935D6] hover:bg-[#4828b8] dark:bg-[#C9B8FF] dark:hover:bg-[#ded2ff] text-white dark:text-[#0B0A0F] font-semibold text-sm shadow-md transition-all cursor-pointer"
               >
-                <span>Open Project Board</span>
+                <span>{acceptedSuccess.type === 'project' ? 'Open Project Board' : 'Open Workspace'}</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             </div>
@@ -202,7 +236,7 @@ export default function AcceptInvitationPage() {
                 Invitation Declined
               </h3>
               <p className="text-xs text-slate-500 dark:text-[#A6A1B5]">
-                You have declined the invitation to join {invitationData?.project?.name}.
+                You have declined the invitation to join {invitationData?.project?.name || invitationData?.workspace?.name}.
               </p>
               <div className="pt-2">
                 <Link
@@ -236,15 +270,17 @@ export default function AcceptInvitationPage() {
                 </div>
               )}
 
-              {/* Project Details Box */}
+              {/* Details Box (Project or Workspace) */}
               <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#100E17] border border-slate-200 dark:border-white/10 space-y-3">
                 <div className="flex items-start justify-between gap-2">
                   <div>
                     <span className="text-[10px] font-mono font-bold text-indigo-600 dark:text-[#C9B8FF] bg-indigo-50 dark:bg-[#C9B8FF]/15 border border-indigo-200 dark:border-[#C9B8FF]/30 px-1.5 py-0.5 rounded uppercase">
-                      {invitationData.project?.key || 'PROJ'}
+                      {isProjectInvitation ? (invitationData.project?.key || 'PROJ') : 'WORKSPACE'}
                     </span>
                     <h3 className="text-base font-bold text-slate-900 dark:text-[#F8F6EF] mt-1.5">
-                      {invitationData.project?.name || invitationData.projectName}
+                      {isProjectInvitation
+                        ? (invitationData.project?.name || invitationData.projectName)
+                        : (invitationData.workspace?.name || invitationData.workspaceName)}
                     </h3>
                   </div>
                   <Badge variant="purple" size="sm">
@@ -262,7 +298,7 @@ export default function AcceptInvitationPage() {
                   <div className="flex justify-between">
                     <span>Invited By:</span>
                     <strong className="text-slate-800 dark:text-[#F8F6EF]">
-                      {invitationData.inviter?.name || invitationData.inviterName}
+                      {invitationData.inviter?.name || invitationData.inviterName || 'Team Administrator'}
                     </strong>
                   </div>
                   <div className="flex justify-between">
@@ -286,7 +322,7 @@ export default function AcceptInvitationPage() {
                   </div>
 
                   <Link
-                    to="/login"
+                    to={`/login?redirect=${encodeURIComponent(`/invitations/${token}`)}`}
                     state={{ from: { pathname: `/invitations/${token}` } }}
                     className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg bg-[#5935D6] hover:bg-[#4828b8] dark:bg-[#C9B8FF] dark:hover:bg-[#ded2ff] text-white dark:text-[#0B0A0F] font-semibold text-sm shadow-md transition-all"
                   >
@@ -295,7 +331,7 @@ export default function AcceptInvitationPage() {
                   </Link>
 
                   <Link
-                    to="/signup"
+                    to={`/signup?redirect=${encodeURIComponent(`/invitations/${token}`)}`}
                     state={{ from: { pathname: `/invitations/${token}` } }}
                     className="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/15 text-xs font-semibold text-slate-800 dark:text-[#F8F6EF] transition-colors"
                   >
@@ -352,7 +388,11 @@ export default function AcceptInvitationPage() {
                     ) : (
                       <>
                         <CheckCircle2 className="w-4 h-4" />
-                        <span>Accept Invitation & Join Project</span>
+                        <span>
+                          {isProjectInvitation
+                            ? 'Accept Invitation & Join Project'
+                            : 'Accept Invitation & Join Workspace'}
+                        </span>
                       </>
                     )}
                   </button>

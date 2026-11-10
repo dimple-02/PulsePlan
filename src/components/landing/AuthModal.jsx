@@ -115,7 +115,12 @@ export default function AuthModal({ isOpen, initialMode = 'login', onClose }) {
     try {
       await login({ email: email.trim(), password });
       onClose();
-      const destination = location.state?.from?.pathname || '/';
+      const searchParams = new URLSearchParams(location.search);
+      const redirectParam = searchParams.get('redirect');
+      const fromPath = location.state?.from?.pathname
+        ? `${location.state.from.pathname}${location.state.from.search || ''}`
+        : (typeof location.state?.from === 'string' ? location.state.from : null);
+      const destination = fromPath || redirectParam || '/';
       navigate(destination, { replace: true });
     } catch (err) {
       if (err.details?.code === 'EMAIL_NOT_VERIFIED' || err.code === 'EMAIL_NOT_VERIFIED') {
@@ -190,7 +195,12 @@ export default function AuthModal({ isOpen, initialMode = 'login', onClose }) {
       setSuccessMessage('Email verified successfully! Opening your workspace...');
       setTimeout(() => {
         onClose();
-        const destination = location.state?.from?.pathname || location.state?.from || '/';
+        const searchParams = new URLSearchParams(location.search);
+        const redirectParam = searchParams.get('redirect');
+        const fromPath = location.state?.from?.pathname
+          ? `${location.state.from.pathname}${location.state.from.search || ''}`
+          : (typeof location.state?.from === 'string' ? location.state.from : null);
+        const destination = fromPath || redirectParam || '/';
         navigate(destination, { replace: true });
       }, 900);
     } catch (err) {

@@ -10,6 +10,12 @@ import mongoose from 'mongoose';
  */
 const invitationSchema = new mongoose.Schema(
   {
+    type: {
+      type: String,
+      enum: ['project', 'workspace'],
+      default: 'project',
+      index: true,
+    },
     email: {
       type: String,
       required: [true, 'Invited email is required'],
@@ -20,7 +26,7 @@ const invitationSchema = new mongoose.Schema(
     projectId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Project',
-      required: [true, 'Target project ID is required'],
+      required: false,
       index: true,
     },
     workspaceId: {
@@ -36,7 +42,7 @@ const invitationSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ['Admin', 'Member', 'Viewer'],
+      enum: ['Owner', 'Admin', 'Member', 'Viewer'],
       default: 'Member',
     },
     tokenHash: {
@@ -47,8 +53,16 @@ const invitationSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ['pending', 'accepted', 'rejected', 'expired', 'revoked'],
+      enum: ['pending', 'claimed', 'accepted', 'rejected', 'expired', 'revoked'],
       default: 'pending',
+      index: true,
+    },
+    claimedAt: {
+      type: Date,
+    },
+    claimId: {
+      type: String,
+      default: null,
       index: true,
     },
     expiresAt: {
@@ -81,6 +95,7 @@ const invitationSchema = new mongoose.Schema(
 
 // Compound indexes for fast lookups and duplicate prevention
 invitationSchema.index({ projectId: 1, email: 1, status: 1 });
+invitationSchema.index({ workspaceId: 1, email: 1, status: 1 });
 invitationSchema.index({ workspaceId: 1, status: 1 });
 invitationSchema.index({ expiresAt: 1 });
 

@@ -38,7 +38,7 @@ import {
  * - Resend or revoke active invitations
  */
 export default function ProjectMembersModal({ isOpen, onClose, project }) {
-  const { activeWorkspace } = useWorkspace();
+  const { activeWorkspace, reloadWorkspaces } = useWorkspace();
   const { user } = useAuth();
 
   const [activeTab, setActiveTab] = useState('members'); // 'members' | 'invitations'
@@ -166,6 +166,9 @@ export default function ProjectMembersModal({ isOpen, onClose, project }) {
       setActionMessage({ type: 'success', text: 'Collaborator removed from project.' });
       const collabRes = await getProjectCollaborators(workspaceId, projectId);
       setCollaborators(collabRes?.collaborators || []);
+      if (reloadWorkspaces) {
+        reloadWorkspaces();
+      }
     } catch (err) {
       setActionMessage({
         type: 'error',

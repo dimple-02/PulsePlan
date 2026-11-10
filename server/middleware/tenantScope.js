@@ -18,6 +18,8 @@ export async function tenantScope(req, res, next) {
     const rawWorkspaceId =
       req.headers['x-workspace-id'] ||
       req.headers['x-tenant-id'] ||
+      req.params?.workspaceId ||
+      req.params?.wsId ||
       req.query.workspaceId ||
       req.body.workspaceId;
 
@@ -78,7 +80,10 @@ export async function tenantScope(req, res, next) {
       await req.user.save();
     }
 
-    req.workspaceRole = memberInWorkspace?.role || 'Member';
+    const userRoleInWs = req.user.workspaces?.find(
+      (w) => w.workspaceId.toString() === workspace._id.toString()
+    )?.role;
+    req.workspaceRole = memberInWorkspace?.role || userRoleInWs || 'Member';
 
     req.workspace = workspace;
     req.workspaceId = workspace._id;

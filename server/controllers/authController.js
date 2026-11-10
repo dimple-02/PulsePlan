@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
 import { User } from '../models/User.js';
 import { Workspace } from '../models/Workspace.js';
+import { Project } from '../models/Project.js';
 import { Otp } from '../models/Otp.js';
 import { ENV } from '../config/env.js';
 import { sendWelcomeEmail, sendOtpEmail } from '../services/emailService.js';
@@ -8,6 +9,92 @@ import { generateOtp, verifyOtp, hashOtp } from '../services/otpService.js';
 import { maskRecipient, redactSensitive } from '../config/mailer.js';
 
 const JWT_EXPIRES_IN = '7d';
+
+/**
+ * Automatically link newly registered/verified users to workspaces & projects
+ * they were invited to prior to registration.
+ */
+export async function linkPreexistingWorkspaces(user) {
+  try {
+    const normalizedEmail = user.email.toLowerCase().trim();
+
+    // 1. Atomically update all matching workspace member entries (userId & Active status)
+    await Workspace.updateMany(
+      { 'members.email': normalizedEmail },
+      {
+        $set: {
+          'members.$[elem].userId': user._id,
+          'members.$[elem].status': 'Active',
+        },
+      },
+      { arrayFilters: [{ 'elem.email': normalizedEmail }] }
+    );
+
+    // 2. Atomically update all matching project collaborator entries (userId)
+    await Project.updateMany(
+      { 'collaborators.email': normalizedEmail },
+      {
+        $set: {
+          'collaborators.$[elem].userId': user._id,
+        },
+      },
+      { arrayFilters: [{ 'elem.email': normalizedEmail }] }
+    );
+
+    // 3. Find all workspaces where this user has a member entry to synchronize user.workspaces atomically
+    const workspaces = await Workspace.find({ 'members.email': normalizedEmail });
+    for (const ws of workspaces) {
+      const member = ws.members?.find((m) => m.email?.toLowerCase() === normalizedEmail);
+      const memberRole = member?.role || 'Member';
+
+      // Atomic push: Add workspace link ONLY if it is not already present in user.workspaces (prevents duplicate entries)
+      await User.updateOne(
+        {
+          _id: user._id,
+          'workspaces.workspaceId': { $ne: ws._id },
+        },
+        {
+          $push: {
+            workspaces: {
+              workspaceId: ws._id,
+              role: memberRole,
+            },
+          },
+        }
+      );
+
+      // Atomic role upgrade: preserve role hierarchy (Owner > Admin > Member > Viewer). Never downgrade!
+      if (memberRole === 'Owner') {
+        await User.updateOne(
+          { _id: user._id, workspaces: { $elemMatch: { workspaceId: ws._id, role: { $ne: 'Owner' } } } },
+          { $set: { 'workspaces.$.role': 'Owner' } }
+        );
+      } else if (memberRole === 'Admin') {
+        await User.updateOne(
+          { _id: user._id, workspaces: { $elemMatch: { workspaceId: ws._id, role: { $in: ['Member', 'Viewer'] } } } },
+          { $set: { 'workspaces.$.role': 'Admin' } }
+        );
+      } else if (memberRole === 'Member') {
+        await User.updateOne(
+          { _id: user._id, workspaces: { $elemMatch: { workspaceId: ws._id, role: 'Viewer' } } },
+          { $set: { 'workspaces.$.role': 'Member' } }
+        );
+      }
+    }
+
+    // 4. Reload in-memory user document from database so caller code holding this user instance
+    // cannot later overwrite the atomic database changes with stale in-memory array data
+    const freshUser = await User.findById(user._id);
+    if (freshUser) {
+      user.workspaces = freshUser.workspaces;
+      if (freshUser.activeWorkspaceId) {
+        user.activeWorkspaceId = freshUser.activeWorkspaceId;
+      }
+    }
+  } catch (err) {
+    console.error('[Auth Sync Error]: Failed to link preexisting memberships:', err.message);
+  }
+}
 
 /**
  * Cookie configuration helper
@@ -143,6 +230,9 @@ export async function signup(req, res, next) {
     user.activeWorkspaceId = personalWorkspace._id;
     await user.save();
 
+    // Link any workspaces/projects invited prior to registration
+    await linkPreexistingWorkspaces(user);
+
     // 5. Generate 6-Digit Email Verification OTP (Expires in 5m, 60s cooldown)
     const otpData = await generateOtp(normalizedEmail, 'email_verification');
 
@@ -217,6 +307,9 @@ export async function verifyEmail(req, res, next) {
 
     user.isEmailVerified = true;
     await user.save();
+
+    // Link any workspaces/projects invited prior to verification
+    await linkPreexistingWorkspaces(user);
 
     // Clean up any remaining OTPs
     await Otp.deleteMany({ email: normalizedEmail, purpose: 'email_verification' });
@@ -379,6 +472,9 @@ export async function login(req, res, next) {
         },
       });
     }
+
+    // Link any workspaces/projects invited prior to login
+    await linkPreexistingWorkspaces(user);
 
     // Issue token and set session cookie
     const token = generateToken(user);

@@ -176,6 +176,33 @@ export async function addWorkspaceMember(workspaceId, memberData) {
     method: 'POST',
     body: JSON.stringify(memberData),
   }, workspaceId);
+  return result.data || result.member || result;
+}
+
+export async function getWorkspaceInvitations(workspaceId) {
+  const result = await apiRequest(`/workspaces/${workspaceId}/invitations`, { method: 'GET' }, workspaceId);
+  return result.data || [];
+}
+
+export async function createWorkspaceInvitation(workspaceId, { email, role }) {
+  const result = await apiRequest(`/workspaces/${workspaceId}/invitations`, {
+    method: 'POST',
+    body: JSON.stringify({ email, role }),
+  }, workspaceId);
+  return result.data;
+}
+
+export async function resendWorkspaceInvitation(workspaceId, invitationId) {
+  const result = await apiRequest(`/workspaces/${workspaceId}/invitations/${invitationId}/resend`, {
+    method: 'POST',
+  }, workspaceId);
+  return result.data;
+}
+
+export async function revokeWorkspaceInvitation(workspaceId, invitationId) {
+  const result = await apiRequest(`/workspaces/${workspaceId}/invitations/${invitationId}/revoke`, {
+    method: 'POST',
+  }, workspaceId);
   return result.data;
 }
 
@@ -379,8 +406,12 @@ export async function acceptProjectInvitation(token) {
   });
 }
 
+export const acceptInvitation = acceptProjectInvitation;
+
 export async function rejectProjectInvitation(token) {
   return await apiRequest(`/invitations/token/${encodeURIComponent(token)}/reject`, {
     method: 'POST',
   });
 }
+
+export const rejectInvitation = rejectProjectInvitation;
