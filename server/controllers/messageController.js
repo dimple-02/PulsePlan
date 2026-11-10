@@ -25,10 +25,10 @@ export async function getMessages(req, res, next) {
 
     // Strict Tenant Membership Authorization Check (IDOR Prevention)
     const isMember =
-      req.user.workspaces?.some((w) => w.workspaceId.toString() === workspace._id.toString()) ||
+      req.user.workspaces?.some((w) => w.workspaceId && String(w.workspaceId) === String(workspace._id)) ||
       workspace.members?.some(
         (m) =>
-          (m.userId && m.userId.toString() === req.user._id.toString()) ||
+          (m.userId && String(m.userId) === String(req.user._id)) ||
           (m.email && areEmailsEqual(m.email, req.user.email))
       );
 
@@ -39,18 +39,30 @@ export async function getMessages(req, res, next) {
       });
     }
 
-    const userEmail = req.user.email.toLowerCase();
+    const userEmail = req.user.email.toLowerCase().trim();
     let query = { workspaceId };
 
     if (recipientEmail && typeof recipientEmail === 'string' && recipientEmail.trim()) {
       const otherEmail = recipientEmail.toLowerCase().trim();
       const userRegex = getEmailRegex(userEmail);
       const otherRegex = getEmailRegex(otherEmail);
-      // 1-on-1 direct messages between current user and specified recipient
-      query.$or = [
-        { 'sender.email': { $regex: userRegex }, 'recipient.email': { $regex: otherRegex } },
-        { 'sender.email': { $regex: otherRegex }, 'recipient.email': { $regex: userRegex } },
-      ];
+
+      const isSelfChat = areEmailsEqual(userEmail, otherEmail);
+
+      if (isSelfChat) {
+        // Self-chat or self-notes query
+        query.$or = [
+          { 'sender.email': { $regex: userRegex }, 'recipient.email': { $regex: userRegex } },
+          { 'sender.email': { $regex: userRegex }, recipient: null },
+          { 'sender.email': { $regex: userRegex }, 'recipient.email': { $exists: false } },
+        ];
+      } else {
+        // 1-on-1 direct messages between current user and specified recipient
+        query.$or = [
+          { 'sender.email': { $regex: userRegex }, 'recipient.email': { $regex: otherRegex } },
+          { 'sender.email': { $regex: otherRegex }, 'recipient.email': { $regex: userRegex } },
+        ];
+      }
     } else {
       // General workspace team channel messages
       query.$or = [
@@ -94,10 +106,10 @@ export async function sendMessage(req, res, next) {
 
     // Strict Tenant Membership Authorization Check (IDOR Prevention)
     const isMember =
-      req.user.workspaces?.some((w) => w.workspaceId.toString() === workspace._id.toString()) ||
+      req.user.workspaces?.some((w) => w.workspaceId && String(w.workspaceId) === String(workspace._id)) ||
       workspace.members?.some(
         (m) =>
-          (m.userId && m.userId.toString() === req.user._id.toString()) ||
+          (m.userId && String(m.userId) === String(req.user._id)) ||
           (m.email && areEmailsEqual(m.email, req.user.email))
       );
 
@@ -120,17 +132,20 @@ export async function sendMessage(req, res, next) {
         name: recipientName || targetMember?.name || recipientEmail,
         email: normalizedRecipient,
         avatar: recipientAvatar || targetMember?.avatar || 'U',
-        userId: targetMember?.userId,
+        ...(targetMember?.userId ? { userId: targetMember.userId } : {}),
       };
     }
+
+    const senderName = req.user.name || 'User';
+    const senderAvatar = req.user.avatar || (senderName ? senderName.slice(0, 2).toUpperCase() : 'U');
 
     const message = await Message.create({
       workspaceId,
       sender: {
         userId: req.user._id,
-        name: req.user.name,
-        email: req.user.email.toLowerCase(),
-        avatar: req.user.avatar || req.user.name.slice(0, 2).toUpperCase(),
+        name: senderName,
+        email: req.user.email.toLowerCase().trim(),
+        avatar: senderAvatar,
       },
       recipient: recipientData,
       content: content.trim(),

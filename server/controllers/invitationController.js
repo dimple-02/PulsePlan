@@ -826,6 +826,14 @@ export async function acceptInvitation(req, res, next) {
       });
     }
 
+    // If recipient email has dots and current user email was stored dotless, harmonize user's account to original email
+    if (req.user.email !== invitedEmail && areEmailsEqual(req.user.email, invitedEmail)) {
+      req.user.email = invitedEmail;
+      await req.user.save();
+      const harmonizedToken = generateToken(req.user);
+      res.cookie('token', harmonizedToken, getCookieOptions());
+    }
+
     const workspace = await Workspace.findById(existing.workspaceId);
     if (!workspace) {
       return res.status(404).json({
@@ -991,6 +999,7 @@ export async function acceptInvitation(req, res, next) {
         workspace.members[existingMemberIndex].userId = req.user._id;
         workspace.members[existingMemberIndex].status = 'Active';
         workspace.members[existingMemberIndex].name = req.user.name;
+        workspace.members[existingMemberIndex].email = invitedEmail;
         // Never downgrade an existing higher workspace role
         if (!isProjectInvite && shouldUpgradeRole(originalWorkspaceMemberRole, claimedInvitation.role)) {
           workspace.members[existingMemberIndex].role = claimedInvitation.role;
@@ -999,7 +1008,7 @@ export async function acceptInvitation(req, res, next) {
         addedMemberToWorkspace = true;
         workspace.members.push({
           name: req.user.name,
-          email: req.user.email,
+          email: invitedEmail,
           role: wsRole,
           avatar: req.user.avatar || 'U',
           status: 'Active',
@@ -1067,6 +1076,7 @@ export async function acceptInvitation(req, res, next) {
         if (existingCollabIndex !== -1) {
           originalProjectCollaboratorRole = project.collaborators[existingCollabIndex].role;
           project.collaborators[existingCollabIndex].userId = req.user._id;
+          project.collaborators[existingCollabIndex].email = invitedEmail;
           // Never downgrade an existing higher project collaborator role
           if (shouldUpgradeRole(originalProjectCollaboratorRole, claimedInvitation.role)) {
             project.collaborators[existingCollabIndex].role = claimedInvitation.role;
@@ -1077,7 +1087,7 @@ export async function acceptInvitation(req, res, next) {
           addedCollaboratorToProject = true;
           project.collaborators.push({
             userId: req.user._id,
-            email: req.user.email,
+            email: invitedEmail,
             name: req.user.name,
             role: claimedInvitation.role,
             avatar: req.user.avatar || 'U',

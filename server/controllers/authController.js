@@ -45,6 +45,17 @@ export async function linkPreexistingWorkspaces(user) {
 
     // 3. Find all workspaces where this user has a member entry to synchronize user.workspaces atomically
     const workspaces = await Workspace.find({ 'members.email': { $regex: emailRegex } });
+
+    // Harmonize user.email with dot if pre-existing invitations/memberships have dots
+    const foundDotEmail = workspaces
+      .flatMap((w) => w.members || [])
+      .map((m) => m.email)
+      .find((e) => e && e.includes('.') && areEmailsEqual(e, normalizedEmail));
+
+    if (foundDotEmail && !user.email.split('@')[0].includes('.')) {
+      user.email = foundDotEmail.toLowerCase().trim();
+      await user.save();
+    }
     for (const ws of workspaces) {
       const member = ws.members?.find((m) => m.email && areEmailsEqual(m.email, normalizedEmail));
       const memberRole = member?.role || 'Member';
@@ -322,6 +333,9 @@ export async function verifyEmail(req, res, next) {
       });
     }
 
+    if (user.email !== normalizedEmail && areEmailsEqual(user.email, normalizedEmail)) {
+      user.email = normalizedEmail;
+    }
     user.isEmailVerified = true;
     await user.save();
 
@@ -494,6 +508,25 @@ export async function login(req, res, next) {
           requiresVerification: true,
         },
       });
+    }
+
+    // Harmonize stored email to the user's provided original email format (e.g. restore dots if previously stripped)
+    if (user.email !== normalizedEmail && areEmailsEqual(user.email, normalizedEmail)) {
+      const priorEmail = user.email;
+      user.email = normalizedEmail;
+      await user.save();
+
+      // Synchronize workspace members and project collaborators with the restored email
+      await Workspace.updateMany(
+        { 'members.email': { $regex: emailRegex } },
+        { $set: { 'members.$[elem].email': normalizedEmail } },
+        { arrayFilters: [{ 'elem.email': { $regex: emailRegex } }] }
+      );
+      await Project.updateMany(
+        { 'collaborators.email': { $regex: emailRegex } },
+        { $set: { 'collaborators.$[elem].email': normalizedEmail } },
+        { arrayFilters: [{ 'elem.email': { $regex: emailRegex } }] }
+      );
     }
 
     // Link any workspaces/projects invited prior to login

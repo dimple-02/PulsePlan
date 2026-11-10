@@ -17,7 +17,7 @@ import { areEmailsEqual } from '../../utils/emailUtils';
  * - Optimistic UI sending with automatic scroll-to-bottom
  */
 export default function MemberChatDrawer({ isOpen, onClose, member }) {
-  const { activeWorkspace } = useWorkspace();
+  const { activeWorkspace, activeWorkspaceId, showToast } = useWorkspace();
   const { user } = useAuth();
 
   const [messages, setMessages] = useState([]);
@@ -28,9 +28,9 @@ export default function MemberChatDrawer({ isOpen, onClose, member }) {
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
 
-  const workspaceId = activeWorkspace?._id || activeWorkspace?.id;
-  const currentEmail = user?.email?.toLowerCase();
-  const recipientEmail = member?.email?.toLowerCase();
+  const workspaceId = activeWorkspace?._id || activeWorkspace?.id || activeWorkspaceId;
+  const currentEmail = user?.email?.toLowerCase()?.trim();
+  const recipientEmail = member?.email?.toLowerCase()?.trim();
 
   // Scroll smoothly to bottom
   const scrollToBottom = () => {
@@ -44,7 +44,14 @@ export default function MemberChatDrawer({ isOpen, onClose, member }) {
 
     try {
       const data = await api.getWorkspaceMessages(workspaceId, recipientEmail);
-      setMessages(data || []);
+      setMessages((prev) => {
+        // Retain any pending optimistic messages that haven't landed in server state yet
+        const optimistic = prev.filter((m) => String(m._id).startsWith('temp-'));
+        if (optimistic.length === 0) return data || [];
+        const serverIds = new Set((data || []).map((m) => String(m._id)));
+        const stillPending = optimistic.filter((o) => !serverIds.has(String(o._id)));
+        return [...(data || []), ...stillPending];
+      });
     } catch (err) {
       console.error('[Chat] Failed to load messages:', err);
     } finally {
@@ -122,6 +129,9 @@ export default function MemberChatDrawer({ isOpen, onClose, member }) {
       console.error('[Chat] Failed to deliver message:', error);
       // Remove optimistic message if sending failed
       setMessages((prev) => prev.filter((m) => m._id !== optimisticMessage._id));
+      if (typeof showToast === 'function') {
+        showToast(error.message || 'Failed to send message. Please try again.', 'danger');
+      }
     } finally {
       setIsSending(false);
       setTimeout(() => inputRef.current?.focus(), 50);

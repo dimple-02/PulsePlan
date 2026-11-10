@@ -4,7 +4,9 @@ import { areEmailsEqual, canonicalizeEmail, getEmailRegex, NORMALIZE_EMAIL_OPTS 
 import { User } from '../models/User.js';
 import { Workspace } from '../models/Workspace.js';
 import { Project } from '../models/Project.js';
-import { linkPreexistingWorkspaces } from '../controllers/authController.js';
+import { Message } from '../models/Message.js';
+import { linkPreexistingWorkspaces, login } from '../controllers/authController.js';
+import { getMessages, sendMessage } from '../controllers/messageController.js';
 import { ENV } from '../config/env.js';
 
 let passCount = 0;
@@ -223,6 +225,190 @@ async function runTests() {
     matchedCollab && matchedCollab.userId?.toString() === registeredUser._id.toString(),
     'Project collaborator entry with dot linked to user registered without dot'
   );
+
+  // --- SECTION 6: Auto-restoring OG Gmail with dot on login ---
+  console.log('\n--- SECTION 6: Login Auto-restoration of OG Gmail with Dot ---');
+  function createMockReqRes(options = {}) {
+    let statusCode = 200;
+    let payload = null;
+    let cookieVal = null;
+    const req = {
+      body: options.body || {},
+      params: options.params || {},
+      query: options.query || {},
+      user: options.user || null,
+      cookies: options.cookies || {},
+    };
+    const res = {
+      status(c) {
+        statusCode = c;
+        return this;
+      },
+      json(d) {
+        payload = d;
+        return this;
+      },
+      cookie(name, val) {
+        cookieVal = val;
+        return this;
+      },
+      _getStatus() {
+        return statusCode;
+      },
+      _getData() {
+        return payload;
+      },
+    };
+    const next = (err) => {
+      if (err) throw err;
+    };
+    return { req, res, next };
+  }
+
+  // Create dotless user in DB
+  const dotlessEmail = `ogtestuser${timestamp}@gmail.com`;
+  const ogEmailWithDot = `og.test.user.${timestamp}@gmail.com`;
+  const legacyDotlessUser = await User.create({
+    name: 'OG User',
+    email: dotlessEmail,
+    password: 'Password123!',
+    avatar: 'OG',
+    isEmailVerified: true,
+  });
+
+  // User logs in providing their original email with dots
+  const loginCtx = createMockReqRes({
+    body: {
+      email: ogEmailWithDot,
+      password: 'Password123!',
+    },
+  });
+  await login(loginCtx.req, loginCtx.res, loginCtx.next);
+
+  testAssert(loginCtx.res._getStatus() === 200, 'Login succeeded with HTTP 200');
+  const loginData = loginCtx.res._getData();
+  testAssert(
+    loginData.data.user.email === ogEmailWithDot,
+    'Returned user payload restores the original Gmail email containing dots'
+  );
+
+  const refreshedDbUser = await User.findById(legacyDotlessUser._id);
+  testAssert(
+    refreshedDbUser.email === ogEmailWithDot,
+    'MongoDB user document email is permanently updated to original Gmail with dots'
+  );
+
+  // --- SECTION 7: Workspace Chat / Messaging with Dot Variance & Multi-Tenant Isolation ---
+  console.log('\n--- SECTION 7: Workspace Chat & Direct Messaging ---');
+
+  // Add refreshedDbUser as a member of ws
+  await Workspace.updateOne(
+    { _id: ws._id },
+    {
+      $push: {
+        members: {
+          name: refreshedDbUser.name,
+          email: refreshedDbUser.email,
+          role: 'Member',
+          avatar: refreshedDbUser.avatar,
+          status: 'Active',
+          userId: refreshedDbUser._id,
+        },
+      },
+    }
+  );
+
+  // User 1 sends message to User 2 (refreshedDbUser)
+  const sendCtx1 = createMockReqRes({
+    params: { id: ws._id.toString() },
+    user: registeredUser,
+    body: {
+      content: 'Hello collaborator with dots!',
+      recipientEmail: ogEmailWithDot,
+      recipientName: refreshedDbUser.name,
+      recipientAvatar: refreshedDbUser.avatar,
+    },
+  });
+  await sendMessage(sendCtx1.req, sendCtx1.res, sendCtx1.next);
+
+  testAssert(sendCtx1.res._getStatus() === 201, 'User 1 successfully posted direct message (HTTP 201)');
+  const sentMsg = sendCtx1.res._getData()?.data;
+  testAssert(
+    sentMsg && sentMsg.content === 'Hello collaborator with dots!',
+    'Message content matches input'
+  );
+  testAssert(
+    sentMsg?.recipient?.email === ogEmailWithDot,
+    'Recipient email preserved with dots'
+  );
+
+  // User 2 fetches messages with query ?recipientEmail=<registeredUser.email>
+  const getCtx1 = createMockReqRes({
+    params: { id: ws._id.toString() },
+    user: refreshedDbUser,
+    query: { recipientEmail: registeredUser.email },
+  });
+  await getMessages(getCtx1.req, getCtx1.res, getCtx1.next);
+
+  testAssert(getCtx1.res._getStatus() === 200, 'User 2 fetched messages successfully (HTTP 200)');
+  const messagesUser2 = getCtx1.res._getData()?.data || [];
+  testAssert(
+    messagesUser2.some((m) => m.content === 'Hello collaborator with dots!'),
+    'Recipient User 2 retrieved the direct message across dot variants'
+  );
+
+  // Self-chat test: User 1 sends message to themselves
+  const sendSelfCtx = createMockReqRes({
+    params: { id: ws._id.toString() },
+    user: registeredUser,
+    body: {
+      content: 'Self note for testing chat',
+      recipientEmail: registeredUser.email,
+    },
+  });
+  await sendMessage(sendSelfCtx.req, sendSelfCtx.res, sendSelfCtx.next);
+  testAssert(sendSelfCtx.res._getStatus() === 201, 'Self message posted successfully');
+
+  // User 1 queries self-messages
+  const getSelfCtx = createMockReqRes({
+    params: { id: ws._id.toString() },
+    user: registeredUser,
+    query: { recipientEmail: registeredUser.email },
+  });
+  await getMessages(getSelfCtx.req, getSelfCtx.res, getSelfCtx.next);
+  const selfMessages = getSelfCtx.res._getData()?.data || [];
+  testAssert(
+    selfMessages.some((m) => m.content === 'Self note for testing chat'),
+    'Self-chat messages retrieved correctly'
+  );
+
+  // IDOR check: Non-member is blocked from sending message
+  const nonMemberUser = await User.create({
+    name: 'Outsider',
+    email: `outsider.${timestamp}@gmail.com`,
+    password: 'Password123!',
+    avatar: 'OS',
+    isEmailVerified: true,
+  });
+
+  const sendBlockedCtx = createMockReqRes({
+    params: { id: ws._id.toString() },
+    user: nonMemberUser,
+    body: {
+      content: 'Intruder message',
+      recipientEmail: ogEmailWithDot,
+    },
+  });
+  await sendMessage(sendBlockedCtx.req, sendBlockedCtx.res, sendBlockedCtx.next);
+  testAssert(
+    sendBlockedCtx.res._getStatus() === 403,
+    'Non-member posting to workspace is blocked with HTTP 403 Forbidden'
+  );
+
+  // Cleanup extra test data
+  await Message.deleteMany({ workspaceId: ws._id });
+  await User.deleteOne({ _id: legacyDotlessUser._id });
+  await User.deleteOne({ _id: nonMemberUser._id });
 
   // Cleanup
   await Workspace.deleteOne({ _id: ws._id });

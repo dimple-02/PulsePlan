@@ -38,7 +38,7 @@ import { areEmailsEqual } from '../utils/emailUtils';
 export default function AcceptInvitationPage() {
   const { token } = useParams();
   const navigate = useNavigate();
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, logout, checkSession } = useAuth();
   const { switchWorkspace, reloadWorkspaces } = useWorkspace();
 
   const [invitationData, setInvitationData] = useState(null);
@@ -101,6 +101,9 @@ export default function AcceptInvitationPage() {
       // Synchronize in-memory workspace context
       if (reloadWorkspaces) {
         await reloadWorkspaces();
+      }
+      if (checkSession) {
+        await checkSession();
       }
       if (switchWorkspace && acceptData.workspaceId) {
         switchWorkspace(acceptData.workspaceId, acceptData.projectId);
