@@ -15,7 +15,8 @@
     "test:brevo": "node server/tests/brevoApiEmailTest.js",
     "test:auth": "node server/tests/authTest.js",
     "test:security": "node server/tests/securityAuditTest.js",
-    "test:hardening": "node server/tests/securityHardeningTest.js"
+    "test:hardening": "node server/tests/securityHardeningTest.js",
+    "test:onboarding": "node server/tests/onboardingTest.js"
   },
   "dependencies": {
     "bootstrap": "^5.3.8",

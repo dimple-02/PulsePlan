@@ -9,6 +9,7 @@ import {
   getMe,
   verifyEmail,
   resendVerification,
+  saveOnboarding,
 } from '../controllers/authController.js';
 import {
   forgotPassword,
@@ -147,6 +148,14 @@ router.post('/logout', optionalAuth, logout);
  * Protected by requireAuth middleware
  */
 router.get('/me', requireAuth, getMe);
+
+/**
+ * PATCH /api/auth/onboarding
+ * POST /api/auth/onboarding
+ * Saves or skips first-time onboarding preferences for the authenticated user
+ */
+router.patch('/onboarding', requireAuth, saveOnboarding);
+router.post('/onboarding', requireAuth, saveOnboarding);
 
 /**
  * POST /api/auth/forgot-password

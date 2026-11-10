@@ -12,6 +12,7 @@ import LandingPage from '../pages/LandingPage';
 import ForgotPasswordPage from '../pages/ForgotPasswordPage';
 import VerifyEmailPage from '../pages/VerifyEmailPage';
 import AcceptInvitationPage from '../pages/AcceptInvitationPage';
+import OnboardingPage from '../pages/OnboardingPage';
 import ProtectedRoute from '../components/auth/ProtectedRoute';
 import { useAuth } from '../context/AuthContext';
 import { Layers, Loader2 } from 'lucide-react';
@@ -24,7 +25,7 @@ import { Layers, Loader2 } from 'lucide-react';
  * - Authenticated users: Render the AppLayout and DashboardPage
  */
 function RootRoute() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
     return (
@@ -41,6 +42,11 @@ function RootRoute() {
   }
 
   if (isAuthenticated) {
+    // If newly registered user has incomplete onboarding, route them to onboarding setup
+    if (user?.onboarding && user.onboarding.completed === false && user.onboarding.skipped === false) {
+      return <Navigate to="/onboarding" replace />;
+    }
+
     return (
       <AppLayout>
         <DashboardPage />
@@ -58,7 +64,7 @@ function RootRoute() {
  * If the user is already authenticated, redirects them to their intended destination or home.
  */
 function PublicAuthRoute({ defaultMode }) {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
   const location = useLocation();
 
   if (!isLoading && isAuthenticated) {
@@ -67,6 +73,22 @@ function PublicAuthRoute({ defaultMode }) {
     const fromPath = location.state?.from?.pathname
       ? `${location.state.from.pathname}${location.state.from.search || ''}`
       : (typeof location.state?.from === 'string' ? location.state.from : null);
+
+    const needsOnboarding = Boolean(
+      user?.onboarding &&
+      user.onboarding.completed === false &&
+      user.onboarding.skipped === false
+    );
+
+    const isInvite =
+      (redirectParam && (redirectParam.startsWith('/invitations/') || redirectParam.startsWith('/invite/'))) ||
+      (fromPath && (fromPath.startsWith('/invitations/') || fromPath.startsWith('/invite/')));
+
+    if (needsOnboarding && !isInvite) {
+      const targetQuery = (fromPath || redirectParam) ? `?redirect=${encodeURIComponent(fromPath || redirectParam)}` : '';
+      return <Navigate to={`/onboarding${targetQuery}`} replace />;
+    }
+
     const destination = fromPath || redirectParam || '/';
     return <Navigate to={destination} replace />;
   }
@@ -101,6 +123,7 @@ export default function AppRoutes() {
 
       {/* Protected SaaS Application Routes */}
       <Route element={<ProtectedRoute />}>
+        <Route path="/onboarding" element={<OnboardingPage />} />
         <Route element={<AppLayout />}>
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/workspaces" element={<WorkspacePage />} />

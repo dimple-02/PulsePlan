@@ -11,7 +11,7 @@ import { Layers, Loader2 } from 'lucide-react';
  * - Redirects unauthenticated visitors to /login, preserving target URL for post-login redirection.
  */
 export default function ProtectedRoute() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
   const location = useLocation();
 
   if (isLoading) {
@@ -30,6 +30,18 @@ export default function ProtectedRoute() {
 
   if (!isAuthenticated) {
     return <Navigate to="/" replace state={{ from: location, openLogin: true }} />;
+  }
+
+  // Check if newly registered user has incomplete onboarding
+  const needsOnboarding = Boolean(
+    user?.onboarding &&
+    user.onboarding.completed === false &&
+    user.onboarding.skipped === false
+  );
+
+  // If user requires onboarding and is trying to access other private routes, redirect to /onboarding
+  if (needsOnboarding && location.pathname !== '/onboarding') {
+    return <Navigate to="/onboarding" replace state={{ from: location }} />;
   }
 
   return <Outlet />;

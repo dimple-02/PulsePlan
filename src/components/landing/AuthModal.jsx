@@ -191,7 +191,7 @@ export default function AuthModal({ isOpen, initialMode = 'login', onClose }) {
 
     setIsSubmitting(true);
     try {
-      await verifyEmailOtp({ email: email.trim().toLowerCase(), otp: cleanOtp });
+      const verifiedUser = await verifyEmailOtp({ email: email.trim().toLowerCase(), otp: cleanOtp });
       setSuccessMessage('Email verified successfully! Opening your workspace...');
       setTimeout(() => {
         onClose();
@@ -200,8 +200,24 @@ export default function AuthModal({ isOpen, initialMode = 'login', onClose }) {
         const fromPath = location.state?.from?.pathname
           ? `${location.state.from.pathname}${location.state.from.search || ''}`
           : (typeof location.state?.from === 'string' ? location.state.from : null);
-        const destination = fromPath || redirectParam || '/';
-        navigate(destination, { replace: true });
+        const rawDest = fromPath || redirectParam || '/';
+
+        const isInvite = rawDest.startsWith('/invitations/') || rawDest.startsWith('/invite/');
+        const needsOnboarding = Boolean(
+          verifiedUser?.onboarding &&
+          verifiedUser.onboarding.completed === false &&
+          verifiedUser.onboarding.skipped === false
+        );
+
+        let finalDest = rawDest;
+        if (isInvite) {
+          finalDest = rawDest;
+        } else if (needsOnboarding) {
+          const destParam = rawDest && rawDest !== '/' ? `?redirect=${encodeURIComponent(rawDest)}` : '';
+          finalDest = `/onboarding${destParam}`;
+        }
+
+        navigate(finalDest, { replace: true });
       }, 900);
     } catch (err) {
       const details = err.details || {};

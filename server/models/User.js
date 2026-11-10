@@ -23,6 +23,54 @@ const userWorkspaceSchema = new mongoose.Schema(
   { _id: false }
 );
 
+/**
+ * First-Time User Onboarding Schema
+ * Captures user role, primary use-case goals, team size, and experience level.
+ */
+const onboardingSchema = new mongoose.Schema(
+  {
+    completed: {
+      type: Boolean,
+      default: false,
+    },
+    skipped: {
+      type: Boolean,
+      default: false,
+    },
+    role: {
+      type: String,
+      enum: ['Student', 'Developer', 'Team Lead', 'Project Manager', 'Freelancer', 'Other', null],
+      default: null,
+    },
+    goals: {
+      type: [String],
+      enum: [
+        'Personal task management',
+        'College projects',
+        'Team collaboration',
+        'Software development',
+        'Business and project management',
+      ],
+      default: [],
+    },
+    teamSize: {
+      type: String,
+      enum: ['Just me', '2–5 people', '6–10 people', '11–25 people', '25+ people', null],
+      default: null,
+    },
+    experience: {
+      type: String,
+      enum: ['Beginner', 'Some experience', 'Experienced', null],
+      default: null,
+    },
+    completedAt: {
+      type: Date,
+      default: null,
+    },
+  },
+  { _id: false }
+);
+
 const userSchema = new mongoose.Schema(
   {
     name: {
@@ -66,6 +114,10 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
       index: true,
+    },
+    onboarding: {
+      type: onboardingSchema,
+      default: null,
     },
   },
   {

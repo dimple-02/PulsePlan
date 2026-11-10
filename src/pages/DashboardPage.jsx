@@ -1,9 +1,11 @@
 import React, { useMemo } from 'react';
+import { useAuth } from '../context/AuthContext';
 import { useWorkspace } from '../hooks/useWorkspace';
 import MetricCard from '../components/dashboard/MetricCard';
 import ProjectProgressList from '../components/dashboard/ProjectProgressList';
 import RecentActivityFeed from '../components/dashboard/RecentActivityFeed';
 import QuickTaskSummary from '../components/dashboard/QuickTaskSummary';
+import PersonalizedOnboardingCard from '../components/dashboard/PersonalizedOnboardingCard';
 import { Card, CardHeader, CardTitle, CardBody } from '../components/common/Card';
 import Button from '../components/common/Button';
 import Badge from '../components/common/Badge';
@@ -24,6 +26,7 @@ import { Link } from 'react-router-dom';
  * Uses useMemo for computing KPI metrics dynamically from activeWorkspace state.
  */
 export default function DashboardPage() {
+  const { user } = useAuth();
   const { activeWorkspace, isLoading } = useWorkspace();
 
   // Compute metrics dynamically for the active tenant
@@ -99,6 +102,9 @@ export default function DashboardPage() {
         {/* Ambient background glow decoration */}
         <div className="absolute -right-10 -bottom-10 w-64 h-64 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none" />
       </div>
+
+      {/* Personalized Onboarding Guidance Banner */}
+      <PersonalizedOnboardingCard user={user} />
 
       {/* KPI Metric Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

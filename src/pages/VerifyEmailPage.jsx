@@ -28,7 +28,7 @@ import { useAuth } from '../context/AuthContext';
 export default function VerifyEmailPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { verifyEmailOtp, resendVerificationOtp, isAuthenticated, isLoading: authLoading } = useAuth();
+  const { user, verifyEmailOtp, resendVerificationOtp, isAuthenticated, isLoading: authLoading } = useAuth();
 
   // Read initial email from navigation state or URL query parameter
   const searchParams = new URLSearchParams(location.search);
@@ -68,13 +68,29 @@ export default function VerifyEmailPage() {
       const fromPath = location.state?.from?.pathname
         ? `${location.state.from.pathname}${location.state.from.search || ''}`
         : (typeof location.state?.from === 'string' ? location.state.from : null);
-      const destination = fromPath || redirectParam || '/';
+      const rawDest = fromPath || redirectParam || '/';
+
+      const isInvite = rawDest.startsWith('/invitations/') || rawDest.startsWith('/invite/');
+      const needsOnboarding = Boolean(
+        user?.onboarding &&
+        user.onboarding.completed === false &&
+        user.onboarding.skipped === false
+      );
+
+      let finalDest = rawDest;
+      if (isInvite) {
+        finalDest = rawDest;
+      } else if (needsOnboarding) {
+        const destParam = rawDest && rawDest !== '/' ? `?redirect=${encodeURIComponent(rawDest)}` : '';
+        finalDest = `/onboarding${destParam}`;
+      }
+
       const timeout = setTimeout(() => {
-        navigate(destination, { replace: true });
+        navigate(finalDest, { replace: true });
       }, 1200);
       return () => clearTimeout(timeout);
     }
-  }, [authLoading, isAuthenticated, isVerified, location.state, location.search, navigate]);
+  }, [authLoading, isAuthenticated, isVerified, location.state, location.search, navigate, user]);
 
   // Handle OTP verification submission
   const handleVerify = async (e) => {
@@ -97,7 +113,7 @@ export default function VerifyEmailPage() {
 
     setIsVerifying(true);
     try {
-      await verifyEmailOtp({ email: trimmedEmail, otp: cleanOtp });
+      const verifiedUser = await verifyEmailOtp({ email: trimmedEmail, otp: cleanOtp });
       setIsVerified(true);
       setSuccessInfo('Email successfully verified! Signing you in...');
 
@@ -106,9 +122,25 @@ export default function VerifyEmailPage() {
       const fromPath = location.state?.from?.pathname
         ? `${location.state.from.pathname}${location.state.from.search || ''}`
         : (typeof location.state?.from === 'string' ? location.state.from : null);
-      const destination = fromPath || redirectParam || '/';
+      const rawDest = fromPath || redirectParam || '/';
+
+      const isInvite = rawDest.startsWith('/invitations/') || rawDest.startsWith('/invite/');
+      const needsOnboarding = Boolean(
+        verifiedUser?.onboarding &&
+        verifiedUser.onboarding.completed === false &&
+        verifiedUser.onboarding.skipped === false
+      );
+
+      let finalDest = rawDest;
+      if (isInvite) {
+        finalDest = rawDest;
+      } else if (needsOnboarding) {
+        const destParam = rawDest && rawDest !== '/' ? `?redirect=${encodeURIComponent(rawDest)}` : '';
+        finalDest = `/onboarding${destParam}`;
+      }
+
       setTimeout(() => {
-        navigate(destination, { replace: true });
+        navigate(finalDest, { replace: true });
       }, 1000);
     } catch (err) {
       const details = err.details || {};

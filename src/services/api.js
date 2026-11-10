@@ -108,6 +108,14 @@ export async function getCurrentUser() {
   return result.data?.user;
 }
 
+export async function saveOnboarding(onboardingData) {
+  const result = await apiRequest('/auth/onboarding', {
+    method: 'PATCH',
+    body: JSON.stringify(onboardingData),
+  });
+  return result.data?.user;
+}
+
 export async function forgotPassword(email) {
   return await apiRequest('/auth/forgot-password', {
     method: 'POST',

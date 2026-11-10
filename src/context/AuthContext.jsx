@@ -108,6 +108,21 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
+  // Update or skip onboarding action
+  const updateOnboarding = useCallback(async (data) => {
+    setAuthError(null);
+    try {
+      const updatedUser = await api.saveOnboarding(data);
+      if (updatedUser) {
+        setUser(updatedUser);
+      }
+      return updatedUser;
+    } catch (err) {
+      setAuthError(err.message || 'Failed to update onboarding preferences');
+      throw err;
+    }
+  }, []);
+
   const value = {
     user,
     isAuthenticated: Boolean(user),
@@ -119,6 +134,7 @@ export function AuthProvider({ children }) {
     resendVerificationOtp,
     login,
     logout,
+    updateOnboarding,
     checkSession,
   };
 

@@ -182,6 +182,15 @@ export async function signup(req, res, next) {
       password,
       avatar: initials,
       isEmailVerified: false,
+      onboarding: {
+        completed: false,
+        skipped: false,
+        role: null,
+        goals: [],
+        teamSize: null,
+        experience: null,
+        completedAt: null,
+      },
     });
 
     // 4. Create an isolated private initial workspace for the new user
@@ -537,6 +546,157 @@ export async function getMe(req, res, next) {
       success: true,
       data: {
         user: userJson,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+const ALLOWED_ROLES = ['Student', 'Developer', 'Team Lead', 'Project Manager', 'Freelancer', 'Other'];
+const ALLOWED_GOALS = [
+  'Personal task management',
+  'College projects',
+  'Team collaboration',
+  'Software development',
+  'Business and project management',
+];
+const ALLOWED_TEAM_SIZES = ['Just me', '2–5 people', '6–10 people', '11–25 people', '25+ people'];
+const ALLOWED_EXPERIENCE = ['Beginner', 'Some experience', 'Experienced'];
+
+// Normalizes team sizes like '2-5 people' (hyphen) to '2–5 people' (en-dash)
+function normalizeTeamSize(size) {
+  if (typeof size !== 'string') return size;
+  return size.replace(/(\d+)-(\d+)/g, '$1–$2');
+}
+
+/**
+ * PATCH /api/auth/onboarding
+ * POST /api/auth/onboarding
+ * Saves or skips first-time onboarding preferences for the authenticated user.
+ */
+export async function saveOnboarding(req, res, next) {
+  try {
+    if (!req.user || !req.user._id) {
+      return res.status(401).json({
+        success: false,
+        message: 'Authentication required to update onboarding preferences.',
+      });
+    }
+
+    const { skipped, role, goals, teamSize, experience } = req.body || {};
+
+    // 1. Support skipping onboarding without requiring any answers
+    if (skipped === true) {
+      const updatedUser = await User.findByIdAndUpdate(
+        req.user._id,
+        {
+          $set: {
+            'onboarding.completed': false,
+            'onboarding.skipped': true,
+            'onboarding.completedAt': new Date(),
+          },
+        },
+        { new: true, runValidators: true }
+      );
+
+      if (!updatedUser) {
+        return res.status(404).json({
+          success: false,
+          message: 'User account not found.',
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: 'Onboarding skipped.',
+        data: {
+          user: updatedUser.toJSON(),
+        },
+      });
+    }
+
+    // 2. Validate input fields when completing or answering onboarding
+    const updateFields = {
+      'onboarding.completed': true,
+      'onboarding.skipped': false,
+      'onboarding.completedAt': new Date(),
+    };
+
+    if (role !== undefined && role !== null) {
+      if (!ALLOWED_ROLES.includes(role)) {
+        return res.status(400).json({
+          success: false,
+          code: 'INVALID_ONBOARDING_ROLE',
+          message: `Invalid role selected. Allowed roles: ${ALLOWED_ROLES.join(', ')}`,
+        });
+      }
+      updateFields['onboarding.role'] = role;
+    }
+
+    if (goals !== undefined && goals !== null) {
+      if (!Array.isArray(goals)) {
+        return res.status(400).json({
+          success: false,
+          code: 'INVALID_ONBOARDING_GOALS',
+          message: 'Goals must be provided as an array of strings.',
+        });
+      }
+      for (const g of goals) {
+        if (!ALLOWED_GOALS.includes(g)) {
+          return res.status(400).json({
+            success: false,
+            code: 'INVALID_ONBOARDING_GOAL',
+            message: `Invalid goal '${g}'. Allowed goals: ${ALLOWED_GOALS.join(', ')}`,
+          });
+        }
+      }
+      // Deduplicate goals
+      updateFields['onboarding.goals'] = Array.from(new Set(goals));
+    }
+
+    if (teamSize !== undefined && teamSize !== null) {
+      const normalizedSize = normalizeTeamSize(teamSize);
+      if (!ALLOWED_TEAM_SIZES.includes(normalizedSize)) {
+        return res.status(400).json({
+          success: false,
+          code: 'INVALID_ONBOARDING_TEAM_SIZE',
+          message: `Invalid team size. Allowed values: ${ALLOWED_TEAM_SIZES.join(', ')}`,
+        });
+      }
+      updateFields['onboarding.teamSize'] = normalizedSize;
+    }
+
+    if (experience !== undefined && experience !== null) {
+      if (!ALLOWED_EXPERIENCE.includes(experience)) {
+        return res.status(400).json({
+          success: false,
+          code: 'INVALID_ONBOARDING_EXPERIENCE',
+          message: `Invalid experience level. Allowed levels: ${ALLOWED_EXPERIENCE.join(', ')}`,
+        });
+      }
+      updateFields['onboarding.experience'] = experience;
+    }
+
+    // 3. Atomically update user onboarding document
+    const updatedUser = await User.findByIdAndUpdate(
+      req.user._id,
+      { $set: updateFields },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({
+        success: false,
+        message: 'User account not found.',
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Onboarding preferences saved successfully.',
+      data: {
+        user: updatedUser.toJSON(),
       },
     });
   } catch (error) {
