@@ -19,6 +19,7 @@ import {
   revokeInvitation,
 } from '../controllers/invitationController.js';
 import { getMessages, sendMessage } from '../controllers/messageController.js';
+import { NORMALIZE_EMAIL_OPTS } from '../utils/emailUtils.js';
 
 const router = express.Router();
 
@@ -36,7 +37,13 @@ router.post(
   [
     param('id').isMongoId().withMessage('Invalid workspace ID format'),
     body('name').trim().notEmpty().withMessage('Member name is required'),
-    body('email').isEmail().withMessage('A valid email address is required'),
+    body('email')
+      .trim()
+      .notEmpty()
+      .withMessage('A valid email address is required')
+      .isEmail()
+      .withMessage('A valid email address is required')
+      .normalizeEmail(NORMALIZE_EMAIL_OPTS),
     body('role').optional().isIn(['Owner', 'Admin', 'Member']).withMessage('Invalid role'),
     validate,
   ],
@@ -88,7 +95,7 @@ router.post(
       .withMessage('Member email is required')
       .isEmail()
       .withMessage('Please enter a valid email address')
-      .normalizeEmail(),
+      .normalizeEmail(NORMALIZE_EMAIL_OPTS),
     body('role').optional().isIn(['Owner', 'Admin', 'Member']).withMessage('Invalid role'),
     validate,
   ],

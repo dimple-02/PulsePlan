@@ -17,6 +17,7 @@ import { Project } from '../models/Project.js';
 import { Workspace } from '../models/Workspace.js';
 import mongoose from 'mongoose';
 import { sendTaskAssignmentEmail } from '../services/mailService.js';
+import { areEmailsEqual } from '../utils/emailUtils.js';
 
 // Helper: Check whether user can access a project within their authorized workspace
 function canUserAccessProject(user, workspaceRole, project) {
@@ -26,7 +27,7 @@ function canUserAccessProject(user, workspaceRole, project) {
   const isCollab = project.collaborators?.some(
     (c) =>
       (c.userId && c.userId.toString() === user._id.toString()) ||
-      (c.email && c.email.toLowerCase() === user.email?.toLowerCase())
+      (c.email && areEmailsEqual(c.email, user.email))
   );
   if (isCollab) return true;
   return !project.collaborators || project.collaborators.length === 0;
@@ -38,7 +39,7 @@ function getUserProjectRole(user, project) {
   const collab = project.collaborators?.find(
     (c) =>
       (c.userId && c.userId.toString() === user._id.toString()) ||
-      (c.email && c.email.toLowerCase() === user.email?.toLowerCase())
+      (c.email && areEmailsEqual(c.email, user.email))
   );
   return collab?.role || null;
 }
@@ -210,7 +211,7 @@ export async function createTask(req, res, next) {
       const collab = project.collaborators?.find(
         (c) =>
           (c.userId && c.userId.toString() === req.user._id.toString()) ||
-          (c.email && c.email.toLowerCase() === req.user.email.toLowerCase())
+          (c.email && areEmailsEqual(c.email, req.user.email))
       );
       if (collab?.role === 'Viewer') {
         return res.status(403).json({
@@ -267,7 +268,7 @@ export async function createTask(req, res, next) {
         const member = ws?.members?.find(
           (m) => m.name.toLowerCase() === task.assignee.name.toLowerCase()
         );
-        if (member?.email && member.email.toLowerCase() !== req.user?.email?.toLowerCase()) {
+        if (member?.email && !areEmailsEqual(member.email, req.user?.email)) {
           sendTaskAssignmentEmail({
             to: member.email,
             recipientName: member.name,

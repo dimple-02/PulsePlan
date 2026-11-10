@@ -7,6 +7,7 @@ import { Invitation } from '../models/Invitation.js';
 import { sendWorkspaceInviteEmail } from '../services/mailService.js';
 import { hashToken } from '../services/otpService.js';
 import { ENV } from '../config/env.js';
+import { areEmailsEqual, getEmailRegex } from '../utils/emailUtils.js';
 
 /**
  * Helper to dynamically compute currentUserRole for a specific user
@@ -16,7 +17,7 @@ function resolveCurrentUserRole(workspace, user) {
   const member = workspace.members?.find(
     (m) =>
       (m.userId && m.userId.toString() === user._id.toString()) ||
-      (m.email && m.email.toLowerCase() === user.email.toLowerCase())
+      (m.email && areEmailsEqual(m.email, user.email))
   );
   if (member?.role) return member.role;
   const userWs = user.workspaces?.find(
@@ -40,11 +41,12 @@ export async function getWorkspaces(req, res, next) {
     // where user is explicitly in user.workspaces or workspace.members
     if (req.user) {
       const userWorkspaceIds = (req.user.workspaces || []).map((w) => w.workspaceId);
+      const emailRegex = getEmailRegex(req.user.email);
       query = {
         $or: [
           { _id: { $in: userWorkspaceIds } },
           { 'members.userId': req.user._id },
-          { 'members.email': req.user.email.toLowerCase() },
+          { 'members.email': { $regex: emailRegex } },
         ],
       };
     }
@@ -106,7 +108,7 @@ export async function getWorkspaceById(req, res, next) {
         workspace.members?.some(
           (m) =>
             (m.userId && m.userId.toString() === req.user._id.toString()) ||
-            (m.email && m.email.toLowerCase() === req.user.email.toLowerCase())
+            (m.email && areEmailsEqual(m.email, req.user.email))
         );
 
       if (!isMember) {
@@ -241,7 +243,7 @@ export async function updateWorkspace(req, res, next) {
         workspace.members?.some(
           (m) =>
             ((m.userId && m.userId.toString() === req.user._id.toString()) ||
-              (m.email && m.email.toLowerCase() === req.user.email.toLowerCase())) &&
+              (m.email && areEmailsEqual(m.email, req.user.email))) &&
             (m.role === 'Owner' || m.role === 'Admin')
         );
 
@@ -262,7 +264,7 @@ export async function updateWorkspace(req, res, next) {
         workspace.members?.some(
           (m) =>
             ((m.userId && m.userId.toString() === req.user._id.toString()) ||
-              (m.email && m.email.toLowerCase() === req.user.email.toLowerCase())) &&
+              (m.email && areEmailsEqual(m.email, req.user.email))) &&
             (m.role === 'Owner' || m.role === 'Admin')
         );
 
@@ -320,7 +322,7 @@ export async function deleteWorkspace(req, res, next) {
         workspace.members?.some(
           (m) =>
             ((m.userId && m.userId.toString() === req.user._id.toString()) ||
-              (m.email && m.email.toLowerCase() === req.user.email.toLowerCase())) &&
+              (m.email && areEmailsEqual(m.email, req.user.email))) &&
             (m.role === 'Owner' || m.role === 'Admin')
         );
 
@@ -374,7 +376,7 @@ export async function addWorkspaceMember(req, res, next) {
       workspace.members?.some(
         (m) =>
           ((m.userId && m.userId.toString() === req.user._id.toString()) ||
-            (m.email && m.email.toLowerCase() === req.user.email.toLowerCase())) &&
+            (m.email && areEmailsEqual(m.email, req.user.email))) &&
           (m.role === 'Owner' || m.role === 'Admin')
       );
 
@@ -394,7 +396,7 @@ export async function addWorkspaceMember(req, res, next) {
         workspace.members?.some(
           (m) =>
             ((m.userId && m.userId.toString() === req.user._id.toString()) ||
-              (m.email && m.email.toLowerCase() === req.user.email.toLowerCase())) &&
+              (m.email && areEmailsEqual(m.email, req.user.email))) &&
             m.role === 'Owner'
         );
 
@@ -410,7 +412,7 @@ export async function addWorkspaceMember(req, res, next) {
 
     // Check if member already exists in this workspace
     const existingMember = workspace.members.find(
-      (m) => m.email.toLowerCase() === normalizedEmail
+      (m) => m.email && areEmailsEqual(m.email, normalizedEmail)
     );
     if (existingMember) {
       return res.status(409).json({
@@ -420,7 +422,10 @@ export async function addWorkspaceMember(req, res, next) {
     }
 
     // Check if user account already exists in MongoDB with this email
-    const registeredUser = await User.findOne({ email: normalizedEmail });
+    const emailRegex = getEmailRegex(normalizedEmail);
+    const registeredUser = await User.findOne({
+      $or: [{ email: normalizedEmail }, { email: { $regex: emailRegex } }],
+    });
 
     const initials =
       name
@@ -490,7 +495,7 @@ export async function addWorkspaceMember(req, res, next) {
     await Invitation.deleteMany({
       workspaceId: workspace._id,
       projectId: null,
-      email: normalizedEmail,
+      email: { $regex: emailRegex },
       status: { $in: ['expired', 'revoked', 'rejected'] },
     });
 
@@ -552,7 +557,7 @@ export async function removeWorkspaceMember(req, res, next) {
       workspace.members?.some(
         (m) =>
           ((m.userId && m.userId.toString() === req.user._id.toString()) ||
-            (m.email && m.email.toLowerCase() === req.user.email.toLowerCase())) &&
+            (m.email && areEmailsEqual(m.email, req.user.email))) &&
           (m.role === 'Owner' || m.role === 'Admin')
       );
 
@@ -565,7 +570,7 @@ export async function removeWorkspaceMember(req, res, next) {
 
     // Find member by _id or email
     const memberIndex = workspace.members.findIndex(
-      (m) => m._id.toString() === memberId || m.email.toLowerCase() === memberId.toLowerCase()
+      (m) => m._id.toString() === memberId || (m.email && areEmailsEqual(m.email, memberId))
     );
 
     if (memberIndex === -1) {

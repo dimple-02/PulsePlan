@@ -1,6 +1,7 @@
 import { Project } from '../models/Project.js';
 import { Task } from '../models/Task.js';
 import { Workspace } from '../models/Workspace.js';
+import { areEmailsEqual } from '../utils/emailUtils.js';
 
 /**
  * Project Controller
@@ -45,7 +46,7 @@ export async function getProjects(req, res, next) {
         const isCollab = p.collaborators?.some(
           (c) =>
             (c.userId && c.userId.toString() === userIdStr) ||
-            (c.email && c.email.toLowerCase() === userEmail)
+            (c.email && areEmailsEqual(c.email, userEmail))
         );
         if (isCollab) return true;
         return !p.collaborators || p.collaborators.length === 0;
@@ -85,7 +86,7 @@ export async function getProjectById(req, res, next) {
       const isCollab = project.collaborators?.some(
         (c) =>
           (c.userId && c.userId.toString() === userIdStr) ||
-          (c.email && c.email.toLowerCase() === userEmail)
+          (c.email && areEmailsEqual(c.email, userEmail))
       );
       const isOpen = !project.collaborators || project.collaborators.length === 0;
       if (!isLead && !isCollab && !isOpen) {
@@ -228,7 +229,7 @@ export async function updateProject(req, res, next) {
       existingProject.collaborators?.some(
         (c) =>
           ((c.userId && c.userId.toString() === req.user._id.toString()) ||
-            (c.email && c.email.toLowerCase() === req.user.email.toLowerCase())) &&
+            (c.email && areEmailsEqual(c.email, req.user.email))) &&
           c.role === 'Admin'
       );
 

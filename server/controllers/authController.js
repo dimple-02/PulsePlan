@@ -7,6 +7,7 @@ import { ENV } from '../config/env.js';
 import { sendWelcomeEmail, sendOtpEmail } from '../services/emailService.js';
 import { generateOtp, verifyOtp, hashOtp } from '../services/otpService.js';
 import { maskRecipient, redactSensitive } from '../config/mailer.js';
+import { areEmailsEqual, getEmailRegex } from '../utils/emailUtils.js';
 
 const JWT_EXPIRES_IN = '7d';
 
@@ -17,34 +18,35 @@ const JWT_EXPIRES_IN = '7d';
 export async function linkPreexistingWorkspaces(user) {
   try {
     const normalizedEmail = user.email.toLowerCase().trim();
+    const emailRegex = getEmailRegex(normalizedEmail);
 
     // 1. Atomically update all matching workspace member entries (userId & Active status)
     await Workspace.updateMany(
-      { 'members.email': normalizedEmail },
+      { 'members.email': { $regex: emailRegex } },
       {
         $set: {
           'members.$[elem].userId': user._id,
           'members.$[elem].status': 'Active',
         },
       },
-      { arrayFilters: [{ 'elem.email': normalizedEmail }] }
+      { arrayFilters: [{ 'elem.email': { $regex: emailRegex } }] }
     );
 
     // 2. Atomically update all matching project collaborator entries (userId)
     await Project.updateMany(
-      { 'collaborators.email': normalizedEmail },
+      { 'collaborators.email': { $regex: emailRegex } },
       {
         $set: {
           'collaborators.$[elem].userId': user._id,
         },
       },
-      { arrayFilters: [{ 'elem.email': normalizedEmail }] }
+      { arrayFilters: [{ 'elem.email': { $regex: emailRegex } }] }
     );
 
     // 3. Find all workspaces where this user has a member entry to synchronize user.workspaces atomically
-    const workspaces = await Workspace.find({ 'members.email': normalizedEmail });
+    const workspaces = await Workspace.find({ 'members.email': { $regex: emailRegex } });
     for (const ws of workspaces) {
-      const member = ws.members?.find((m) => m.email?.toLowerCase() === normalizedEmail);
+      const member = ws.members?.find((m) => m.email && areEmailsEqual(m.email, normalizedEmail));
       const memberRole = member?.role || 'Member';
 
       // Atomic push: Add workspace link ONLY if it is not already present in user.workspaces (prevents duplicate entries)
@@ -144,7 +146,10 @@ export async function signup(req, res, next) {
     const normalizedEmail = email.toLowerCase().trim();
 
     // 1. Check for duplicate email
-    const existingUser = await User.findOne({ email: normalizedEmail });
+    const emailRegex = getEmailRegex(normalizedEmail);
+    const existingUser = await User.findOne({
+      $or: [{ email: normalizedEmail }, { email: { $regex: emailRegex } }],
+    });
     if (existingUser) {
       if (existingUser.isEmailVerified) {
         return res.status(409).json({
@@ -306,7 +311,10 @@ export async function verifyEmail(req, res, next) {
       });
     }
 
-    const user = await User.findOne({ email: normalizedEmail });
+    const emailRegex = getEmailRegex(normalizedEmail);
+    const user = await User.findOne({
+      $or: [{ email: normalizedEmail }, { email: { $regex: emailRegex } }],
+    });
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -369,7 +377,10 @@ export async function resendVerification(req, res, next) {
     const normalizedEmail = email.toLowerCase().trim();
 
     // Check user existence
-    const user = await User.findOne({ email: normalizedEmail });
+    const emailRegex = getEmailRegex(normalizedEmail);
+    const user = await User.findOne({
+      $or: [{ email: normalizedEmail }, { email: { $regex: emailRegex } }],
+    });
     if (!user) {
       // Generic message to avoid email enumeration
       return res.status(200).json({
@@ -450,7 +461,10 @@ export async function login(req, res, next) {
     const normalizedEmail = email.toLowerCase().trim();
 
     // Query user and explicitly select password field (select: false in schema)
-    const user = await User.findOne({ email: normalizedEmail }).select('+password');
+    const emailRegex = getEmailRegex(normalizedEmail);
+    const user = await User.findOne({
+      $or: [{ email: normalizedEmail }, { email: { $regex: emailRegex } }],
+    }).select('+password');
     if (!user) {
       return res.status(401).json({
         success: false,

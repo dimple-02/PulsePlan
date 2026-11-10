@@ -18,6 +18,7 @@ import {
   getProjectCollaborators,
   removeProjectCollaborator,
 } from '../controllers/invitationController.js';
+import { NORMALIZE_EMAIL_OPTS } from '../utils/emailUtils.js';
 
 const router = express.Router();
 
@@ -112,7 +113,7 @@ router.post(
       .withMessage('Collaborator email is required')
       .isEmail()
       .withMessage('Please enter a valid email address')
-      .normalizeEmail(),
+      .normalizeEmail(NORMALIZE_EMAIL_OPTS),
     body('role')
       .optional()
       .isIn(['Admin', 'Member', 'Viewer'])

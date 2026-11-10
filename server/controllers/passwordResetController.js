@@ -4,6 +4,7 @@ import { generateOtp, verifyOtp, createResetToken, verifyResetToken, consumeRese
 import { sendOtpEmail } from '../services/emailService.js';
 import { getCookieOptions } from './authController.js';
 import { maskRecipient, redactSensitive } from '../config/mailer.js';
+import { getEmailRegex } from '../utils/emailUtils.js';
 
 /**
  * POST /api/auth/forgot-password
@@ -35,7 +36,10 @@ export async function forgotPassword(req, res, next) {
     };
 
     // Check if user exists in database
-    const user = await User.findOne({ email: normalizedEmail });
+    const emailRegex = getEmailRegex(normalizedEmail);
+    const user = await User.findOne({
+      $or: [{ email: normalizedEmail }, { email: { $regex: emailRegex } }],
+    });
     if (!user) {
       // Return 200 OK without dispatching email, concealing existence of account
       return res.status(200).json(genericSuccessResponse);
@@ -204,7 +208,10 @@ export async function resetPassword(req, res, next) {
     }
 
     // 2. Fetch user
-    const user = await User.findOne({ email: normalizedEmail });
+    const emailRegex = getEmailRegex(normalizedEmail);
+    const user = await User.findOne({
+      $or: [{ email: normalizedEmail }, { email: { $regex: emailRegex } }],
+    });
     if (!user) {
       return res.status(404).json({
         success: false,

@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import { Workspace } from '../models/Workspace.js';
+import { areEmailsEqual } from '../utils/emailUtils.js';
 
 /**
  * Tenant Scoping & Server-Side Membership Authorization Middleware
@@ -61,7 +62,7 @@ export async function tenantScope(req, res, next) {
     const memberInWorkspace = workspace.members?.find(
       (m) =>
         (m.userId && m.userId.toString() === req.user._id.toString()) ||
-        (m.email && m.email.toLowerCase() === req.user.email.toLowerCase())
+        (m.email && areEmailsEqual(m.email, req.user.email))
     );
 
     if (!isMemberInUserList && !memberInWorkspace) {

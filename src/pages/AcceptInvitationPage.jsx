@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import ThemeToggle from '../components/common/ThemeToggle';
 import Badge from '../components/common/Badge';
+import { areEmailsEqual } from '../utils/emailUtils';
 
 /**
  * AcceptInvitationPage Component
@@ -131,9 +132,11 @@ export default function AcceptInvitationPage() {
     });
   };
 
-  const invitedEmail = invitationData?.invitedEmail?.toLowerCase();
-  const currentEmail = user?.email?.toLowerCase();
-  const isEmailMatching = isAuthenticated && currentEmail === invitedEmail;
+  const invitedEmail = invitationData?.invitedEmail?.toLowerCase()?.trim();
+  const currentEmail = user?.email?.toLowerCase()?.trim();
+  const isEmailMatching = Boolean(
+    isAuthenticated && currentEmail && invitedEmail && areEmailsEqual(currentEmail, invitedEmail)
+  );
   const isProjectInvitation = Boolean(invitationData?.project || invitationData?.projectName);
 
   return (

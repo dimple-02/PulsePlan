@@ -7,6 +7,7 @@ import { User } from '../models/User.js';
 import { sendProjectInviteEmail, sendWorkspaceInviteEmail } from '../services/emailService.js';
 import { hashToken } from '../services/otpService.js';
 import { ENV } from '../config/env.js';
+import { areEmailsEqual, getEmailRegex } from '../utils/emailUtils.js';
 
 const INVITATION_EXPIRY_DAYS = 7;
 const INVITATION_EXPIRY_MS = INVITATION_EXPIRY_DAYS * 24 * 60 * 60 * 1000;
@@ -26,7 +27,7 @@ function canUserManageProject(user, workspaceRole, project) {
   const isCollabAdmin = project.collaborators?.some(
     (c) =>
       ((c.userId && c.userId.toString() === user._id.toString()) ||
-        c.email?.toLowerCase() === user.email.toLowerCase()) &&
+        (c.email && areEmailsEqual(c.email, user.email))) &&
       c.role === 'Admin'
   );
   return Boolean(isCollabAdmin);
@@ -103,7 +104,7 @@ export async function createProjectInvitation(req, res, next) {
     const normalizedEmail = email.toLowerCase().trim();
 
     // 4. Prevent self-invitation
-    if (normalizedEmail === req.user.email.toLowerCase()) {
+    if (areEmailsEqual(normalizedEmail, req.user.email)) {
       return res.status(400).json({
         success: false,
         message: 'You are already a member of this project.',
@@ -112,7 +113,7 @@ export async function createProjectInvitation(req, res, next) {
 
     // 5. Prevent duplicate project membership
     const alreadyCollaborator = project.collaborators?.some(
-      (c) => c.email?.toLowerCase() === normalizedEmail
+      (c) => c.email && areEmailsEqual(c.email, normalizedEmail)
     );
     if (alreadyCollaborator) {
       return res.status(409).json({
@@ -122,9 +123,10 @@ export async function createProjectInvitation(req, res, next) {
     }
 
     // 6. Prevent duplicate active pending invitations
+    const emailRegex = getEmailRegex(normalizedEmail);
     const existingPending = await Invitation.findOne({
       projectId: project._id,
-      email: normalizedEmail,
+      email: { $regex: emailRegex },
       status: 'pending',
       expiresAt: { $gt: new Date() },
     });
@@ -287,7 +289,7 @@ export async function createWorkspaceInvitation(req, res, next) {
     const callerMember = workspace.members?.find(
       (m) =>
         (m.userId && m.userId.toString() === req.user._id.toString()) ||
-        (m.email && m.email.toLowerCase() === req.user.email.toLowerCase())
+        (m.email && areEmailsEqual(m.email, req.user.email))
     );
     const userWsRole = req.user.workspaces?.find(
       (w) => w.workspaceId.toString() === workspace._id.toString()
@@ -311,7 +313,7 @@ export async function createWorkspaceInvitation(req, res, next) {
 
     const normalizedEmail = email.toLowerCase().trim();
 
-    if (normalizedEmail === req.user.email.toLowerCase()) {
+    if (areEmailsEqual(normalizedEmail, req.user.email)) {
       return res.status(400).json({
         success: false,
         message: 'You are already a member of this workspace.',
@@ -319,7 +321,7 @@ export async function createWorkspaceInvitation(req, res, next) {
     }
 
     const existingMember = workspace.members?.find(
-      (m) => m.email?.toLowerCase() === normalizedEmail
+      (m) => m.email && areEmailsEqual(m.email, normalizedEmail)
     );
     if (existingMember && existingMember.userId) {
       return res.status(409).json({
@@ -328,10 +330,11 @@ export async function createWorkspaceInvitation(req, res, next) {
       });
     }
 
+    const emailRegex = getEmailRegex(normalizedEmail);
     const existingPending = await Invitation.findOne({
       workspaceId: workspace._id,
       projectId: null,
-      email: normalizedEmail,
+      email: { $regex: emailRegex },
       status: 'pending',
       expiresAt: { $gt: new Date() },
     });
@@ -355,7 +358,7 @@ export async function createWorkspaceInvitation(req, res, next) {
     await Invitation.deleteMany({
       workspaceId: workspace._id,
       projectId: null,
-      email: normalizedEmail,
+      email: { $regex: emailRegex },
       status: { $in: ['expired', 'revoked', 'rejected'] },
     });
 
@@ -372,7 +375,9 @@ export async function createWorkspaceInvitation(req, res, next) {
     });
 
     if (!existingMember) {
-      const registeredUser = await User.findOne({ email: normalizedEmail });
+      const registeredUser = await User.findOne({
+        $or: [{ email: normalizedEmail }, { email: { $regex: emailRegex } }],
+      });
       const nameGuess = normalizedEmail.split('@')[0];
       workspace.members.push({
         name: nameGuess,
@@ -510,7 +515,7 @@ export async function resendInvitation(req, res, next) {
       const callerMember = workspace?.members?.find(
         (m) =>
           (m.userId && m.userId.toString() === req.user._id.toString()) ||
-          (m.email && m.email.toLowerCase() === req.user.email.toLowerCase())
+          (m.email && areEmailsEqual(m.email, req.user.email))
       );
       const userWsRole = req.user.workspaces?.find(
         (w) => w.workspaceId.toString() === (workspace?._id || '').toString()
@@ -620,7 +625,7 @@ export async function revokeInvitation(req, res, next) {
       const callerMember = workspace?.members?.find(
         (m) =>
           (m.userId && m.userId.toString() === req.user._id.toString()) ||
-          (m.email && m.email.toLowerCase() === req.user.email.toLowerCase())
+          (m.email && areEmailsEqual(m.email, req.user.email))
       );
       const userWsRole = req.user.workspaces?.find(
         (w) => w.workspaceId.toString() === (workspace?._id || '').toString()
@@ -810,11 +815,11 @@ export async function acceptInvitation(req, res, next) {
       });
     }
 
-    // STRICT EMAIL MATCH: Recipient user email MUST match invited email
+    // STRICT EMAIL MATCH: Recipient user email MUST match invited email (supporting canonical Gmail dot/subaddress equivalence)
     const currentUserEmail = req.user.email.toLowerCase().trim();
     const invitedEmail = existing.email.toLowerCase().trim();
 
-    if (currentUserEmail !== invitedEmail) {
+    if (!areEmailsEqual(currentUserEmail, invitedEmail)) {
       return res.status(403).json({
         success: false,
         message: `You are signed in as '${currentUserEmail}', but this invitation was sent to '${invitedEmail}'. Please switch accounts or log in with '${invitedEmail}' to accept.`,
@@ -976,7 +981,7 @@ export async function acceptInvitation(req, res, next) {
       const existingMemberIndex = workspace.members?.findIndex(
         (m) =>
           (m.userId && m.userId.toString() === req.user._id.toString()) ||
-          (m.email && m.email.toLowerCase() === currentUserEmail)
+          (m.email && areEmailsEqual(m.email, currentUserEmail))
       );
 
       const wsRole = isProjectInvite ? 'Member' : claimedInvitation.role;
@@ -1056,7 +1061,7 @@ export async function acceptInvitation(req, res, next) {
         const existingCollabIndex = project.collaborators.findIndex(
           (c) =>
             (c.userId && c.userId.toString() === req.user._id.toString()) ||
-            (c.email && c.email.toLowerCase() === currentUserEmail)
+            (c.email && areEmailsEqual(c.email, currentUserEmail))
         );
 
         if (existingCollabIndex !== -1) {
@@ -1199,7 +1204,7 @@ export async function rejectInvitation(req, res, next) {
 
     // Verify recipient email
     const currentUserEmail = req.user.email.toLowerCase().trim();
-    if (currentUserEmail !== invitation.email.toLowerCase().trim()) {
+    if (!areEmailsEqual(currentUserEmail, invitation.email)) {
       return res.status(403).json({
         success: false,
         message: `You are signed in as '${currentUserEmail}', but this invitation was sent to '${invitation.email}'.`,
@@ -1285,7 +1290,7 @@ export async function removeProjectCollaborator(req, res, next) {
     const index = project.collaborators.findIndex(
       (c) =>
         (c.userId && c.userId.toString() === userIdOrEmail) ||
-        (c.email && c.email.toLowerCase() === lowerId)
+        (c.email && areEmailsEqual(c.email, lowerId))
     );
 
     if (index === -1) {

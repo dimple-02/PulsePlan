@@ -5,6 +5,7 @@ import * as api from '../../services/api';
 import Avatar from '../common/Avatar';
 import Badge from '../common/Badge';
 import { X, Send, MessageSquare, Loader2, Clock, CheckCheck } from 'lucide-react';
+import { areEmailsEqual } from '../../utils/emailUtils';
 
 /**
  * MemberChatDrawer Component
@@ -195,7 +196,7 @@ export default function MemberChatDrawer({ isOpen, onClose, member }) {
           ) : (
             messages.map((msg) => {
               const isMine =
-                msg.sender?.email?.toLowerCase() === currentEmail ||
+                (msg.sender?.email && areEmailsEqual(msg.sender.email, currentEmail)) ||
                 msg.sender?.userId?.toString() === user?._id?.toString() ||
                 msg.sender?.userId?.toString() === user?.id?.toString();
 

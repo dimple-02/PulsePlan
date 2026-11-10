@@ -17,6 +17,7 @@ import {
   resetPassword,
 } from '../controllers/passwordResetController.js';
 import { createRateLimiter } from '../middleware/rateLimiter.js';
+import { NORMALIZE_EMAIL_OPTS } from '../utils/emailUtils.js';
 
 const router = express.Router();
 
@@ -59,7 +60,7 @@ router.post(
       .withMessage('Email address is required')
       .isEmail()
       .withMessage('Please provide a valid email address')
-      .normalizeEmail(),
+      .normalizeEmail(NORMALIZE_EMAIL_OPTS),
     body('password')
       .notEmpty()
       .withMessage('Password is required')
@@ -83,7 +84,7 @@ router.post(
       .withMessage('Email address is required')
       .isEmail()
       .withMessage('Please enter a valid email address')
-      .normalizeEmail(),
+      .normalizeEmail(NORMALIZE_EMAIL_OPTS),
     body('password')
       .notEmpty()
       .withMessage('Password is required'),
@@ -106,7 +107,7 @@ router.post(
       .withMessage('Email address is required')
       .isEmail()
       .withMessage('Please enter a valid email address')
-      .normalizeEmail(),
+      .normalizeEmail(NORMALIZE_EMAIL_OPTS),
     body('otp')
       .trim()
       .notEmpty()
@@ -132,7 +133,7 @@ router.post(
       .withMessage('Email address is required')
       .isEmail()
       .withMessage('Please enter a valid email address')
-      .normalizeEmail(),
+      .normalizeEmail(NORMALIZE_EMAIL_OPTS),
     validate,
   ],
   resendVerification
@@ -171,7 +172,7 @@ router.post(
       .withMessage('Email address is required')
       .isEmail()
       .withMessage('Please provide a valid email address')
-      .normalizeEmail(),
+      .normalizeEmail(NORMALIZE_EMAIL_OPTS),
     validate,
   ],
   forgotPassword
@@ -191,7 +192,7 @@ router.post(
       .withMessage('Email address is required')
       .isEmail()
       .withMessage('Please provide a valid email address')
-      .normalizeEmail(),
+      .normalizeEmail(NORMALIZE_EMAIL_OPTS),
     body('otp')
       .trim()
       .notEmpty()
@@ -217,7 +218,7 @@ router.post(
       .withMessage('Email address is required')
       .isEmail()
       .withMessage('Please provide a valid email address')
-      .normalizeEmail(),
+      .normalizeEmail(NORMALIZE_EMAIL_OPTS),
     body('newPassword')
       .notEmpty()
       .withMessage('New password is required')

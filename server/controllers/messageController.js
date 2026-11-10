@@ -1,5 +1,6 @@
 import { Message } from '../models/Message.js';
 import { Workspace } from '../models/Workspace.js';
+import { areEmailsEqual, getEmailRegex } from '../utils/emailUtils.js';
 
 /**
  * Message Controller
@@ -28,7 +29,7 @@ export async function getMessages(req, res, next) {
       workspace.members?.some(
         (m) =>
           (m.userId && m.userId.toString() === req.user._id.toString()) ||
-          (m.email && m.email.toLowerCase() === req.user.email.toLowerCase())
+          (m.email && areEmailsEqual(m.email, req.user.email))
       );
 
     if (!isMember) {
@@ -43,10 +44,12 @@ export async function getMessages(req, res, next) {
 
     if (recipientEmail && typeof recipientEmail === 'string' && recipientEmail.trim()) {
       const otherEmail = recipientEmail.toLowerCase().trim();
+      const userRegex = getEmailRegex(userEmail);
+      const otherRegex = getEmailRegex(otherEmail);
       // 1-on-1 direct messages between current user and specified recipient
       query.$or = [
-        { 'sender.email': userEmail, 'recipient.email': otherEmail },
-        { 'sender.email': otherEmail, 'recipient.email': userEmail },
+        { 'sender.email': { $regex: userRegex }, 'recipient.email': { $regex: otherRegex } },
+        { 'sender.email': { $regex: otherRegex }, 'recipient.email': { $regex: userRegex } },
       ];
     } else {
       // General workspace team channel messages
@@ -95,7 +98,7 @@ export async function sendMessage(req, res, next) {
       workspace.members?.some(
         (m) =>
           (m.userId && m.userId.toString() === req.user._id.toString()) ||
-          (m.email && m.email.toLowerCase() === req.user.email.toLowerCase())
+          (m.email && areEmailsEqual(m.email, req.user.email))
       );
 
     if (!isMember) {
@@ -110,7 +113,7 @@ export async function sendMessage(req, res, next) {
       const normalizedRecipient = recipientEmail.toLowerCase().trim();
       // Verify recipient exists in this workspace
       const targetMember = workspace.members.find(
-        (m) => m.email.toLowerCase() === normalizedRecipient
+        (m) => m.email && areEmailsEqual(m.email, normalizedRecipient)
       );
 
       recipientData = {

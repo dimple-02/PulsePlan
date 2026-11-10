@@ -1505,6 +1505,85 @@ async function runAllTests() {
       ENV.IS_PRODUCTION = false;
     }
 
+    // 4.23: Gmail Dot-Insensitivity and Canonical Email Equivalence
+    console.log('\n--- Test 4.23: Gmail Dot-Insensitivity & Canonical Email Equivalence ---');
+    const gmailUserRegistered = `test.gmail.${Date.now()}@gmail.com`;
+    const gmailUserWithoutDots = gmailUserRegistered.replace(/\./g, '').replace('@gmailcom', '@gmail.com');
+    const gmailUserRegPass = 'Password123!';
+
+    // Register user with dots preserved
+    const gmailRegRes = await request({
+      path: '/api/auth/signup',
+      method: 'POST',
+      body: {
+        name: 'Gmail Dot Tester',
+        email: gmailUserRegistered,
+        password: gmailUserRegPass,
+      },
+    });
+    assert(gmailRegRes.status === 201, 'User signs up with dots preserved in email');
+    assert(gmailRegRes.body?.data?.email === gmailUserRegistered, 'Registered email retains dots in User model');
+
+    // Mark verified in DB for test execution
+    await User.updateOne({ email: gmailUserRegistered }, { isEmailVerified: true });
+
+    // Login using the version WITHOUT dots
+    const gmailLoginRes = await request({
+      path: '/api/auth/login',
+      method: 'POST',
+      body: {
+        email: gmailUserWithoutDots,
+        password: gmailUserRegPass,
+      },
+    });
+    assert(gmailLoginRes.status === 200, 'User can log in using email variant without dots (Gmail equivalence)');
+    const gmailUserToken = gmailLoginRes.body?.data?.token || gmailLoginRes.headers['set-cookie']?.[0]?.split(';')[0]?.replace('token=', '');
+
+    // Owner creates workspace invitation for email WITHOUT dots
+    const gmailWsInviteRes = await request({
+      path: `/api/workspaces/${user1WorkspaceId}/invitations`,
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${loginNew.body.data.token}`,
+        'x-workspace-id': user1WorkspaceId,
+      },
+      body: {
+        email: gmailUserWithoutDots,
+        role: 'Member',
+      },
+    });
+    assert(gmailWsInviteRes.status === 201, 'Workspace invitation sent to email variant without dots');
+    const gmailInviteToken = gmailWsInviteRes.body?.data?.token;
+
+    // Recipient (signed in with dots) accepts the invitation (sent without dots)
+    const gmailAcceptRes = await request({
+      path: `/api/invitations/token/${gmailInviteToken}/accept`,
+      method: 'POST',
+      headers: { Authorization: `Bearer ${gmailUserToken}` },
+    });
+    assert(gmailAcceptRes.status === 200, 'User signed in with dots successfully accepts invitation sent without dots (HTTP 200)');
+    assert(gmailAcceptRes.body?.success === true, 'Acceptance response indicates success without account mismatch');
+
+    // Confirm user is active member of workspace
+    const checkWs = await Workspace.findById(user1WorkspaceId);
+    const activeMember = checkWs.members.find((m) => m.email.replace(/\./g, '') === gmailUserWithoutDots.replace(/\./g, ''));
+    assert(activeMember && activeMember.status === 'Active', 'Member is active in workspace members list');
+
+    // Duplicate invitation check: Inviting the dot variant when member already active is rejected
+    const gmailDupInviteRes = await request({
+      path: `/api/workspaces/${user1WorkspaceId}/invitations`,
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${loginNew.body.data.token}`,
+        'x-workspace-id': user1WorkspaceId,
+      },
+      body: {
+        email: gmailUserRegistered,
+        role: 'Member',
+      },
+    });
+    assert(gmailDupInviteRes.status === 409, 'Duplicate invitation for existing member (dot variant) rejected with HTTP 409');
+
     console.log('\n================================================================');
     console.log(` RESULTS: ${passCount} PASSED, ${failCount} FAILED`);
     console.log('================================================================');
