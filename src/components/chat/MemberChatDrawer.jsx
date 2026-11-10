@@ -24,6 +24,7 @@ export default function MemberChatDrawer({ isOpen, onClose, member }) {
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isSending, setIsSending] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
@@ -41,6 +42,7 @@ export default function MemberChatDrawer({ isOpen, onClose, member }) {
   const loadMessages = async (showLoadingSpinner = false) => {
     if (!workspaceId || !recipientEmail) return;
     if (showLoadingSpinner) setIsLoading(true);
+    setErrorMessage('');
 
     try {
       const data = await api.getWorkspaceMessages(workspaceId, recipientEmail);
@@ -54,6 +56,7 @@ export default function MemberChatDrawer({ isOpen, onClose, member }) {
       });
     } catch (err) {
       console.error('[Chat] Failed to load messages:', err);
+      setErrorMessage(err.message || 'Unable to connect to chat service.');
     } finally {
       if (showLoadingSpinner) setIsLoading(false);
     }
@@ -62,11 +65,13 @@ export default function MemberChatDrawer({ isOpen, onClose, member }) {
   // Initial load when opened or member changes
   useEffect(() => {
     if (isOpen && member) {
+      setErrorMessage('');
       loadMessages(true);
       setTimeout(() => inputRef.current?.focus(), 150);
     } else {
       setMessages([]);
       setInputText('');
+      setErrorMessage('');
     }
   }, [isOpen, member?.email, workspaceId]);
 
@@ -92,6 +97,7 @@ export default function MemberChatDrawer({ isOpen, onClose, member }) {
     const trimmed = inputText.trim();
     if (!trimmed || isSending || !workspaceId) return;
 
+    setErrorMessage('');
     const optimisticMessage = {
       _id: 'temp-' + Date.now(),
       sender: {
@@ -102,8 +108,8 @@ export default function MemberChatDrawer({ isOpen, onClose, member }) {
       },
       recipient: {
         email: recipientEmail,
-        name: member?.name,
-        avatar: member?.avatar,
+        name: member?.name || member?.email || 'Member',
+        avatar: member?.avatar || 'U',
       },
       content: trimmed,
       createdAt: new Date().toISOString(),
@@ -117,8 +123,8 @@ export default function MemberChatDrawer({ isOpen, onClose, member }) {
       const savedMessage = await api.sendWorkspaceMessage(workspaceId, {
         content: trimmed,
         recipientEmail: member.email,
-        recipientName: member.name,
-        recipientAvatar: member.avatar,
+        recipientName: member.name || member.email,
+        recipientAvatar: member.avatar || 'U',
       });
 
       // Replace optimistic temp with MongoDB saved message
@@ -129,6 +135,7 @@ export default function MemberChatDrawer({ isOpen, onClose, member }) {
       console.error('[Chat] Failed to deliver message:', error);
       // Remove optimistic message if sending failed
       setMessages((prev) => prev.filter((m) => m._id !== optimisticMessage._id));
+      setErrorMessage(error.message || 'Failed to send message. Please try again.');
       if (typeof showToast === 'function') {
         showToast(error.message || 'Failed to send message. Please try again.', 'danger');
       }
@@ -154,22 +161,22 @@ export default function MemberChatDrawer({ isOpen, onClose, member }) {
         <div className="p-4 border-b border-slate-100 dark:border-white/10 flex items-center justify-between bg-slate-50/70 dark:bg-[#100E17]/60">
           <div className="flex items-center gap-3 min-w-0">
             <Avatar
-              name={member.name}
-              initials={member.avatar}
-              status={member.status === 'Active' ? 'online' : 'offline'}
+              name={member?.name || 'Member'}
+              initials={member?.avatar || 'U'}
+              status={member?.status === 'Active' ? 'online' : 'offline'}
               size="md"
             />
             <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <h3 className="text-sm font-semibold text-slate-900 dark:text-[#F8F6EF] truncate">
-                  {member.name}
+                  {member?.name || member?.email || 'Member'}
                 </h3>
-                <Badge variant={member.role === 'Owner' ? 'purple' : member.role === 'Admin' ? 'primary' : 'neutral'} size="xs">
-                  {member.role}
+                <Badge variant={member?.role === 'Owner' ? 'purple' : member?.role === 'Admin' ? 'primary' : 'neutral'} size="xs">
+                  {member?.role || 'Member'}
                 </Badge>
               </div>
               <p className="text-[11px] text-slate-500 dark:text-[#A6A1B5] font-mono truncate">
-                {member.email}
+                {member?.email}
               </p>
             </div>
           </div>
@@ -183,6 +190,20 @@ export default function MemberChatDrawer({ isOpen, onClose, member }) {
             <X className="w-5 h-5" />
           </button>
         </div>
+
+        {/* Error notification banner if any */}
+        {errorMessage && (
+          <div className="mx-4 mt-3 p-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/60 text-xs text-rose-700 dark:text-rose-300 flex items-center justify-between animate-in fade-in duration-150">
+            <span className="truncate pr-2">{errorMessage}</span>
+            <button
+              type="button"
+              onClick={() => setErrorMessage('')}
+              className="text-rose-500 hover:text-rose-700 font-bold px-1"
+            >
+              &times;
+            </button>
+          </div>
+        )}
 
         {/* Message Thread Body */}
         <div className="flex-1 overflow-y-auto p-4 space-y-3.5 bg-slate-50/30 dark:bg-[#0B0A0F]">
@@ -210,10 +231,12 @@ export default function MemberChatDrawer({ isOpen, onClose, member }) {
                 msg.sender?.userId?.toString() === user?._id?.toString() ||
                 msg.sender?.userId?.toString() === user?.id?.toString();
 
-              const formattedTime = new Date(msg.createdAt).toLocaleTimeString([], {
-                hour: '2-digit',
-                minute: '2-digit',
-              });
+              const formattedTime = msg.createdAt
+                ? new Date(msg.createdAt).toLocaleTimeString([], {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })
+                : 'Just now';
 
               return (
                 <div
@@ -262,7 +285,7 @@ export default function MemberChatDrawer({ isOpen, onClose, member }) {
             type="text"
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
-            placeholder={`Message ${member.name.split(' ')[0]}...`}
+            placeholder={`Message ${(member?.name || 'Member').split(' ')[0]}...`}
             className="flex-1 px-3.5 py-2.5 text-base sm:text-xs bg-slate-50 dark:bg-[#0B0A0F] border border-slate-200 dark:border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-[#C9B8FF]/20 focus:bg-white dark:focus:bg-[#100E17] transition-all text-slate-800 dark:text-[#F8F6EF] placeholder:text-slate-400 dark:placeholder:text-[#A6A1B5]/50"
             maxLength={2000}
             disabled={isSending}
